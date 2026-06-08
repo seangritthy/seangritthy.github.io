@@ -1,7 +1,5 @@
-/* Import Cyberpunk Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap');
 
-/* Cyberpunk Color Variables */
 :root {
     --primary: #00ff9d;
     --secondary: #7b61ff;
@@ -12,164 +10,70 @@
     --card-bg: #13131f;
 }
 
-* { 
-    box-sizing: border-box; 
-    margin: 0; 
-    padding: 0; 
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* Background Grid & Body */
 body {
     font-family: 'Exo 2', sans-serif;
     background-color: var(--dark-bg);
     color: #ffffff;
     min-height: 100vh;
-    /* This creates the Cyber-Grid background */
-    background-image: 
-        linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(123, 97, 255, 0.03) 1px, transparent 1px);
+    background-image: linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(123, 97, 255, 0.03) 1px, transparent 1px);
     background-size: 50px 50px;
 }
 
-/* Header & Main Title */
 header {
-    padding: 30px 20px;
-    background: rgba(10, 10, 15, 0.95);
-    text-align: center;
-    border-bottom: 2px solid var(--primary);
+    padding: 30px 20px; background: rgba(10, 10, 15, 0.95);
+    text-align: center; border-bottom: 2px solid var(--primary);
     box-shadow: 0 0 25px rgba(0, 255, 157, 0.3);
 }
 
 h1 {
-    font-family: 'Orbitron', sans-serif;
-    color: var(--primary);
-    margin-bottom: 20px;
-    font-size: 2.8rem;
-    text-shadow: 0 0 15px rgba(0, 255, 157, 0.6);
-    letter-spacing: 4px;
-    text-transform: uppercase;
+    font-family: 'Orbitron', sans-serif; color: var(--primary);
+    margin-bottom: 20px; font-size: 2.8rem;
+    text-shadow: 0 0 15px rgba(0, 255, 157, 0.6); letter-spacing: 4px;
 }
 
-/* Search Bar */
 .search-container {
-    display: flex; 
-    justify-content: center; 
-    gap: 15px;
-    max-width: 600px; 
-    margin: 0 auto;
+    display: flex; justify-content: center; gap: 15px;
+    max-width: 600px; margin: 0 auto;
 }
 
 #searchInput {
-    flex: 1; 
-    padding: 12px 15px; 
-    background: rgba(0, 0, 0, 0.8);
-    border: 1px solid var(--secondary); 
-    color: var(--primary); 
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 1rem; 
-    outline: none;
-    transition: 0.3s;
+    flex: 1; padding: 12px 15px; background: rgba(0, 0, 0, 0.8);
+    border: 1px solid var(--secondary); color: var(--primary); 
+    font-family: 'Share Tech Mono', monospace; font-size: 1rem; outline: none;
 }
 
-#searchInput:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
-}
-
-#searchInput::placeholder {
-    color: rgba(0, 255, 157, 0.4);
-}
+#searchInput:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(0, 255, 157, 0.3); }
 
 #searchBtn {
-    padding: 12px 24px; 
-    border: 1px solid var(--primary); 
-    background-color: rgba(0, 255, 157, 0.1); 
-    color: var(--primary); 
-    font-family: 'Orbitron', sans-serif;
-    font-weight: bold;
-    cursor: pointer; 
-    font-size: 1rem; 
-    transition: 0.3s;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    padding: 12px 24px; border: 1px solid var(--primary); 
+    background-color: rgba(0, 255, 157, 0.1); color: var(--primary); 
+    font-family: 'Orbitron', sans-serif; font-weight: bold; cursor: pointer; 
 }
 
-#searchBtn:hover { 
-    background-color: var(--primary); 
-    color: #000;
-    box-shadow: 0 0 20px var(--primary); 
-}
+#searchBtn:hover { background-color: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary); }
 
-/* Movies Grid */
 .movies-grid {
-    display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 35px; 
-    padding: 40px 20px; 
-    max-width: 1400px; 
-    margin: 0 auto;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 35px; padding: 40px 20px; max-width: 1400px; margin: 0 auto;
 }
 
-/* Movie Cards */
 .movie-card {
-    background-color: var(--card-bg); 
-    border: 1px solid var(--secondary); 
-    overflow: hidden;
-    cursor: pointer; 
-    transition: all 0.3s ease;
-    position: relative;
+    background-color: var(--card-bg); border: 1px solid var(--secondary); 
+    overflow: hidden; cursor: pointer; transition: all 0.3s ease; position: relative;
 }
 
-/* Top neon border that appears on hover */
 .movie-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
     background: linear-gradient(90deg, var(--cyber-blue), var(--primary), var(--accent));
-    opacity: 0;
-    transition: 0.3s;
-    z-index: 2;
+    opacity: 0; transition: 0.3s; z-index: 2;
 }
 
-.movie-card:hover { 
-    transform: translateY(-10px); 
-    border-color: var(--primary);
-    box-shadow: 0 0 25px rgba(0, 255, 157, 0.4); 
-}
-
-.movie-card:hover::before {
-    opacity: 1;
-}
-
-.movie-poster { 
-    width: 100%; 
-    height: 330px; 
-    object-fit: cover; 
-    border-bottom: 1px solid rgba(123, 97, 255, 0.3);
-}
-
-.movie-info { 
-    padding: 15px; 
-}
-
-.movie-title { 
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.1rem; 
-    margin-bottom: 10px; 
-    white-space: nowrap; 
-    overflow: hidden; 
-    text-overflow: ellipsis; 
-    color: var(--primary);
-}
-
-.movie-year, .movie-rating { 
-    font-family: 'Share Tech Mono', monospace;
-    color: var(--cyber-blue); 
-    font-size: 0.9rem; 
-    margin-bottom: 5px; 
-}
-
-.movie-rating { 
-    color: var(--cyber-yellow); 
-}
+.movie-card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 0 25px rgba(0, 255, 157, 0.4); }
+.movie-card:hover::before { opacity: 1; }
+.movie-poster { width: 100%; height: 330px; object-fit: cover; border-bottom: 1px solid rgba(123, 97, 255, 0.3); }
+.movie-info { padding: 15px; }
+.movie-title { font-family: 'Orbitron', sans-serif; font-size: 1.1rem; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--primary); }
+.movie-year, .movie-rating { font-family: 'Share Tech Mono', monospace; color: var(--cyber-blue); font-size: 0.9rem; margin-bottom: 5px; }
+.movie-rating { color: var(--cyber-yellow); }
