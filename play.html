@@ -6,24 +6,75 @@
     <title>MVHD Cyber Player</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        /* Your exact Cyberpunk CSS from the PHP file */
-        :root { --primary: #00ff9d; --secondary: #7b61ff; --accent: #ff00e5; --dark-bg: #0a0a0f; --cyber-blue: #00ccff; --cyber-yellow: #fff200; }
+        :root { 
+            --primary: #00ff9d; 
+            --secondary: #7b61ff; 
+            --accent: #ff00e5; 
+            --dark-bg: #0a0a0f; 
+            --cyber-blue: #00ccff; 
+            --cyber-yellow: #fff200; 
+        }
+        
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--dark-bg); color: white; font-family: 'Exo 2', sans-serif; min-height: 100vh; background-size: cover; background-position: center; background-attachment: fixed;}
-        .cyber-grid { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(0, 255, 157, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(123, 97, 255, 0.02) 1px, transparent 1px); background-size: 50px 50px; z-index: -1; pointer-events: none; }
-        .cyber-header { background: rgba(10, 10, 15, 0.95); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); font-family: 'Share Tech Mono', monospace;}
-        .site-title { font-family: 'Orbitron', sans-serif; color: var(--primary); font-size: 1.5rem; font-weight: 700; text-decoration: none; }
+        
+        body { 
+            background: var(--dark-bg); 
+            color: white; 
+            font-family: 'Exo 2', sans-serif; 
+            min-height: 100vh; 
+            background-size: cover; 
+            background-position: center; 
+            background-attachment: fixed;
+        }
+        
+        .cyber-grid { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-image: linear-gradient(rgba(0, 255, 157, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(123, 97, 255, 0.02) 1px, transparent 1px); 
+            background-size: 50px 50px; z-index: -1; pointer-events: none; 
+        }
+        
+        .cyber-header { 
+            background: rgba(10, 10, 15, 0.95); padding: 15px 20px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 2px solid var(--primary); font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .site-title { 
+            font-family: 'Orbitron', sans-serif; color: var(--primary); 
+            font-size: 1.5rem; font-weight: 700; text-decoration: none; 
+        }
+        
         .main-container { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
-        .movie-info-panel { background: rgba(19, 19, 31, 0.9); border: 2px solid var(--primary); padding: 25px; margin-bottom: 30px; display: flex; gap: 30px; flex-wrap: wrap; box-shadow: 0 0 20px rgba(0, 255, 157, 0.2);}
+        
+        .movie-info-panel { 
+            background: rgba(19, 19, 31, 0.9); border: 2px solid var(--primary); 
+            padding: 25px; margin-bottom: 30px; display: flex; gap: 30px; flex-wrap: wrap; 
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.2);
+        }
+        
         .movie-poster img { width: 200px; border: 2px solid var(--primary); }
         .movie-details { flex: 1; min-width: 300px; }
         .movie-title { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: var(--primary); margin-bottom: 10px; }
         .meta-item { display: inline-block; margin-right: 20px; font-family: 'Share Tech Mono', monospace; color: var(--cyber-blue); margin-bottom: 10px;}
         .overview { margin: 20px 0; line-height: 1.6; }
-        .player-container { background: #000; border: 3px solid var(--primary); border-radius: 10px; overflow: hidden; margin-bottom: 30px; box-shadow: 0 0 30px rgba(0,255,157,0.3);}
+        
+        .player-container { 
+            background: #000; border: 3px solid var(--primary); 
+            border-radius: 10px; overflow: hidden; margin-bottom: 30px; 
+            box-shadow: 0 0 30px rgba(0,255,157,0.3);
+        }
+        
         #stream-frame { width: 100%; height: 650px; border: none; display: block; }
         
-        @media (max-width: 768px) { #stream-frame { height: 400px; } .movie-info-panel { flex-direction: column; align-items: center; text-align: center;} }
+        @keyframes scan {
+            0% { left: -50%; }
+            100% { left: 100%; }
+        }
+        
+        @media (max-width: 768px) { 
+            #stream-frame { height: 400px; } 
+            .movie-info-panel { flex-direction: column; align-items: center; text-align: center;} 
+        }
     </style>
 </head>
 <body>
@@ -51,30 +102,38 @@
         </div>
 
         <div class="player-container">
-            <iframe id="stream-frame" allowfullscreen></iframe>
+            <div id="stream-loading" style="text-align: center; padding: 100px 20px; font-family: 'Share Tech Mono', monospace; color: var(--primary);">
+                <h2 style="font-family: 'Orbitron', sans-serif; margin-bottom: 15px; text-shadow: 0 0 15px rgba(0, 255, 157, 0.5);">[ ESTABLISHING SECURE CONNECTION ]</h2>
+                <p id="loading-status">Bypassing standard nodes. Routing to Cloudnestra...</p>
+                <div style="width: 200px; height: 2px; background: var(--dark-bg); margin: 20px auto; overflow: hidden; position: relative;">
+                    <div style="width: 50%; height: 100%; background: var(--primary); position: absolute; animation: scan 1s linear infinite;"></div>
+                </div>
+            </div>
+            <iframe id="stream-frame" allowfullscreen style="display: none;"></iframe>
         </div>
     </div>
 
     <script>
         const API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         
-        // 1. Get TMDB ID from the URL (e.g., play.html?tmdb=550)
+        // --- IMPORTANT: CHANGE THIS TO YOUR ACTUAL VERCEL API URL ---
+        const VERCEL_URL = 'https://YOUR_VERCEL_PROJECT_URL.vercel.app/api/extract'; 
+
         const urlParams = new URLSearchParams(window.location.search);
         const tmdbId = urlParams.get('tmdb');
 
         if (!tmdbId) {
-            document.body.innerHTML = '<h1 style="text-align:center; color:red; margin-top:50px;">ERROR: NO TMDB ID PROVIDED</h1>';
+            document.body.innerHTML = '<h1 style="text-align:center; color:#ff003c; margin-top:50px;">SYSTEM ERROR: NO TMDB ID PROVIDED</h1>';
         } else {
             loadMovieData(tmdbId);
         }
 
         async function loadMovieData(id) {
             try {
-                // Fetch info from TMDB directly in the browser
-                const res = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&language=en-US`);
-                const movie = await res.json();
+                // 1. Fetch UI Data from TMDB
+                const tmdbRes = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&language=en-US`);
+                const movie = await tmdbRes.json();
 
-                // 2. Populate the page with the data
                 document.getElementById('m-title').textContent = `${movie.title} (${movie.release_date ? movie.release_date.substring(0,4) : ''})`;
                 document.getElementById('m-rating').textContent = movie.vote_average.toFixed(1);
                 document.getElementById('m-runtime').textContent = movie.runtime || 'N/A';
@@ -86,15 +145,39 @@
                     document.body.style.backgroundImage = `linear-gradient(rgba(10,10,15,0.9), rgba(10,10,15,0.9)), url('https://image.tmdb.org/t/p/original${movie.backdrop_path}')`;
                 }
 
-                // 3. Set the video player source
-                document.getElementById('stream-frame').src = `https://vidsrc.to/embed/movie/${id}`;
-
-                // Show the content now that it's loaded
                 document.getElementById('content-container').style.display = 'block';
                 document.title = `MVHD | ${movie.title}`;
 
+                // 2. Extract Cloudnestra URL via Vercel Backend
+                const frame = document.getElementById('stream-frame');
+                const loadingScreen = document.getElementById('stream-loading');
+                const loadingStatus = document.getElementById('loading-status');
+
+                try {
+                    const extractRes = await fetch(`${VERCEL_URL}?tmdb=${id}`);
+                    const extractData = await extractRes.json();
+
+                    if (extractData.success && extractData.url) {
+                        loadingStatus.textContent = "Target acquired. Injecting stream payload...";
+                        frame.src = extractData.url; 
+                    } else {
+                        throw new Error("Cloudnestra node not found");
+                    }
+                } catch (extractError) {
+                    console.error("Extraction failed, engaging fallback protocol:", extractError);
+                    loadingStatus.textContent = "Primary route failed. Engaging fallback stream...";
+                    loadingStatus.style.color = "var(--cyber-yellow)";
+                    frame.src = `https://vidsrc.to/embed/movie/${id}`;
+                }
+
+                // 3. Reveal Player once the iframe loads the URL
+                frame.onload = () => {
+                    loadingScreen.style.display = 'none';
+                    frame.style.display = 'block';
+                };
+
             } catch (error) {
-                console.error("Error fetching movie data:", error);
+                console.error("Critical Database Error:", error);
             }
         }
     </script>
