@@ -11,7 +11,7 @@ searchBtn.addEventListener('click', searchMovies);
 searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchMovies(); });
 
 function setGridMessage(message) {
-    moviesGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: white; font-size: 1.2rem;">${message}</p>`;
+    moviesGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--primary); font-family: 'Share Tech Mono', monospace; font-size: 1.2rem;">${message}</p>`;
 }
 
 async function fetchPopularMovies() {
@@ -47,7 +47,6 @@ function displayMovies(moviesToDisplay) {
         const card = document.createElement('div');
         card.className = 'movie-card';
         
-        // This is where it sends the user to play.html
         card.onclick = () => window.location.href = `play.html?tmdb=${movie.id}`;
 
         card.innerHTML = `
