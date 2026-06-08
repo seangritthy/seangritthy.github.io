@@ -3,34 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MovieFlix - Your Movie Hub</title>
+    <title>MVHD CyberCinema</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <h1 class="logo">🎬 MovieFlix</h1>
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Search movies...">
-                <button id="searchBtn">Search</button>
-            </div>
+    <header>
+        <h1>MVHD CyberCinema</h1>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search for a movie...">
+            <button id="searchBtn">Search</button>
         </div>
-    </nav>
+    </header>
 
-    <div class="container">
-        <section class="hero">
-            <h2>Discover Amazing Movies</h2>
-            <p>Browse, search, and explore thousands of movies</p>
-        </section>
-
-        <section class="movies-grid" id="moviesGrid">
-            <!-- Movies will be loaded here by JavaScript -->
-        </section>
-    </div>
-
-    <footer>
-        <p>&copy; 2026 MovieFlix. All rights reserved.</p>
-    </footer>
+    <main>
+        <div id="moviesGrid" class="movies-grid"></div>
+    </main>
 
     <script src="script.js"></script>
 </body>
