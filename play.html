@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">MVHD | CyberCinema</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         :root {
             --primary: #00ff9d;
@@ -48,33 +49,6 @@
         @keyframes scanlines {
             0% { background-position: 0 0; }
             100% { background-position: 0 100px; }
-        }
-
-        .video-stream-effect {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-            opacity: 0.1;
-        }
-
-        .data-packet {
-            position: absolute;
-            width: 3px;
-            height: 20px;
-            background: var(--primary);
-            animation: dataFlow 3s linear infinite;
-            filter: blur(1px);
-        }
-
-        @keyframes dataFlow {
-            0% { transform: translateY(-100px) rotate(45deg); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: translateY(100vh) rotate(45deg); opacity: 0; }
         }
 
         .cyber-header {
@@ -213,6 +187,7 @@
             box-shadow: 0 0 50px rgba(0, 255, 157, 0.3);
             margin-bottom: 30px;
             position: relative;
+            min-height: 400px;
         }
 
         .player-container::before {
@@ -232,6 +207,13 @@
             height: 650px;
             border: none;
             display: block;
+        }
+
+        #direct-player {
+            width: 100%;
+            height: 650px;
+            outline: none;
+            background: #000;
         }
 
         .status-badges {
@@ -304,21 +286,11 @@
             font-size: 12px;
             color: #888;
             font-family: monospace;
-        }
-
-        .back-button {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
-            background: rgba(0, 255, 157, 0.1);
-            border: 1px solid var(--primary);
-            color: var(--primary);
-            text-decoration: none;
-            font-family: 'Orbitron', sans-serif;
+            margin-top: 10px;
         }
 
         @media (max-width: 768px) {
-            #stream-frame { height: 400px; }
+            #stream-frame, #direct-player { height: 400px; }
             .movie-title { font-size: 1.5rem; }
             .main-container { padding: 120px 15px 30px; }
             .movie-info-panel { flex-direction: column; }
@@ -329,7 +301,6 @@
 <body>
     <div class="cyber-grid"></div>
     <div class="scanlines"></div>
-    <div class="video-stream-effect" id="streamEffect"></div>
 
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
@@ -361,6 +332,7 @@
 
         <div class="player-container">
             <iframe id="stream-frame" src="" allowfullscreen></iframe>
+            <video id="direct-player" controls autoplay playsinline style="display:none; width:100%; height:650px;"></video>
         </div>
 
         <div class="status-badges">
@@ -372,11 +344,20 @@
     <script>
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         
+        // DEFAULT MOVIE ID - "Swapped" (2026)
+        const DEFAULT_TMDB_ID = '1380291';
+        
         // Get parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
-        const tmdbId = urlParams.get('tmdb');
+        let tmdbId = urlParams.get('tmdb');
         const mediaType = urlParams.get('type') || 'movie';
         const titleParam = urlParams.get('title') || '';
+
+        // If no TMDB ID in URL, use default
+        if (!tmdbId) {
+            tmdbId = DEFAULT_TMDB_ID;
+            console.log('No TMDB ID provided, using default:', DEFAULT_TMDB_ID);
+        }
 
         function updateLoading(msg, step) {
             document.getElementById('loadingText').textContent = msg;
@@ -392,26 +373,21 @@
             }, 500);
         }
 
-        // ============================================================
-        // EXACT MATCH OF YOUR Android UrlDecoder.decodeCloudnestraUrl()
-        // ============================================================
+        // Decode Cloudnestra URL (same as your Android code)
         function decodeCloudnestraUrl(cloudnestraUrl) {
             try {
                 console.log('Decoding Cloudnestra URL:', cloudnestraUrl);
                 
-                // Extract encoded part after /rcp/ (same as Android)
-                const encoded = cloudnestraUrl.split('/rcp/')[1];
-                if (!encoded) return null;
+                const match = cloudnestraUrl.match(/\/rcp\/([A-Za-z0-9+\/=]+)/);
+                if (!match) return null;
                 
-                // Fix base64 URL-safe encoding (same as Android Base64.decode)
-                let base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
-                while (base64.length % 4) base64 += '=';
+                let encoded = match[1];
+                encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
+                while (encoded.length % 4) encoded += '=';
                 
-                // Decode base64 (same as Android Base64.decode)
-                const decoded = atob(base64);
+                const decoded = atob(encoded);
                 console.log('Decoded:', decoded);
                 
-                // Same patterns as your Android code
                 const patterns = [
                     /(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i,
                     /(https?:\/\/[^\s"']+\.mp4[^\s"']*)/i,
@@ -426,7 +402,6 @@
                     }
                 }
                 
-                // If decoded starts with http, return as is (same as Android)
                 if (decoded.startsWith('http')) {
                     return decoded;
                 }
@@ -438,9 +413,7 @@
             }
         }
 
-        // ============================================================
-        // GENERATE CLOUDNESTRA URL (same as what your Android extractor returns)
-        // ============================================================
+        // Generate Cloudnestra URL
         function generateCloudnestraUrl(id, type) {
             const vidsrcUrl = `https://vidsrc.to/embed/${type}/${id}`;
             const encoded = btoa(vidsrcUrl);
@@ -468,7 +441,7 @@
                     year: 'N/A',
                     rating: 'N/A',
                     runtime: 'N/A',
-                    overview: 'Unable to fetch movie details. Streaming in progress.',
+                    overview: 'Unable to fetch movie details.',
                     genres: [],
                     poster: null
                 };
@@ -499,67 +472,44 @@
             });
         }
 
-        // Create streaming effect
-        function createStreamEffect() {
-            const container = document.getElementById('streamEffect');
-            const colors = ['#00ff9d', '#7b61ff', '#ff00e5', '#00ccff'];
-            for (let i = 0; i < 25; i++) {
-                const packet = document.createElement('div');
-                packet.className = 'data-packet';
-                packet.style.left = `${Math.random() * 100}%`;
-                packet.style.animationDelay = `${Math.random() * 3}s`;
-                packet.style.animationDuration = `${Math.random() * 2 + 2}s`;
-                packet.style.background = colors[Math.floor(Math.random() * colors.length)];
-                container.appendChild(packet);
-            }
-        }
-
-        // ============================================================
-        // MAIN FUNCTION - Exact same logic as your Android extractor
-        // ============================================================
+        // Main function
         async function main() {
-            if (!tmdbId) {
-                updateLoading('ERROR', 'No TMDB ID provided');
-                setTimeout(() => window.location.href = 'index.html', 3000);
-                return;
-            }
-
             try {
-                // Step 1: Fetch movie info (like TMDB API in Android)
+                // Step 1: Fetch movie info
                 updateLoading('FETCHING MOVIE DATA...', 'Loading from TMDB');
                 const movieInfo = await fetchMovieInfo(tmdbId, mediaType);
                 updateMovieUI(movieInfo);
                 
-                // Step 2: Generate Cloudnestra URL (same as your Android extractor returns)
+                // Step 2: Generate Cloudnestra URL
                 updateLoading('GENERATING CLOUDNESTRA URL...', 'Creating encrypted stream link');
                 const cloudnestraUrl = generateCloudnestraUrl(tmdbId, mediaType);
                 console.log('Generated Cloudnestra URL:', cloudnestraUrl);
                 
-                // Step 3: Decode the Cloudnestra URL (same as UrlDecoder.decodeCloudnestraUrl)
+                // Step 3: Try to decode and get direct stream
                 updateLoading('DECODING CLOUDNESTRA...', 'Extracting actual stream URL');
                 const decodedUrl = decodeCloudnestraUrl(cloudnestraUrl);
                 
                 const iframe = document.getElementById('stream-frame');
+                const videoPlayer = document.getElementById('direct-player');
                 const streamBadge = document.getElementById('streamBadge');
                 
                 if (decodedUrl && (decodedUrl.includes('.m3u8') || decodedUrl.includes('.mp4'))) {
-                    // We found the actual stream URL - play directly
                     updateLoading('STREAM FOUND!', 'Starting video player');
                     streamBadge.innerHTML = '🚀 CLOUDNESTRA EXTRACTED • DIRECT STREAM';
+                    streamBadge.className = 'status-badge badge-primary';
                     
-                    // Use video element for direct playback (no iframe needed)
-                    const playerContainer = document.querySelector('.player-container');
-                    playerContainer.innerHTML = `
-                        <video id="directPlayer" controls autoplay playsinline style="width:100%; height:650px;"></video>
-                    `;
-                    const videoPlayer = document.getElementById('directPlayer');
+                    iframe.style.display = 'none';
+                    videoPlayer.style.display = 'block';
                     
                     if (decodedUrl.includes('.m3u8')) {
-                        if (Hls.isSupported()) {
+                        if (typeof Hls !== 'undefined' && Hls.isSupported()) {
                             const hls = new Hls({ debug: false, enableWorker: true });
                             hls.loadSource(decodedUrl);
                             hls.attachMedia(videoPlayer);
-                        } else {
+                            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                                videoPlayer.play().catch(e => console.log('Autoplay blocked'));
+                            });
+                        } else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
                             videoPlayer.src = decodedUrl;
                         }
                     } else {
@@ -567,10 +517,11 @@
                     }
                     hideLoading();
                 } else {
-                    // Fallback: Load Cloudnestra URL in iframe
                     updateLoading('LOADING STREAM...', 'Connecting to Cloudnestra');
-                    iframe.src = cloudnestraUrl;
                     streamBadge.innerHTML = '☁️ CLOUDNESTRA STREAM • EMBEDDED';
+                    videoPlayer.style.display = 'none';
+                    iframe.style.display = 'block';
+                    iframe.src = cloudnestraUrl;
                     hideLoading();
                 }
                 
@@ -580,17 +531,8 @@
             }
         }
 
-        // Initialize
-        createStreamEffect();
-        
-        // Check for URL parameter
-        if (tmdbId) {
-            main();
-        } else {
-            updateLoading('ERROR', 'No TMDB ID provided in URL');
-            document.getElementById('loadingText').style.color = 'var(--cyber-red)';
-            setTimeout(() => window.location.href = 'index.html', 3000);
-        }
+        // Start
+        main();
     </script>
 </body>
 </html>
