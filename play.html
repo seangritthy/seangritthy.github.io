@@ -340,7 +340,8 @@
                 const playerBadge = document.getElementById('badge-player');
 
                 try {
-                    const targetUrl = encodeURIComponent(`https://vidsrc.xyz/embed/movie/${id}`);
+                    // CHANGED FROM vidsrc.xyz TO vidsrc.to
+                    const targetUrl = encodeURIComponent(`https://vidsrc.to/embed/movie/${id}`);
                     const proxyUrl = `https://api.allorigins.win/get?url=${targetUrl}`;
 
                     const extractRes = await fetch(proxyUrl);
