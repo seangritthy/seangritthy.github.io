@@ -271,8 +271,37 @@
             // Start Data Fetch
             const urlParams = new URLSearchParams(window.location.search);
             const tmdbId = urlParams.get('tmdb');
+            // Also support direct cloudnestra URL parameter
+            let cloudnestraUrl = urlParams.get('url');
 
-            if (!tmdbId) {
+            if (cloudnestraUrl) {
+                // Direct Cloudnestra URL mode
+                document.getElementById('badge-tmdb').textContent = `☁️ CLOUDNESTRA STREAM`;
+                document.getElementById('m-title').textContent = "Cloudnestra Stream";
+                document.getElementById('c-title').textContent = "CLOUDNESTRA STREAM";
+                document.getElementById('main-content').style.display = 'block';
+                
+                const frame = document.getElementById('stream-frame');
+                frame.src = cloudnestraUrl;
+                
+                const playerBadge = document.getElementById('badge-player');
+                playerBadge.className = "status-badge badge-primary";
+                playerBadge.innerHTML = "🚀 MVHD • CLOUDNESTRA STREAM";
+                
+                frame.onload = function() {
+                    document.getElementById('loadingOverlay').style.opacity = '0';
+                    setTimeout(() => { document.getElementById('loadingOverlay').style.display = 'none'; }, 500);
+                };
+                
+                setTimeout(() => {
+                    const overlay = document.getElementById('loadingOverlay');
+                    if (overlay.style.display !== 'none') {
+                        overlay.style.opacity = '0';
+                        setTimeout(() => { overlay.style.display = 'none'; }, 500);
+                    }
+                }, 5000);
+                
+            } else if (!tmdbId) {
                 document.getElementById('loading-msg').textContent = "ERROR: INVALID TMDB ID";
                 document.getElementById('loading-msg').style.color = "var(--cyber-red)";
             } else {
@@ -281,7 +310,7 @@
             }
         });
 
-        // Generate Cloudnestra URL directly (since vidsrc.xyz is dead)
+        // Generate Cloudnestra URL from TMDB ID
         function generateCloudnestraUrl(tmdbId) {
             const vidsrcUrl = `https://vidsrc.to/embed/movie/${tmdbId}`;
             const encoded = btoa(vidsrcUrl);
@@ -332,7 +361,7 @@
                     });
                 }
 
-                // Make quality random based on ID (Mimicking PHP logic)
+                // Make quality random based on ID
                 const qualities = ['4K HDR', '1080p', '720p', '480p'];
                 const streamQuality = qualities[id % qualities.length];
                 document.getElementById('streamQualityMeta').textContent = streamQuality;
@@ -341,12 +370,12 @@
                 // Show the main UI
                 document.getElementById('main-content').style.display = 'block';
 
-                // 2. Generate Cloudnestra URL directly (vidsrc.xyz is dead, so we generate)
+                // 2. Generate and play Cloudnestra URL directly
                 document.getElementById('loading-msg').textContent = "GENERATING CLOUDNESTRA STREAM...";
                 const frame = document.getElementById('stream-frame');
                 const playerBadge = document.getElementById('badge-player');
 
-                // Generate Cloudnestra URL from TMDB ID (same as PHP fallback)
+                // Generate Cloudnestra URL from TMDB ID
                 const cloudnestraUrl = generateCloudnestraUrl(id);
                 frame.src = cloudnestraUrl;
                 
