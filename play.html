@@ -142,7 +142,7 @@
         z-index: 2;
     }
 
-    #stream-frame, video { width: 100%; height: 650px; border: none; display: block; background: #000; }
+    #stream-frame { width: 100%; height: 650px; border: none; display: block; background: #000; }
 
     /* Badges */
     .status-badges { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px; }
@@ -151,7 +151,6 @@
         display: inline-flex; align-items: center; gap: 10px; animation: badgePulse 2s infinite;
     }
     .badge-primary { background: rgba(0, 255, 157, 0.1); border: 2px solid var(--primary); color: var(--primary); }
-    .badge-warning { background: rgba(255, 242, 0, 0.1); border: 2px solid var(--cyber-yellow); color: var(--cyber-yellow); }
     .badge-success { background: rgba(0, 204, 255, 0.1); border: 2px solid var(--cyber-blue); color: var(--cyber-blue); }
 
     @keyframes badgePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
@@ -179,11 +178,10 @@
     .quality-btn.active { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 15px rgba(0, 255, 157, 0.5); }
 
     @media (max-width: 768px) {
-        #stream-frame, video { height: 400px; }
+        #stream-frame { height: 400px; }
         .movie-title { font-size: 1.8rem; }
     }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 <body>
     <div class="cyber-grid"></div>
@@ -192,8 +190,8 @@
 
     <div class="loading-overlay" id="loadingOverlay">
         <div style="text-align:center;">
-            <div class="loading-text" id="loadingText">BYPASSING FIREWALLS & EXTRACTING AD-FREE STREAM...</div>
-            <div style="color:var(--cyber-blue); font-family:monospace; margin-top:10px;" id="loadingLog">Connecting to vsembed.ru node...</div>
+            <div class="loading-text" id="loadingText">ACTIVATING VSEMBED SHIELD...</div>
+            <div style="color:var(--cyber-blue); font-family:monospace; margin-top:10px;" id="loadingLog">Routing connection...</div>
         </div>
     </div>
 
@@ -220,11 +218,11 @@
         </div>
 
         <div class="player-container" id="playerContainer">
-            <iframe id="stream-frame" src="" allowfullscreen></iframe>
+            <iframe id="stream-frame" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
 
         <div class="status-badges">
-            <div class="status-badge badge-primary" id="extractionBadge">🛡️ ORIGIN GUARD: EXECUTING SCRAPER PROTOCOL</div>
+            <div class="status-badge badge-primary" id="extractionBadge">🛡️ ORIGIN GUARD: VSEMBED PLAYER ACTIVE</div>
             <div class="status-badge badge-success" id="tmdbBadge">🎬 TMDB: CONNECTED</div>
         </div>
         
@@ -259,6 +257,33 @@
     </div>
 
     <script>
+        /* =========================================================================
+           🛡️ ORIGIN GUARD ANTI-POPUP & REDIRECT ENGINE (CLIENT-SIDE AD BLOCKER)
+           ========================================================================= */
+        (function applyOriginGuard() {
+            // Block popups triggered by iframe clickjacking
+            const originalWindowOpen = window.open;
+            window.open = function(url, name, specs, replace) {
+                console.warn("🛡️ Origin Guard: Blocked popup request ->", url);
+                return { focus: function(){}, blur: function(){}, close: function(){}, document: {} }; 
+            };
+
+            // Prevent top-level navigation hijacks
+            window.onbeforeunload = function(e) {
+                if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+                    console.warn("🛡️ Origin Guard: Intercepted redirection attempt.");
+                    return "Origin Guard blocked a redirect. Stay here to play video.";
+                }
+            };
+
+            // Drop clicks on hidden ad links covering the page
+            document.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A' && (e.target.href.includes('ad') || e.target.href.includes('bet') || e.target.href.includes('crypto'))) {
+                    e.preventDefault();
+                }
+            }, true);
+        })();
+
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         const urlParams = new URLSearchParams(window.location.search);
         const tmdbId = urlParams.get('tmdb');
@@ -276,29 +301,6 @@
                 overlay.style.opacity = '0';
                 setTimeout(() => overlay.style.display = 'none', 500);
             }
-        }
-
-        // --- ANDROID PORT: NATIVE DECRYPTION ---
-        function decodeCloudnestraUrl(rawUrl) {
-            try {
-                if (!rawUrl.includes('/rcp/')) return null;
-                const encoded = rawUrl.split('/rcp/')[1];
-                const decoded = atob(encoded); // Base64 decode
-
-                // Scan for native formats
-                const patterns = [
-                    /(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i,
-                    /(https?:\/\/[^\s"']+\.mp4[^\s"']*)/i,
-                    /(https?:\/\/[^\s"']+\/(?:manifest|playlist|master)[^\s"']*)/i
-                ];
-
-                for (let pattern of patterns) {
-                    const match = decoded.match(pattern);
-                    if (match && match[0]) return match[0];
-                }
-                if (decoded.startsWith('http')) return decoded;
-                return null;
-            } catch (e) { return null; }
         }
 
         // --- TMDB METADATA LOADER ---
@@ -332,68 +334,20 @@
             } catch (e) { logAction("Meta warning: TMDB sync failed."); }
         }
 
-        // --- THE PERFECT NO-ADS EXTRACTION ENGINE (TARGET: vsembed.ru) ---
-        async function executePerfectExtractor() {
+        // --- DIRECT VSEMBED IFRAME MOUNTER ---
+        function loadVsembedFrame() {
             if (!tmdbId) return dismissOverlay();
 
-            // Switched target destination from vidsrc.to -> vsembed.ru
-            const targetEmbed = `https://vsembed.ru/embed/${mediaType}/${tmdbId}`;
-            let extractedCleanUrl = null;
-
-            logAction(`Scanning Primary Node: vsembed.ru...`);
+            logAction("Mounting direct vsembed.ru node...");
             
-            try {
-                // Fetch using CORS proxy
-                const proxyGate = `https://api.allorigins.win/get?url=${encodeURIComponent(targetEmbed)}`;
-                const res = await fetch(proxyGate);
-                const data = await res.json();
+            const targetEmbed = mediaType === 'tv' 
+                ? `https://vsembed.ru/embed/tv/${tmdbId}/1/1` 
+                : `https://vsembed.ru/embed/movie/${tmdbId}`;
 
-                if (data && data.contents) {
-                    // Locate the cloudorchestranova / cloudnestra token
-                    const match = data.contents.match(/(https?:\/\/[^\s"'`]+\/rcp\/[^\s"'`>]+)/i);
-                    if (match && match[0]) {
-                        logAction("Encrypted RCP Token Found! Decrypting...");
-                        extractedCleanUrl = decodeCloudnestraUrl(match[0]);
-                    }
-                }
-            } catch (err) {
-                logAction(`Primary proxy fetch failed. Rerouting...`);
-            }
-
-            const container = document.getElementById('playerContainer');
-            const extractionBadge = document.getElementById('extractionBadge');
-
-            if (extractedCleanUrl) {
-                // 1. SUCCESS: Inject the clean, AD-FREE native video player
-                logAction("Stream decrypted successfully! Mounting video...");
-                container.innerHTML = `<video id="videoPlayer" controls autoplay playsinline style="width:100%; height:650px; background:#000; outline:none;"></video>`;
-                const video = document.getElementById('videoPlayer');
-
-                if (extractedCleanUrl.includes('.m3u8') && Hls.isSupported()) {
-                    const hls = new Hls();
-                    hls.loadSource(extractedCleanUrl);
-                    hls.attachMedia(video);
-                    hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play(); dismissOverlay(); });
-                } else {
-                    video.src = extractedCleanUrl;
-                    video.play();
-                    dismissOverlay();
-                }
-                
-                extractionBadge.className = "status-badge badge-primary";
-                extractionBadge.innerText = "🚀 MVHD: PERFECT NATIVE AD-FREE STREAM CONNECTED";
-
-            } else {
-                // 2. FAILSAFE: If extraction fails, use normal iframe with vsembed
-                logAction("Extraction failed. Booting standard embed protocol...");
-                const frame = document.getElementById('stream-frame');
-                if (frame) {
-                    frame.src = targetEmbed; 
-                    frame.onload = dismissOverlay;
-                }
-                
-                extractionBadge.className = "status-badge badge-warning";
-                extractionBadge.innerText = "⚠️ PROXY BLOCKED: STANDARD EMBED PLAYER ACTIVE";
+            const frame = document.getElementById('stream-frame');
+            if (frame) {
+                frame.src = targetEmbed;
+                frame.onload = dismissOverlay; // Remove loading screen once iframe finishes loading
             }
         }
 
@@ -433,19 +387,15 @@
             });
         }
 
-        // --- Ad-Blocker Override for Fallback Clicks ---
-        window.open = function() { console.warn("Origin Guard blocked a popup window."); return null; };
-        document.addEventListener('click', (e) => {
-            if(e.target.tagName === 'A' && e.target.href.includes('ads')) e.preventDefault();
-        });
-
         // Init
         document.addEventListener('DOMContentLoaded', () => {
             syncTmdbDetails();
-            executePerfectExtractor();
+            loadVsembedFrame();
             generateDataParticles();
             handleDashboardLoops();
-            setTimeout(dismissOverlay, 8000); // Failsafe loader release
+            
+            // Failsafe overlay remover in case vsembed takes too long
+            setTimeout(dismissOverlay, 6000); 
         });
     </script>
 </body>
