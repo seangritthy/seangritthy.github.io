@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>MVHD | Cloudnestra Player</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         * {
@@ -14,116 +13,82 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: #0a0a0a;
-            color: #fff;
+            background: #000;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
         }
 
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            padding: 30px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
-            font-size: 2rem;
-            background: linear-gradient(135deg, #00ff9d, #7b61ff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .input-section {
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        input, select {
-            flex: 1;
-            padding: 14px 18px;
-            background: rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 12px;
-            color: #fff;
-            font-size: 14px;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: #00ff9d;
-        }
-
-        button {
-            padding: 14px 28px;
-            background: linear-gradient(135deg, #00ff9d, #7b61ff);
-            border: none;
-            border-radius: 12px;
-            color: #000;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-        }
-
-        .player-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
             background: #000;
-            border-radius: 16px;
-            overflow: hidden;
-            margin-bottom: 30px;
         }
 
         video {
             width: 100%;
-            height: auto;
-            min-height: 400px;
-            max-height: 70vh;
-            display: block;
+            height: 100%;
+            object-fit: contain;
         }
 
-        .info-panel {
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 20px;
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
 
-        .info-row {
-            display: flex;
-            gap: 12px;
-            padding: 8px 0;
+        .info-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            color: #00ff9d;
+            padding: 12px 20px;
             font-size: 12px;
-            word-break: break-all;
+            font-family: 'Share Tech Mono', monospace;
+            z-index: 1000;
+            border-top: 1px solid #00ff9d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .info-left {
+            display: flex;
+            gap: 20px;
             flex-wrap: wrap;
         }
 
-        .info-label {
-            font-weight: 600;
-            color: #00ff9d;
-            min-width: 100px;
+        .info-right {
+            display: flex;
+            gap: 15px;
         }
 
-        .info-value {
-            color: #aaa;
-            font-family: monospace;
-            flex: 1;
+        .badge {
+            padding: 4px 12px;
+            background: rgba(0,255,157,0.1);
+            border: 1px solid #00ff9d;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+
+        .badge.success {
+            background: rgba(0,255,157,0.2);
+            color: #00ff9d;
+        }
+
+        .badge.warning {
+            border-color: #ffaa00;
+            color: #ffaa00;
+        }
+
+        .badge.error {
+            border-color: #ff4444;
+            color: #ff4444;
         }
 
         .loading-overlay {
@@ -133,10 +98,10 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.95);
-            display: none;
+            display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 1001;
             flex-direction: column;
             gap: 20px;
         }
@@ -144,338 +109,351 @@
         .spinner {
             width: 50px;
             height: 50px;
-            border: 3px solid rgba(255,255,255,0.2);
+            border: 3px solid rgba(0,255,157,0.2);
             border-top-color: #00ff9d;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
 
-        .extraction-log {
-            background: rgba(0,0,0,0.5);
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 16px;
-            font-family: monospace;
+        .loading-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: #00ff9d;
+            letter-spacing: 2px;
+        }
+
+        .loading-step {
             font-size: 11px;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-
-        .log-entry {
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
             color: #888;
+            margin-top: 10px;
         }
 
-        .log-entry.success { color: #00ff9d; }
-        .log-entry.error { color: #ff4444; }
+        button {
+            background: #00ff9d;
+            color: #000;
+            border: none;
+            padding: 8px 20px;
+            font-family: monospace;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: 1px solid #00ff9d;
+            color: #00ff9d;
+        }
+
+        .back-btn:hover {
+            background: #00ff9d;
+            color: #000;
+        }
 
         @media (max-width: 768px) {
-            .container { padding: 15px; }
-            .input-group { flex-direction: column; }
-            button { width: 100%; }
+            .info-bar {
+                flex-direction: column;
+                text-align: center;
+                padding: 10px;
+            }
+            .badge {
+                font-size: 9px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <div id="loadingText">Generating Cloudnestra URL...</div>
+    <div class="container" id="container">
+        <video id="videoPlayer" controls autoplay playsinline></video>
     </div>
 
-    <div class="container">
-        <div class="header">
-            <h1>☁️ MVHD Cloudnestra Player</h1>
-            <p style="color: #888; margin-top: 10px;">Direct Cloudnestra playback · No CORS issues · Instant streaming</p>
+    <div class="info-bar" id="infoBar">
+        <div class="info-left">
+            <span id="movieTitle">MVHD Player</span>
+            <span id="statusBadge" class="badge">⚡ INITIALIZING</span>
         </div>
+        <div class="info-right">
+            <span class="badge" id="streamType">☁️ CLOUDNESTRA</span>
+            <button class="back-btn" onclick="goBack()">← BACK</button>
+            <button onclick="location.reload()">⟳ RELOAD</button>
+        </div>
+    </div>
 
-        <div class="input-section">
-            <div class="input-group">
-                <input type="text" id="tmdbId" placeholder="Enter TMDB ID (e.g., 1327819 for The Matrix)">
-                <select id="mediaType">
-                    <option value="movie">🎬 Movie</option>
-                    <option value="tv">📺 TV Show</option>
-                </select>
-                <button id="extractBtn">🎬 PLAY NOW</button>
-            </div>
-        </div>
-
-        <div class="player-container">
-            <video id="videoPlayer" controls preload="auto" playsinline></video>
-        </div>
-
-        <div class="info-panel">
-            <div class="info-row">
-                <span class="info-label">📺 Status:</span>
-                <span class="info-value" id="statusText">Ready</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">🎬 Title:</span>
-                <span class="info-value" id="movieTitle">-</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">☁️ Cloudnestra URL:</span>
-                <span class="info-value" id="cloudUrl">-</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">📡 Stream URL:</span>
-                <span class="info-value" id="streamUrl">-</span>
-            </div>
-        </div>
-
-        <div class="extraction-log" id="extractionLog">
-            <div class="log-entry">📡 MVHD CyberCinema Ready</div>
-            <div class="log-entry">☁️ Cloudnestra Direct Generator Active</div>
-        </div>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">DECODING CLOUDNESTRA URL...</div>
+        <div class="loading-step" id="loadingStep">Initializing stream engine</div>
     </div>
 
     <script>
-        const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
-        
-        function addLog(message, type = 'info') {
-            const logDiv = document.getElementById('extractionLog');
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${type}`;
-            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-            logDiv.appendChild(entry);
-            entry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            console.log(message);
+        // Get parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        let cloudnestraUrl = urlParams.get('url');
+        const movieTitleParam = urlParams.get('title');
+        const mediaType = urlParams.get('type');
+        const tmdbId = urlParams.get('id');
+
+        const video = document.getElementById('videoPlayer');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
+        const loadingStep = document.getElementById('loadingStep');
+        const statusBadge = document.getElementById('statusBadge');
+        const movieTitleSpan = document.getElementById('movieTitle');
+
+        // Set movie title
+        if (movieTitleParam) {
+            movieTitleSpan.textContent = movieTitleParam;
+            document.title = `MVHD | ${movieTitleParam}`;
         }
 
-        function showLoading(msg) {
-            document.getElementById('loadingOverlay').style.display = 'flex';
-            document.getElementById('loadingText').textContent = msg;
+        function updateLoading(msg, step) {
+            loadingText.textContent = msg;
+            if (step) loadingStep.textContent = step;
+            console.log(msg);
+        }
+
+        function updateStatus(msg, type = 'warning') {
+            statusBadge.textContent = msg;
+            statusBadge.className = `badge ${type}`;
         }
 
         function hideLoading() {
-            document.getElementById('loadingOverlay').style.display = 'none';
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+            }, 500);
         }
 
-        function updateStatus(msg, isError = false) {
-            const statusSpan = document.getElementById('statusText');
-            statusSpan.textContent = msg;
-            statusSpan.style.color = isError ? '#ff4444' : '#00ff9d';
+        function showError(msg) {
+            updateStatus(msg, 'error');
+            loadingText.textContent = 'ERROR';
+            loadingStep.textContent = msg;
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0,0,0,0.95);
+                border: 2px solid #ff4444;
+                padding: 30px;
+                border-radius: 10px;
+                text-align: center;
+                z-index: 1002;
+                min-width: 300px;
+            `;
+            errorDiv.innerHTML = `
+                <div style="color: #ff4444; font-size: 48px; margin-bottom: 15px;">❌</div>
+                <div style="color: #ff4444; margin-bottom: 20px;">${msg}</div>
+                <button onclick="location.reload()">RETRY</button>
+                <button onclick="goBack()" style="margin-left: 10px;">GO BACK</button>
+            `;
+            document.body.appendChild(errorDiv);
+            setTimeout(() => hideLoading(), 2000);
         }
 
-        // Generate Cloudnestra URL from TMDB ID (no extraction needed!)
-        function generateCloudnestraUrl(tmdbId, mediaType, season = 1, episode = 1) {
-            // Step 1: Build vidsrc URL
-            let vidsrcUrl;
-            if (mediaType === 'tv') {
-                vidsrcUrl = `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}`;
-            } else {
-                vidsrcUrl = `https://vidsrc.to/embed/movie/${tmdbId}`;
-            }
-            
-            // Step 2: Base64 encode
-            const encoded = btoa(vidsrcUrl);
-            
-            // Step 3: Create Cloudnestra URL
-            const cloudnestraUrl = `https://cloudnestra.com/rcp/${encoded}`;
-            
-            return { cloudnestraUrl, vidsrcUrl };
+        function goBack() {
+            window.location.href = 'index.html';
         }
 
-        // Decode Cloudnestra URL back to vidsrc URL
-        function decodeCloudnestraUrl(cloudnestraUrl) {
+        // Decode Cloudnestra URL
+        function decodeCloudnestraUrl(cloudUrl) {
             try {
-                const match = cloudnestraUrl.match(/\/rcp\/([A-Za-z0-9+\/=]+)/);
-                if (!match) return null;
+                const match = cloudUrl.match(/\/rcp\/([A-Za-z0-9+\/=]+)/);
+                if (!match) throw new Error('Invalid Cloudnestra URL format');
                 
                 let encoded = match[1];
                 encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
                 while (encoded.length % 4) encoded += '=';
                 
                 const decoded = atob(encoded);
+                console.log('Decoded vidsrc URL:', decoded);
                 return decoded;
             } catch(e) {
+                console.error('Decode error:', e);
                 return null;
             }
         }
 
-        // Fetch movie info from TMDB
-        async function fetchMovieInfo(id, type) {
-            try {
-                const url = `https://api.themoviedb.org/3/${type}/${id}?api_key=${TMDB_API_KEY}&language=en-US`;
-                const response = await fetch(url);
-                const data = await response.json();
-                return data.title || data.name;
-            } catch(e) {
-                return `ID: ${id}`;
-            }
-        }
-
-        // Try to play the stream (attempt multiple approaches)
-        async function attemptPlay(vidsrcUrl) {
-            addLog(`🎯 Attempting to play: ${vidsrcUrl}`, 'info');
+        // Fetch stream URL from vidsrc page
+        async function fetchStreamFromVidSrc(vidsrcUrl) {
+            updateLoading('FETCHING STREAM...', 'Connecting to vidsrc.to');
             
-            // Method 1: Try to get actual m3u8 from cloudnestra
-            const cloudResult = generateCloudnestraUrlFromVidsrc(vidsrcUrl);
-            if (cloudResult) {
-                addLog(`☁️ Generated Cloudnestra URL, trying to get stream...`, 'info');
-                // Try to fetch the cloudnestra page to get the actual stream
+            const proxies = [
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(vidsrcUrl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(vidsrcUrl)}`
+            ];
+            
+            for (const proxy of proxies) {
                 try {
-                    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(cloudResult)}`;
-                    const response = await fetch(proxyUrl);
+                    updateLoading('FETCHING STREAM...', `Trying proxy...`);
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
+                    const response = await fetch(proxy, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    
                     if (response.ok) {
                         const html = await response.text();
-                        const m3u8Match = html.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
-                        if (m3u8Match) {
-                            return m3u8Match[1];
+                        updateLoading('PARSING RESPONSE...', 'Looking for stream URL');
+                        
+                        // Look for m3u8 URL
+                        const patterns = [
+                            /(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i,
+                            /(https?:\/\/[^\s"']+\/master[^\s"']*\.m3u8)/i,
+                            /(https?:\/\/[^\s"']+\/playlist[^\s"']*\.m3u8)/i,
+                            /(https?:\/\/[^\s"']+\/index[^\s"']*\.m3u8)/i
+                        ];
+                        
+                        for (const pattern of patterns) {
+                            const match = html.match(pattern);
+                            if (match) {
+                                return match[1];
+                            }
+                        }
+                        
+                        // Look for Cloudnestra redirect
+                        const cloudMatch = html.match(/https?:\/\/[^\s"']*cloudnestra[^\s"']*\/rcp\/[^\s"']*/i);
+                        if (cloudMatch) {
+                            updateLoading('FOLLOWING REDIRECT...', 'Decoding nested Cloudnestra');
+                            return await fetchStreamFromCloudnestra(cloudMatch[0]);
                         }
                     }
-                } catch(e) {}
+                } catch(e) {
+                    console.log('Proxy failed:', e.message);
+                }
             }
-            
             return null;
         }
 
-        function generateCloudnestraUrlFromVidsrc(vidsrcUrl) {
-            const encoded = btoa(vidsrcUrl);
-            return `https://cloudnestra.com/rcp/${encoded}`;
+        // Direct Cloudnestra fetch
+        async function fetchStreamFromCloudnestra(cloudUrl) {
+            const vidsrcUrl = decodeCloudnestraUrl(cloudUrl);
+            if (vidsrcUrl) {
+                return await fetchStreamFromVidSrc(vidsrcUrl);
+            }
+            return null;
+        }
+
+        // Play the stream
+        function playStream(streamUrl) {
+            updateStatus('STREAM FOUND', 'success');
+            updateLoading('PLAYING STREAM...', 'Starting video player');
+            
+            if (streamUrl.includes('.m3u8')) {
+                if (Hls.isSupported()) {
+                    if (video.hls) video.hls.destroy();
+                    const hls = new Hls({
+                        debug: false,
+                        enableWorker: true,
+                        manifestLoadingTimeOut: 15000,
+                        manifestLoadingMaxRetry: 3
+                    });
+                    hls.loadSource(streamUrl);
+                    hls.attachMedia(video);
+                    video.hls = hls;
+                    
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                        hideLoading();
+                        updateStatus('PLAYING', 'success');
+                        video.play().catch(e => updateStatus('CLICK PLAY TO START', 'warning'));
+                    });
+                    
+                    hls.on(Hls.Events.ERROR, (event, data) => {
+                        if (data.fatal) {
+                            showError('HLS Error: ' + data.type);
+                        }
+                    });
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = streamUrl;
+                    hideLoading();
+                    updateStatus('PLAYING', 'success');
+                    video.play();
+                } else {
+                    showError('HLS not supported in this browser');
+                }
+            } else {
+                video.src = streamUrl;
+                hideLoading();
+                updateStatus('PLAYING', 'success');
+                video.play();
+            }
         }
 
         // Main function
-        async function extractAndPlay() {
-            const tmdbId = document.getElementById('tmdbId').value.trim();
-            const mediaType = document.getElementById('mediaType').value;
-            
-            if (!tmdbId) {
-                updateStatus("Please enter a TMDB ID", true);
-                return;
+        async function main() {
+            if (!cloudnestraUrl) {
+                // Try to generate from TMDB ID if available
+                if (tmdbId) {
+                    const mediaTypeParam = mediaType || 'movie';
+                    const vidsrcUrl = `https://vidsrc.to/embed/${mediaTypeParam}/${tmdbId}`;
+                    cloudnestraUrl = `https://cloudnestra.com/rcp/${btoa(vidsrcUrl)}`;
+                    updateLoading('GENERATED CLOUDNESTRA URL...', 'Using TMDB ID');
+                } else {
+                    cloudnestraUrl = prompt('Enter Cloudnestra URL:', 'https://cloudnestra.com/rcp/');
+                    if (!cloudnestraUrl) {
+                        goBack();
+                        return;
+                    }
+                }
             }
             
-            showLoading(`Generating Cloudnestra URL for ${mediaType} ID: ${tmdbId}...`);
-            updateStatus("Generating...");
-            addLog(`🎬 Starting for ${mediaType} ID: ${tmdbId}`);
-            
             try {
-                // Get movie title
-                const title = await fetchMovieInfo(tmdbId, mediaType);
-                document.getElementById('movieTitle').textContent = title;
-                addLog(`📽️ Title: ${title}`);
+                updateLoading('DECODING CLOUDNESTRA...', 'Extracting vidsrc URL');
+                const vidsrcUrl = decodeCloudnestraUrl(cloudnestraUrl);
                 
-                // Generate Cloudnestra URL directly (no CORS issues!)
-                const { cloudnestraUrl, vidsrcUrl } = generateCloudnestraUrl(tmdbId, mediaType);
-                
-                document.getElementById('cloudUrl').innerHTML = `<a href="${cloudnestraUrl}" target="_blank" style="color:#00ff9d;">${cloudnestraUrl.substring(0, 60)}...</a>`;
-                addLog(`☁️ Generated Cloudnestra URL`, 'success');
-                
-                // Try to get the actual stream
-                showLoading("Attempting to fetch stream from Cloudnestra...");
-                
-                // Try using a CORS proxy to fetch the cloudnestra page
-                const proxyUrls = [
-                    `https://api.allorigins.win/raw?url=${encodeURIComponent(cloudnestraUrl)}`,
-                    `https://corsproxy.io/?${encodeURIComponent(cloudnestraUrl)}`
-                ];
-                
-                let streamUrl = null;
-                
-                for (const proxy of proxyUrls) {
-                    try {
-                        addLog(`🔄 Trying to fetch: ${proxy.substring(0, 50)}...`);
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 10000);
-                        const response = await fetch(proxy, { signal: controller.signal });
-                        clearTimeout(timeoutId);
-                        
-                        if (response.ok) {
-                            const html = await response.text();
-                            addLog(`📄 Got response (${html.length} bytes)`);
-                            
-                            // Look for m3u8 in the response
-                            const m3u8Match = html.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
-                            if (m3u8Match) {
-                                streamUrl = m3u8Match[1];
-                                addLog(`🎯 Found stream URL!`, 'success');
-                                break;
-                            }
-                            
-                            // Also try to decode if it's a redirect
-                            const redirectMatch = html.match(/window\.location\.href\s*=\s*["']([^"']+)["']/i);
-                            if (redirectMatch) {
-                                addLog(`🔄 Found redirect, following...`);
-                                const redirectResponse = await fetch(proxy.replace(/&url=.*/, '') + encodeURIComponent(redirectMatch[1]));
-                                if (redirectResponse.ok) {
-                                    const redirectHtml = await redirectResponse.text();
-                                    const finalMatch = redirectHtml.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
-                                    if (finalMatch) {
-                                        streamUrl = finalMatch[1];
-                                        addLog(`🎯 Found stream after redirect!`, 'success');
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    } catch(e) {
-                        addLog(`⚠️ Proxy failed: ${e.message}`, 'error');
-                    }
+                if (!vidsrcUrl) {
+                    showError('Failed to decode Cloudnestra URL');
+                    return;
                 }
                 
-                const videoPlayer = document.getElementById('videoPlayer');
+                updateLoading('FETCHING STREAM...', vidsrcUrl.substring(0, 60) + '...');
+                let streamUrl = await fetchStreamFromVidSrc(vidsrcUrl);
+                
+                if (!streamUrl) {
+                    // Fallback: Try direct Cloudnestra fetch
+                    streamUrl = await fetchStreamFromCloudnestra(cloudnestraUrl);
+                }
                 
                 if (streamUrl) {
-                    document.getElementById('streamUrl').textContent = streamUrl.substring(0, 80) + (streamUrl.length > 80 ? '...' : '');
-                    addLog(`🎉 Playing stream!`, 'success');
-                    updateStatus("Playing HLS stream");
-                    
-                    if (Hls.isSupported()) {
-                        if (videoPlayer.hls) videoPlayer.hls.destroy();
-                        const hls = new Hls({ debug: false, enableWorker: true });
-                        hls.loadSource(streamUrl);
-                        hls.attachMedia(videoPlayer);
-                        videoPlayer.hls = hls;
-                        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                            videoPlayer.play().catch(() => updateStatus("Click play to start"));
-                        });
-                        hls.on(Hls.Events.ERROR, () => updateStatus("HLS error - trying fallback", true));
-                    } else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
-                        videoPlayer.src = streamUrl;
-                        videoPlayer.play();
-                    }
+                    playStream(streamUrl);
                 } else {
-                    // Fallback: Open vidsrc directly
-                    addLog(`⚠️ Could not extract stream, opening vidsrc fallback`, 'error');
-                    updateStatus("Opening fallback player...");
-                    document.getElementById('streamUrl').textContent = vidsrcUrl;
+                    // Ultimate fallback: Use iframe
+                    updateStatus('USING FALLBACK', 'warning');
+                    updateLoading('FALLBACK MODE...', 'Using vidsrc.to iframe');
                     
-                    // Create iframe fallback
-                    const videoContainer = document.querySelector('.player-container');
-                    videoContainer.innerHTML = `<iframe src="${vidsrcUrl}" style="width:100%; height:500px; border:none;" allowfullscreen></iframe>`;
+                    video.style.display = 'none';
+                    const iframe = document.createElement('iframe');
+                    iframe.src = vidsrcUrl;
+                    document.getElementById('container').appendChild(iframe);
+                    hideLoading();
+                    updateStatus('FALLBACK PLAYER ACTIVE', 'warning');
                 }
                 
-            } catch (error) {
-                addLog(`❌ Error: ${error.message}`, 'error');
-                updateStatus("Error occurred", true);
-            } finally {
-                hideLoading();
+            } catch(e) {
+                showError(e.message);
             }
         }
 
-        // Event listeners
-        document.getElementById('extractBtn').addEventListener('click', extractAndPlay);
-        document.getElementById('tmdbId').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') extractAndPlay();
-        });
-        
-        // Check for URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const tmdbParam = urlParams.get('tmdb');
-        const typeParam = urlParams.get('type');
-        
-        if (tmdbParam) {
-            document.getElementById('tmdbId').value = tmdbParam;
-            if (typeParam) {
-                document.getElementById('mediaType').value = typeParam;
+        // Handle fullscreen
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
             }
-            setTimeout(() => extractAndPlay(), 500);
-        }
-        
-        addLog(`☁️ Cloudnestra Direct Generator Active`, 'success');
-        addLog(`💡 Enter any TMDB ID and click PLAY`, 'info');
+        });
+
+        // Start
+        main();
     </script>
 </body>
 </html>
