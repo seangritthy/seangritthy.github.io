@@ -65,7 +65,7 @@
         .nav-link { color: var(--primary); text-decoration: none; padding: 8px 15px; border: 1px solid transparent; transition: all 0.3s ease; font-size: 0.9rem; letter-spacing: 1px; }
         .nav-link:hover { border-color: var(--primary); box-shadow: 0 0 15px rgba(0, 255, 157, 0.3); transform: translateY(-2px); }
 
-        .main-container { max-width: 1400px; margin: 0 auto; padding: 100px 20px 40px; display: none; } /* Hidden until loaded */
+        .main-container { max-width: 1400px; margin: 0 auto; padding: 100px 20px 40px; display: none; }
         
         .movie-info-panel {
             background: rgba(19, 19, 31, 0.9); backdrop-filter: blur(10px); border: var(--pixel-border);
@@ -281,6 +281,13 @@
             }
         });
 
+        // Generate Cloudnestra URL directly (since vidsrc.xyz is dead)
+        function generateCloudnestraUrl(tmdbId) {
+            const vidsrcUrl = `https://vidsrc.to/embed/movie/${tmdbId}`;
+            const encoded = btoa(vidsrcUrl);
+            return `https://cloudnestra.com/rcp/${encoded}`;
+        }
+
         async function fetchMovieAndStream(id) {
             try {
                 // 1. Fetch TMDB Data
@@ -334,42 +341,18 @@
                 // Show the main UI
                 document.getElementById('main-content').style.display = 'block';
 
-                // 2. Extract Cloudnestra via CORS Proxy
-                document.getElementById('loading-msg').textContent = "BYPASSING CLOUDFLARE. ROUTING TO CLOUDNESTRA...";
+                // 2. Generate Cloudnestra URL directly (vidsrc.xyz is dead, so we generate)
+                document.getElementById('loading-msg').textContent = "GENERATING CLOUDNESTRA STREAM...";
                 const frame = document.getElementById('stream-frame');
                 const playerBadge = document.getElementById('badge-player');
 
-                try {
-                    const targetUrl = encodeURIComponent(`https://vidsrc.xyz/embed/movie/${id}`);
-                    const proxyUrl = `https://api.allorigins.win/get?url=${targetUrl}`;
-
-                    const extractRes = await fetch(proxyUrl);
-                    if (!extractRes.ok) throw new Error("Proxy failed");
-                    
-                    const proxyData = await extractRes.json();
-                    const html = proxyData.contents;
-
-                    // Regex logic matching your exact PHP function
-                    const iframeRegex = /iframe[^>]+src=["']([^"']*cloudnestra[^"']*)["']/i;
-                    const match = html.match(iframeRegex);
-
-                    if (match && match[1]) {
-                        // SUCCESS! Cloudnestra found.
-                        const finalUrl = match[1].startsWith('http') ? match[1] : `https:${match[1]}`;
-                        frame.src = finalUrl; 
-                        
-                        // Update to Bong Bee Badge
-                        playerBadge.className = "status-badge badge-primary";
-                        playerBadge.innerHTML = "🚀MVHD • BY BONG BEE";
-                    } else {
-                        throw new Error("Cloudnestra node not found");
-                    }
-                } catch (extractError) {
-                    // FALLBACK TO STANDARD VIDSRC
-                    frame.src = `https://vidsrc.to/embed/movie/${id}`;
-                    playerBadge.className = "status-badge badge-warning";
-                    playerBadge.innerHTML = "⚠️ FALLBACK PLAYER • STANDARD STREAM";
-                }
+                // Generate Cloudnestra URL from TMDB ID (same as PHP fallback)
+                const cloudnestraUrl = generateCloudnestraUrl(id);
+                frame.src = cloudnestraUrl;
+                
+                // Update to Bong Bee Badge
+                playerBadge.className = "status-badge badge-primary";
+                playerBadge.innerHTML = "🚀 MVHD • CLOUDNESTRA STREAM";
 
                 // Hide loading overlay when iframe finishes loading
                 frame.onload = function() {
@@ -379,8 +362,11 @@
 
                 // Fallback to hide overlay after 10 seconds just in case
                 setTimeout(() => {
-                    document.getElementById('loadingOverlay').style.opacity = '0';
-                    setTimeout(() => { document.getElementById('loadingOverlay').style.display = 'none'; }, 500);
+                    const overlay = document.getElementById('loadingOverlay');
+                    if (overlay.style.display !== 'none') {
+                        overlay.style.opacity = '0';
+                        setTimeout(() => { overlay.style.display = 'none'; }, 500);
+                    }
                 }, 10000);
 
             } catch (error) {
