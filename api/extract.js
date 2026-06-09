@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-    // 1. CORS Headers to allow GitHub Pages to communicate with Vercel
+    // 1. CORS Headers to allow frontend communication
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*'); 
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     try {
         const targetUrl = `https://vidsrc.xyz/embed/movie/${tmdb}`;
         
-        // 2. Fetch HTML from VidSrc with spoofed headers
+        // 2. Fetch HTML from VidSrc with spoofed user-agent parameters
         const response = await fetch(targetUrl, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
             finalUrl = match[1].startsWith('http') ? match[1] : `https:${match[1]}`;
         }
 
-        // 4. Return Data
+        // 4. Return extracted link context
         if (finalUrl) {
             return res.status(200).json({ success: true, url: finalUrl });
         } else {
