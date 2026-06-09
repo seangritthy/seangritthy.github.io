@@ -3,364 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MVHD CyberCinema</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <title>MVHD Player</title>
     <style>
-        :root {
-            --primary: #00ff9d;
-            --secondary: #7b61ff;
-            --dark-bg: #0a0a0f;
-            --card-bg: #13131f;
-            --cyber-blue: #00ccff;
-            --cyber-yellow: #fff200;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
-            font-family: 'Exo 2', sans-serif;
-            background: var(--dark-bg);
-            color: white;
-            min-height: 100vh;
-            background-image: linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(123, 97, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
+            background: #000;
+            font-family: monospace;
         }
-
-        header {
-            padding: 30px 20px;
-            background: rgba(10, 10, 15, 0.95);
-            text-align: center;
-            border-bottom: 2px solid var(--primary);
-            box-shadow: 0 0 25px rgba(0, 255, 157, 0.3);
+        .container {
+            width: 100%;
+            height: 100vh;
+            background: #000;
         }
-
-        h1 {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--primary);
-            margin-bottom: 20px;
-            font-size: 2.8rem;
-            text-shadow: 0 0 15px rgba(0, 255, 157, 0.6);
-            letter-spacing: 4px;
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
-
-        .search-container {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            max-width: 600px;
-            margin: 0 auto;
-            flex-wrap: wrap;
-        }
-
-        #searchInput {
-            flex: 1;
-            padding: 12px 15px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid var(--secondary);
-            color: var(--primary);
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 1rem;
-            outline: none;
-            min-width: 200px;
-        }
-
-        #searchInput:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
-        }
-
-        #searchBtn {
-            padding: 12px 24px;
-            border: 1px solid var(--primary);
-            background: rgba(0, 255, 157, 0.1);
-            color: var(--primary);
-            font-family: 'Orbitron', sans-serif;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        #searchBtn:hover {
-            background: var(--primary);
-            color: #000;
-            box-shadow: 0 0 20px var(--primary);
-        }
-
-        .type-selector {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .type-btn {
-            padding: 8px 20px;
-            background: rgba(0, 255, 157, 0.05);
-            border: 1px solid var(--secondary);
-            color: var(--secondary);
-            cursor: pointer;
-            font-family: 'Share Tech Mono', monospace;
-            transition: all 0.3s;
-        }
-
-        .type-btn.active {
-            background: var(--primary);
-            color: #000;
-            border-color: var(--primary);
-        }
-
-        .movies-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 35px;
-            padding: 40px 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .movie-card {
-            background: var(--card-bg);
-            border: 1px solid var(--secondary);
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .movie-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
+        .info {
+            position: fixed;
+            bottom: 0;
             left: 0;
             right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--cyber-blue), var(--primary), var(--accent));
-            opacity: 0;
-            transition: 0.3s;
-            z-index: 2;
-        }
-
-        .movie-card:hover {
-            transform: translateY(-10px);
-            border-color: var(--primary);
-            box-shadow: 0 0 25px rgba(0, 255, 157, 0.4);
-        }
-
-        .movie-card:hover::before {
-            opacity: 1;
-        }
-
-        .movie-poster {
-            width: 100%;
-            height: 330px;
-            object-fit: cover;
-            border-bottom: 1px solid rgba(123, 97, 255, 0.3);
-        }
-
-        .movie-info {
-            padding: 15px;
-        }
-
-        .movie-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            color: var(--primary);
-        }
-
-        .movie-year, .movie-rating {
-            font-family: 'Share Tech Mono', monospace;
-            color: var(--cyber-blue);
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-        }
-
-        .movie-rating {
-            color: var(--cyber-yellow);
-        }
-
-        .loading {
+            background: rgba(0,0,0,0.7);
+            color: #00ff9d;
+            padding: 10px;
+            font-size: 12px;
             text-align: center;
-            padding: 60px;
-            color: var(--primary);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.2rem;
+            z-index: 1000;
         }
-
-        .loading .spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(0, 255, 157, 0.2);
-            border-top-color: var(--primary);
+        .back-btn {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: #00ff9d;
+            padding: 8px 15px;
+            text-decoration: none;
+            z-index: 1000;
+            border: 1px solid #00ff9d;
+            border-radius: 5px;
+        }
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ff9d;
+            text-align: center;
+            z-index: 1000;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(0,255,157,0.2);
+            border-top-color: #00ff9d;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
+            margin: 0 auto 15px;
         }
-
         @keyframes spin {
             to { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 768px) {
-            h1 { font-size: 2rem; }
-            .movies-grid { gap: 20px; padding: 20px 15px; }
-            .movie-poster { height: 280px; }
-            .search-container { flex-direction: column; }
-            #searchBtn { width: 100%; }
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>MVHD CYBERCINEMA</h1>
-        <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Search for a movie...">
-            <button id="searchBtn">🔍 SEARCH</button>
-        </div>
-        <div class="type-selector">
-            <button id="movieBtn" class="type-btn active">🎥 MOVIES</button>
-            <button id="tvBtn" class="type-btn">📺 TV SHOWS</button>
-        </div>
-    </header>
-
-    <main>
-        <div id="moviesGrid" class="movies-grid">
-            <div class="loading">
-                <div class="spinner"></div>
-                <div>LOADING DATA...</div>
-            </div>
-        </div>
-    </main>
+    <a href="index.html" class="back-btn">← BACK</a>
+    <div class="container">
+        <iframe id="playerFrame" src="" allowfullscreen></iframe>
+    </div>
+    <div class="info" id="info">Loading...</div>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>LOADING STREAM...</div>
+    </div>
 
     <script>
-        const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
-        let currentType = 'movie';
-
-        const moviesGrid = document.getElementById('moviesGrid');
-        const searchInput = document.getElementById('searchInput');
-        const searchBtn = document.getElementById('searchBtn');
-        const movieBtn = document.getElementById('movieBtn');
-        const tvBtn = document.getElementById('tvBtn');
-
-        function setGridMessage(message, showSpinner = false) {
-            moviesGrid.innerHTML = `
-                <div class="loading">
-                    ${showSpinner ? '<div class="spinner"></div>' : ''}
-                    <div>${message}</div>
-                </div>
-            `;
+        const urlParams = new URLSearchParams(window.location.search);
+        const tmdbId = urlParams.get('id');
+        const mediaType = urlParams.get('type') || 'movie';
+        const title = urlParams.get('title') || 'Movie';
+        const season = urlParams.get('season') || 1;
+        const episode = urlParams.get('episode') || 1;
+        
+        document.title = `MVHD | ${title}`;
+        document.getElementById('info').innerHTML = `🎬 ${title}`;
+        
+        // Build the embed URL - using 2embed.cc (works reliably)
+        let playerUrl;
+        if (mediaType === 'tv') {
+            playerUrl = `https://www.2embed.cc/embedtv/${tmdbId}&s=${season}&e=${episode}`;
+        } else {
+            playerUrl = `https://www.2embed.cc/embed/${tmdbId}`;
         }
-
-        async function fetchContent() {
-            try {
-                setGridMessage('FETCHING DATABASE...', true);
-                let url;
-                if (currentType === 'movie') {
-                    url = `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`;
-                } else {
-                    url = `https://api.themoviedb.org/3/tv/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`;
-                }
-                const res = await fetch(url);
-                const data = await res.json();
-                displayItems(data.results);
-            } catch (error) {
-                setGridMessage('⚠️ NETWORK ERROR • PLEASE REFRESH');
-            }
+        
+        function hideLoading() {
+            const loading = document.getElementById('loading');
+            loading.style.opacity = '0';
+            setTimeout(() => loading.style.display = 'none', 500);
         }
-
-        async function searchContent() {
-            const term = searchInput.value.trim();
-            if (!term) {
-                fetchContent();
-                return;
-            }
-            
-            try {
-                setGridMessage(`SCANNING FOR "${term}"...`, true);
-                let url;
-                if (currentType === 'movie') {
-                    url = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(term)}`;
-                } else {
-                    url = `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(term)}`;
-                }
-                const res = await fetch(url);
-                const data = await res.json();
-                displayItems(data.results);
-            } catch (error) {
-                setGridMessage('⚠️ SEARCH ERROR • TRY AGAIN');
-            }
+        
+        if (tmdbId) {
+            const iframe = document.getElementById('playerFrame');
+            iframe.src = playerUrl;
+            iframe.onload = hideLoading;
+            setTimeout(hideLoading, 5000);
+        } else {
+            document.getElementById('loading').innerHTML = '<div>ERROR: No movie ID</div>';
         }
-
-        function displayItems(items) {
-            moviesGrid.innerHTML = '';
-            if (!items || items.length === 0) {
-                setGridMessage('🔍 NO RESULTS FOUND');
-                return;
-            }
-            
-            const fragment = document.createDocumentFragment();
-            items.forEach(item => {
-                if (!item.poster_path) return;
-                
-                const card = document.createElement('div');
-                card.className = 'movie-card';
-                const title = item.title || item.name;
-                const date = item.release_date || item.first_air_date;
-                const year = date ? date.substring(0, 4) : 'N/A';
-                const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
-                
-                card.onclick = () => {
-                    window.location.href = `play.html?tmdb=${item.id}&title=${encodeURIComponent(title)}&type=${currentType}`;
-                };
-                
-                card.innerHTML = `
-                    <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" 
-                         class="movie-poster" 
-                         onerror="this.src='https://via.placeholder.com/300x450/1a1a1a/ffffff?text=MVHD'">
-                    <div class="movie-info">
-                        <div class="movie-title">${escapeHtml(title)}</div>
-                        <div class="movie-year">📅 ${year}</div>
-                        <div class="movie-rating">⭐ ${rating}/10</div>
-                    </div>
-                `;
-                fragment.appendChild(card);
-            });
-            moviesGrid.appendChild(fragment);
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        movieBtn.addEventListener('click', () => {
-            if (currentType === 'movie') return;
-            currentType = 'movie';
-            movieBtn.classList.add('active');
-            tvBtn.classList.remove('active');
-            searchInput.value = '';
-            fetchContent();
-        });
-
-        tvBtn.addEventListener('click', () => {
-            if (currentType === 'tv') return;
-            currentType = 'tv';
-            tvBtn.classList.add('active');
-            movieBtn.classList.remove('active');
-            searchInput.value = '';
-            fetchContent();
-        });
-
-        searchBtn.addEventListener('click', searchContent);
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') searchContent();
-        });
-
-        fetchContent();
     </script>
 </body>
 </html>
