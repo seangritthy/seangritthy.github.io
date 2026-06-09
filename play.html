@@ -98,13 +98,20 @@
         }
         
         if (tmdbId) {
-            const playerUrl = `https://vidsrc.to/embed/${mediaType}/${tmdbId}`;
+            let playerUrl;
+            if (mediaType === 'tv') {
+                playerUrl = `https://vidsrc.to/embed/tv/${tmdbId}/1/1`;
+            } else {
+                playerUrl = `https://vidsrc.to/embed/movie/${tmdbId}`;
+            }
+            
             console.log('Loading:', playerUrl);
             document.getElementById('playerFrame').src = playerUrl;
             document.getElementById('playerFrame').onload = hideLoading;
             setTimeout(hideLoading, 5000);
         } else {
             document.getElementById('loading').innerHTML = '<div>ERROR: No movie ID</div>';
+            document.getElementById('info').innerHTML = 'ERROR: Invalid request';
         }
     </script>
 </body>
