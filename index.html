@@ -116,16 +116,16 @@
 
         <div id="filterWrapper">
             <div class="category-selector" id="categorySelector">
-                <button class="cat-btn active" data-cat="popular">🔥 POPULAR</button>
-                <button class="cat-btn" data-cat="trending">📈 TRENDING</button>
-                <button class="cat-btn" data-cat="top_rated">⭐ TOP RATED</button>
+                <button class="cat-btn active" data-cat="popular" id="catPopular">🔥 POPULAR</button>
+                <button class="cat-btn" data-cat="trending" id="catTrending">📈 TRENDING</button>
+                <button class="cat-btn" data-cat="top_rated" id="catTopRated">⭐ TOP RATED</button>
             </div>
 
             <div class="category-selector" id="languageSelector">
-                <button class="lang-btn active" data-lang="">🌐 ALL LANGUAGES</button>
-                <button class="lang-btn" data-lang="km">🇰🇭 KHMER</button>
-                <button class="lang-btn" data-lang="en">🇬🇧 ENGLISH</button>
-                <button class="lang-btn" data-lang="zh">🇨🇳 CHINESE</button>
+                <button class="lang-btn active" data-lang="" id="langAll">🌐 ALL LANGUAGES</button>
+                <button class="lang-btn" data-lang="km" id="langKhmer">🇰🇭 KHMER</button>
+                <button class="lang-btn" data-lang="en" id="langEnglish">🇬🇧 ENGLISH</button>
+                <button class="lang-btn" data-lang="zh" id="langChinese">🇨🇳 CHINESE</button>
             </div>
         </div>
     </header>
@@ -285,14 +285,14 @@
             document.getElementById('tvBtn').innerText = t.tvBtn;
             resetBtn.innerText = t.clearFilter;
             
-            document.querySelector('[data-cat="popular"]').innerText = t.catPopular;
-            document.querySelector('[data-cat="trending"]').innerText = t.catTrending;
-            document.querySelector('[data-cat="top_rated"]').innerText = t.catTopRated;
+            document.getElementById('catPopular').innerText = t.catPopular;
+            document.getElementById('catTrending').innerText = t.catTrending;
+            document.getElementById('catTopRated').innerText = t.catTopRated;
             
-            document.querySelector('[data-lang=""]').innerText = t.langAll;
-            document.querySelector('[data-lang="km"]').innerText = t.langKhmer;
-            document.querySelector('[data-lang="en"]').innerText = t.langEnglish;
-            document.querySelector('[data-lang="zh"]').innerText = t.langChinese;
+            document.getElementById('langAll').innerText = t.langAll;
+            document.getElementById('langKhmer').innerText = t.langKhmer;
+            document.getElementById('langEnglish').innerText = t.langEnglish;
+            document.getElementById('langChinese').innerText = t.langChinese;
 
             document.getElementById('prevBtn').innerHTML = t.prevBtn;
             document.getElementById('nextBtn').innerHTML = t.nextBtn;
@@ -410,12 +410,12 @@
             document.getElementById('nextBtn').disabled = currentPage >= totalPages;
         }
 
-        // DYNAMIC INSTANT AUTO-TRANSLATE TRIGGER
+        // AUTO TRANSLATE TRIGGER WHEN DROPDOWN CHANGES
         uiLangSelect.addEventListener('change', (e) => {
             localStorage.setItem('uiLang', e.target.value);
             updateUI();
             currentPage = 1; 
-            fetchDashboardData();
+            fetchDashboardData(); // Instantly translates and reloads TMDB movie titles!
         });
 
         function searchContent() {
