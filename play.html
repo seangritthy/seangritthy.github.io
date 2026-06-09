@@ -13,13 +13,14 @@
         body {
             background: #000;
             font-family: monospace;
+            overflow: hidden;
         }
         .container {
             width: 100%;
             height: 100vh;
             background: #000;
         }
-        iframe {
+        iframe, video {
             width: 100%;
             height: 100%;
             border: none;
@@ -71,17 +72,17 @@
             to { transform: rotate(360deg); }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 <body>
     <a href="index.html" class="back-btn">← BACK</a>
-    <div class="container">
-        <!-- Changed from empty src to fallback setup -->
+    <div class="container" id="playerContainer">
         <iframe id="playerFrame" src="" allowfullscreen></iframe>
     </div>
     <div class="info" id="info">Loading...</div>
     <div class="loading" id="loading">
         <div class="spinner"></div>
-        <div>LOADING CYBERSTREAM...</div>
+        <div id="loadingStatus">EXTRACTING CLEAN STREAM...</div>
     </div>
 
     <script>
@@ -93,6 +94,11 @@
         document.title = `MVHD | ${title}`;
         document.getElementById('info').innerHTML = `🎬 ${title}`;
         
+        function updateStatus(msg) {
+            const statusDiv = document.getElementById('loadingStatus');
+            if (statusDiv) statusDiv.innerText = msg;
+        }
+
         function hideLoading() {
             const loading = document.getElementById('loading');
             if (loading) {
@@ -100,30 +106,133 @@
                 setTimeout(() => loading.style.display = 'none', 500);
             }
         }
-        
-        function initializeStream() {
+
+        /**
+         * Pure JavaScript port of your Android UrlDecoder class
+         */
+        function decodeCloudnestraUrl(rawUrl) {
+            try {
+                if (!rawUrl.includes('/rcp/')) return null;
+                
+                // Extract everything after /rcp/
+                const encoded = rawUrl.split('/rcp/')[1];
+                
+                // Base64 decode natively in JavaScript (atob)
+                const decoded = atob(encoded);
+
+                // Replicating patterns list from your Android matching logic
+                const patterns = [
+                    /(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i,
+                    /(https?:\/\/[^\s"']+\.mp4[^\s"']*)/i,
+                    /(https?:\/\/[^\s"']+\/(?:manifest|playlist|master)[^\s"']*)/i
+                ];
+
+                for (let pattern of patterns) {
+                    const match = decoded.match(pattern);
+                    if (match && match[0]) {
+                        return match[0];
+                    }
+                }
+                
+                if (decoded.startsWith('http')) return decoded;
+                return null;
+            } catch (e) {
+                console.error("Decoder failed:", e);
+                return null;
+            }
+        }
+
+        /**
+         * Renders the decrypted stream straight into a premium HTML5 layout
+         */
+        function playDirectStream(streamUrl) {
+            const container = document.getElementById('playerContainer');
+            container.innerHTML = `<video id="videoPlayer" controls autoplay playsinline></video>`;
+            const video = document.getElementById('videoPlayer');
+
+            if (streamUrl.includes('.m3u8')) {
+                if (Hls.isSupported()) {
+                    const hls = new Hls();
+                    hls.loadSource(streamUrl);
+                    hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        video.play();
+                        hideLoading();
+                    });
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = streamUrl;
+                    video.addEventListener('loadedmetadata', function() {
+                        video.play();
+                        hideLoading();
+                    });
+                }
+            } else {
+                // If it resolves directly to an MP4 video stream
+                video.src = streamUrl;
+                video.play();
+                hideLoading();
+            }
+        }
+
+        /**
+         * Main Client Extraction Engine
+         */
+        async function runExtractor() {
             if (!tmdbId) {
                 document.getElementById('loading').innerHTML = '<div>ERROR: No movie ID parameters detected</div>';
                 document.getElementById('info').innerHTML = 'ERROR: Invalid request';
                 return;
             }
 
-            const frame = document.getElementById('playerFrame');
+            const targetEmbed = mediaType === 'tv' 
+                ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` 
+                : `https://vidsrc.to/embed/movie/${tmdbId}`;
 
-            // Pure Frontend Routing - Works flawlessly on GitHub Pages!
-            if (mediaType === 'tv') {
-                frame.src = `https://vidsrc.to/embed/tv/${tmdbId}/1/1`;
-            } else {
-                frame.src = `https://vidsrc.to/embed/movie/${tmdbId}`;
+            try {
+                updateStatus("SCANNING SOURCE EMBED...");
+                
+                // Public open CORS proxy tool to pull source data from vidsrc without CORS blocks
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetEmbed)}`;
+                const response = await fetch(proxyUrl);
+                const data = await response.json();
+                
+                if (data && data.contents) {
+                    const htmlContent = data.contents;
+                    
+                    // Regex looking for cloudorchestranova or cloudnestra rcp structures inside the embed code
+                    const rcpRegex = /(https?:\/\/[^\s"'`]+\/rcp\/[^\s"'`>]+)/i;
+                    const match = htmlContent.match(rcpRegex);
+                    
+                    if (match && match[0]) {
+                        updateStatus("DECRYPTING DATA TOKEN...");
+                        const foundRcpUrl = match[0];
+                        
+                        // Pass token to the JavaScript port of your Android UrlDecoder class
+                        const cleanStreamLink = decodeCloudnestraUrl(foundRcpUrl);
+                        
+                        if (cleanStreamLink) {
+                            console.log("Success! Clean Stream Extracted:", cleanStreamLink);
+                            playDirectStream(cleanStreamLink);
+                            return;
+                        }
+                    }
+                }
+                throw new Error("Direct extraction path not found.");
+            } catch (err) {
+                console.warn("Client extraction bypassed, loading fallback layout...", err);
+                
+                // Fallback: If CORS proxy fails or stream token layout shifts, load direct default player layout 
+                const frame = document.getElementById('playerFrame');
+                if (frame) {
+                    frame.src = targetEmbed;
+                    frame.onload = hideLoading;
+                }
+                setTimeout(hideLoading, 5000);
             }
-
-            frame.onload = hideLoading;
-            // Safety net to remove loading spinner if the embed provider takes a few seconds to load
-            setTimeout(hideLoading, 4000);
         }
 
-        // Run
-        initializeStream();
+        // Execute extraction on launch
+        runExtractor();
     </script>
 </body>
 </html>
