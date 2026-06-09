@@ -12,6 +12,7 @@
             --dark-bg: #0a0a0f;
             --card-bg: #13131f;
             --cyber-blue: #00ccff;
+            --cyber-yellow: #fff200;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -21,6 +22,8 @@
             background: var(--dark-bg);
             color: white;
             min-height: 100vh;
+            background-image: linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(123, 97, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
         }
 
         header {
@@ -120,6 +123,20 @@
             overflow: hidden;
             cursor: pointer;
             transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .movie-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--cyber-blue), var(--primary), var(--accent));
+            opacity: 0;
+            transition: 0.3s;
+            z-index: 2;
         }
 
         .movie-card:hover {
@@ -128,10 +145,15 @@
             box-shadow: 0 0 25px rgba(0, 255, 157, 0.4);
         }
 
+        .movie-card:hover::before {
+            opacity: 1;
+        }
+
         .movie-poster {
             width: 100%;
             height: 330px;
             object-fit: cover;
+            border-bottom: 1px solid rgba(123, 97, 255, 0.3);
         }
 
         .movie-info {
@@ -152,6 +174,18 @@
             font-family: 'Share Tech Mono', monospace;
             color: var(--cyber-blue);
             font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .movie-rating {
+            color: var(--cyber-yellow);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--primary);
+            font-family: monospace;
         }
     </style>
 </head>
@@ -183,7 +217,7 @@
         const tvBtn = document.getElementById('tvBtn');
 
         function setGridMessage(message) {
-            moviesGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--primary); font-family: monospace;">${message}</p>`;
+            moviesGrid.innerHTML = `<div class="loading">${message}</div>`;
         }
 
         async function fetchContent() {
@@ -222,6 +256,18 @@
             }
         }
 
+        // Generate Cloudnestra URL from TMDB ID
+        function generateCloudnestraUrl(tmdbId, type, season = 1, episode = 1) {
+            let vidsrcUrl;
+            if (type === 'tv') {
+                vidsrcUrl = `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}`;
+            } else {
+                vidsrcUrl = `https://vidsrc.to/embed/movie/${tmdbId}`;
+            }
+            const encoded = btoa(vidsrcUrl);
+            return `https://cloudnestra.com/rcp/${encoded}`;
+        }
+
         function displayItems(items) {
             moviesGrid.innerHTML = '';
             if (!items || items.length === 0) {
@@ -239,7 +285,8 @@
                 const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
                 
                 card.onclick = () => {
-                    window.location.href = `play.html?tmdb=${item.id}&type=${currentType}`;
+                    const cloudUrl = generateCloudnestraUrl(item.id, currentType);
+                    window.location.href = `video.html?url=${encodeURIComponent(cloudUrl)}&title=${encodeURIComponent(title)}&type=${currentType}&id=${item.id}`;
                 };
                 
                 card.innerHTML = `
