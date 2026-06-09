@@ -68,7 +68,6 @@
         <div class="type-selector">
             <button id="movieBtn" class="type-btn active">🎥 MOVIES</button>
             <button id="tvBtn" class="type-btn">📺 TV SHOWS</button>
-            <!-- Hidden reset button that appears only when browsing an actor or genre -->
             <button id="resetFilterBtn" class="type-btn filter-alert">✖ CLEAR ACTIVE FILTER</button>
         </div>
     </header>
@@ -82,7 +81,7 @@
     <script>
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         
-        // Read "Pro" Routing parameters from the URL
+        // Read URL Parameters for sorting
         const urlParams = new URLSearchParams(window.location.search);
         let currentType = urlParams.get('type') || 'movie';
         const targetGenreId = urlParams.get('genre');
@@ -90,6 +89,12 @@
         const targetActorId = urlParams.get('actor');
         const targetActorName = urlParams.get('actorName');
         const targetSearch = urlParams.get('search');
+        
+        // New parameters for region and language
+        const targetCountryId = urlParams.get('country');
+        const targetCountryName = urlParams.get('countryName');
+        const targetLangId = urlParams.get('lang');
+        const targetLangName = urlParams.get('langName');
 
         const moviesGrid = document.getElementById('moviesGrid');
         const searchInput = document.getElementById('searchInput');
@@ -97,7 +102,6 @@
         const tvBtn = document.getElementById('tvBtn');
         const resetBtn = document.getElementById('resetFilterBtn');
 
-        // Sync UI Buttons to Type
         if (currentType === 'tv') {
             tvBtn.classList.add('active');
             movieBtn.classList.remove('active');
@@ -114,22 +118,26 @@
 
             try {
                 if (targetActorId) {
-                    // PRO MODE: Show actor's filmography
                     displayContext = `SCANNING FILES FEATURING: ${targetActorName.toUpperCase()}`;
                     url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_cast=${targetActorId}&sort_by=popularity.desc`;
                     resetBtn.style.display = 'block';
                 } else if (targetGenreId) {
-                    // PRO MODE: Show specific genre
                     displayContext = `FILTERING BY GENRE: ${targetGenreName.toUpperCase()}`;
                     url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_genres=${targetGenreId}&sort_by=popularity.desc`;
                     resetBtn.style.display = 'block';
+                } else if (targetCountryId) {
+                    displayContext = `FILTERING REGION: ${targetCountryName.toUpperCase()}`;
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_origin_country=${targetCountryId}&sort_by=popularity.desc`;
+                    resetBtn.style.display = 'block';
+                } else if (targetLangId) {
+                    displayContext = `FILTERING LANGUAGE: ${targetLangName.toUpperCase()}`;
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_original_language=${targetLangId}&sort_by=popularity.desc`;
+                    resetBtn.style.display = 'block';
                 } else if (targetSearch) {
-                    // Normal Text Search
                     displayContext = `SCANNING FOR "${targetSearch.toUpperCase()}"...`;
                     url = `https://api.themoviedb.org/3/search/${currentType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(targetSearch)}`;
                     searchInput.value = targetSearch;
                 } else {
-                    // Default Popular
                     url = `https://api.themoviedb.org/3/${currentType}/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`;
                 }
 
