@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MVHD CyberCinema</title>
-    <!-- ADDED: Battambang font for native Khmer rendering -->
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -15,9 +14,7 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            /* ADDED: Battambang as the primary fallback for body text */
-            font-family: 'Exo 2', 'Battambang', sans-serif; 
-            background: var(--dark-bg); color: white; min-height: 100vh;
+            font-family: 'Exo 2', 'Battambang', sans-serif; background: var(--dark-bg); color: white; min-height: 100vh;
             background-image: linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(123, 97, 255, 0.03) 1px, transparent 1px);
             background-size: 50px 50px;
         }
@@ -27,9 +24,7 @@
             position: sticky; top: 0; z-index: 1000;
         }
         
-        .ui-lang-wrapper {
-            position: absolute; top: 15px; right: 20px;
-        }
+        .ui-lang-wrapper { position: absolute; top: 15px; right: 20px; }
         .ui-lang-select {
             background: rgba(0, 0, 0, 0.8); border: 1px solid var(--primary); color: var(--primary);
             padding: 5px 10px; font-family: 'Share Tech Mono', 'Battambang', monospace; outline: none; cursor: pointer;
@@ -39,9 +34,7 @@
         .ui-lang-select option { background: var(--dark-bg); color: white; }
 
         h1 {
-            /* ADDED: Battambang fallback for titles */
-            font-family: 'Orbitron', 'Battambang', sans-serif; 
-            color: var(--primary); margin-bottom: 20px;
+            font-family: 'Orbitron', 'Battambang', sans-serif; color: var(--primary); margin-bottom: 20px;
             font-size: 2.8rem; text-shadow: 0 0 15px rgba(0, 255, 157, 0.6); letter-spacing: 4px;
         }
         .search-container { display: flex; justify-content: center; gap: 15px; max-width: 600px; margin: 0 auto; flex-wrap: wrap; }
@@ -101,7 +94,6 @@
 </head>
 <body>
     <header>
-        <!-- Dynamic Interface Language Selector -->
         <div class="ui-lang-wrapper">
             <select id="uiLangSelect" class="ui-lang-select">
                 <option value="en">🇬🇧 English</option>
@@ -151,7 +143,14 @@
     </main>
 
     <script>
-        // --- TRANSLATION DICTIONARY ---
+        // Automatic Browser Language Detection on First Visit
+        if (!localStorage.getItem('uiLang')) {
+            const browserLang = navigator.language || navigator.userLanguage;
+            if (browserLang.toLowerCase().includes('km')) localStorage.setItem('uiLang', 'km');
+            else if (browserLang.toLowerCase().includes('zh')) localStorage.setItem('uiLang', 'zh');
+            else localStorage.setItem('uiLang', 'en');
+        }
+
         const translations = {
             en: {
                 siteTitle: "MVHD CYBERCINEMA",
@@ -261,7 +260,6 @@
         const paginationWrap = document.getElementById('pagination');
         const uiLangSelect = document.getElementById('uiLangSelect');
 
-        // Initial Layout sync
         if (currentType === 'tv') {
             document.getElementById('tvBtn').classList.add('active');
             document.getElementById('movieBtn').classList.remove('active');
@@ -272,9 +270,7 @@
             filterWrapper.style.display = 'none';
         }
 
-        function getT() {
-            return translations[localStorage.getItem('uiLang') || 'en'];
-        }
+        function getT() { return translations[localStorage.getItem('uiLang') || 'en']; }
 
         function updateUI() {
             const lang = localStorage.getItem('uiLang') || 'en';
@@ -414,6 +410,7 @@
             document.getElementById('nextBtn').disabled = currentPage >= totalPages;
         }
 
+        // DYNAMIC INSTANT AUTO-TRANSLATE TRIGGER
         uiLangSelect.addEventListener('change', (e) => {
             localStorage.setItem('uiLang', e.target.value);
             updateUI();
