@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MVHD CyberCinema | Loading...</title>
+    <title>MVHD CyberCinema | Loading Stream...</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
     :root {
@@ -531,7 +531,7 @@
 
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-content">
-            <div class="loading-text" id="loadingText">ACTIVATING ORIGIN GUARD SHIELD...</div>
+            <div class="loading-text" id="loadingText">DECRYPTING CYBERSTREAM FILES...</div>
             <div class="loading-bar"></div>
         </div>
     </div>
@@ -569,7 +569,6 @@
             <iframe 
                 id="stream-frame" 
                 src="" 
-                sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowfullscreen 
                 loading="lazy">
@@ -577,7 +576,7 @@
         </div>
 
         <div class="status-badges">
-            <div class="status-badge badge-primary" id="extractionBadge">🛡️ ORIGIN GUARD: INITIALIZING POPUP INTERCEPTOR</div>
+            <div class="status-badge badge-primary" id="extractionBadge">🚀 MVHD • INITIALIZING SECURE PACKET SCRAPER</div>
             <div class="status-badge badge-success" id="tmdbBadge">🎬 TMDB NODE ID: RESOLVING</div>
         </div>
 
@@ -612,40 +611,6 @@
     </div>
 
     <script>
-        /* =========================================================================
-           🛡️ ORIGIN GUARD ANTI-POPUP & REDIRECT ENGINE (CLIENT-SIDE AD BLOCKER)
-           ========================================================================= */
-        (function applyOriginGuard() {
-            // 1. Block unauthorized new windows or popunder window triggers
-            const originalWindowOpen = window.open;
-            window.open = function(url, name, specs, replace) {
-                console.warn("🛡️ Origin Guard: Blocked popup request targeting ->", url);
-                return { 
-                    focus: function() {}, 
-                    blur: function() {},
-                    close: function() {},
-                    document: {} 
-                }; 
-            };
-
-            // 2. Heavy mitigation against background tab context theft or frame redirections
-            window.onbeforeunload = function(e) {
-                // If an embedded layout attempts to crash or hijack the screen, force freeze it
-                if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
-                    console.warn("🛡️ Origin Guard: Intercepted forceful redirection attempt from frame.");
-                    return "Origin Guard blocked a suspicious page redirect. Stay here to play video.";
-                }
-            };
-
-            // 3. Prevent clicking backgrounds from initializing invisible click-under layout redirects
-            document.addEventListener('click', function(e) {
-                if (e.target.tagName === 'A' && (e.target.href.includes('ad') || e.target.href.includes('bet') || e.target.href.includes('crypto'))) {
-                    e.preventDefault();
-                    console.warn("🛡️ Origin Guard: Dropped suspicious ad link click.");
-                }
-            }, true);
-        })();
-
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         const urlParams = new URLSearchParams(window.location.search);
         const tmdbId = urlParams.get('tmdb');
@@ -660,12 +625,12 @@
             }
         }
 
-        // Port of Android package com.bongbee.tdmb.util.UrlDecoder
+        // JavaScript port of your Android UrlDecoder class
         function decodeCloudnestraUrl(rawUrl) {
             try {
                 if (!rawUrl.includes('/rcp/')) return null;
                 const encoded = rawUrl.split('/rcp/')[1];
-                const decoded = atob(encoded);
+                const decoded = atob(encoded); // Native Base64 Decode string function
 
                 const patterns = [
                     /(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i,
@@ -680,12 +645,12 @@
                 if (decoded.startsWith('http')) return decoded;
                 return null;
             } catch (e) {
-                console.error("Decoder runtime exception:", e);
+                console.error("Decoder exception error:", e);
                 return null;
             }
         }
 
-        // Populates UI text values using metadata dynamically fetched from TMDB
+        // Populates UI layout elements using data dynamically fetched from TMDB
         async function syncTmdbDetails() {
             if (!tmdbId) return;
             document.getElementById('tmdbBadge').innerText = `🎬 TMDB ID: ${tmdbId}`;
@@ -720,10 +685,36 @@
                     document.body.style.backgroundPosition = 'center';
                 }
             } catch (e) {
-                console.warn("Meta setup failed, falling back to basic values.");
+                console.warn("Meta mapping failed, executing fallbacks.");
                 document.title = `MVHD | ${passedTitle}`;
                 document.getElementById('movieTitle').innerText = passedTitle;
             }
+        }
+
+        // High-performance direct video port execution
+        function mountDirectStream(decryptedStreamUrl) {
+            const container = document.getElementById('playerContainer');
+            
+            // Replaces iframe layer completely with premium ad-free native video block tag
+            container.innerHTML = `<video id="videoPlayer" controls autoplay playsinline></video>`;
+            const video = document.getElementById('videoPlayer');
+
+            if (decryptedStreamUrl.includes('.m3u8') && Hls.isSupported()) {
+                const hls = new Hls();
+                hls.loadSource(decryptedStreamUrl);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    video.play();
+                    dismissOverlay();
+                });
+            } else {
+                video.src = decryptedStreamUrl;
+                video.play();
+                dismissOverlay();
+            }
+
+            document.getElementById('extractionBadge').className = "status-badge badge-primary";
+            document.getElementById('extractionBadge').innerText = "🚀 MVHD • DIRECT PACKET CYBERSTREAM STABLE";
         }
 
         // Web Client Extraction Mechanism 
@@ -738,61 +729,42 @@
                 : `https://vidsrc.to/embed/movie/${tmdbId}`;
 
             try {
-                // Query embed contents cross-origin using an open proxy gate
+                // Fetch target source code lines completely via an open proxy pipeline context
                 const proxyGate = `https://api.allorigins.win/get?url=${encodeURIComponent(targetEmbed)}`;
                 const response = await fetch(proxyGate);
                 const data = await response.json();
                 
                 if (data && data.contents) {
-                    // Match the cloudorchestranova rcp link pattern hidden inside the code
+                    // Pull out the exact encrypted token URL matches
                     const match = data.contents.match(/(https?:\/\/[^\s"'`]+\/rcp\/[^\s"'`>]+)/i);
                     
                     if (match && match[0]) {
-                        // Pass token URL string directly to your JavaScript port decoding function
-                        const directSourceUrl = decodeCloudnestraUrl(match[0]);
+                        // Pass token payload directly to your decoding engine portfolio
+                        const dynamicStreamLink = decodeCloudnestraUrl(match[0]);
                         
-                        if (directSourceUrl) {
-                            // Inject native clean HTML5 video player layout (Completely removes popups/ad scripts)
-                            const container = document.getElementById('playerContainer');
-                            container.innerHTML = `<video id="videoPlayer" controls autoplay playsinline style="width:100%; height:650px; background:#000; border:none; display:block;"></video>`;
-                            const video = document.getElementById('videoPlayer');
-
-                            if (directSourceUrl.includes('.m3u8') && Hls.isSupported()) {
-                                const hls = new Hls();
-                                hls.loadSource(directSourceUrl);
-                                hls.attachMedia(video);
-                                hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                                    video.play();
-                                    dismissOverlay();
-                                });
-                            } else {
-                                video.src = directSourceUrl;
-                                video.play();
-                                dismissOverlay();
-                            }
-                            
-                            document.getElementById('extractionBadge').className = "status-badge badge-primary";
-                            document.getElementById('extractionBadge').innerText = "🛡️ ORIGIN GUARD: CLEAN DIRECT STREAM RUNNING";
+                        if (dynamicStreamLink) {
+                            console.log("Direct stream fetched:", dynamicStreamLink);
+                            mountDirectStream(dynamicStreamLink);
                             return;
                         }
                     }
                 }
-                throw new Error("rcp token missing.");
+                throw new Error("Direct payload address missing.");
             } catch (err) {
-                console.warn("Extraction link unavailable, mounting isolated safe iframe:", err);
+                console.warn("Proxy extraction bypassed, forcing layout fallback deployment link:", err);
                 
+                // Fallback layout activation layer maps frame source path directly
                 const frame = document.getElementById('stream-frame');
                 if (frame) {
-                    // The sandbox attribute prevents the iframe from opening new popup windows or refreshing the master tab
                     frame.src = targetEmbed;
                     frame.onload = dismissOverlay;
                 }
                 document.getElementById('extractionBadge').className = "status-badge badge-warning";
-                document.getElementById('extractionBadge').innerText = "⚠️ FALLBACK SANBOXED IFRAME PROTECTION ACTIVE";
+                document.getElementById('extractionBadge').innerText = "⚠️ SYSTEM REVERTED TO STANDARD PROXY FRAME LAYOUT";
             }
         }
 
-        // Cyberpunk animation loop routines
+        // Cyberpunk style loop scripts
         function generateDataParticles() {
             const container = document.getElementById('streamEffect');
             const colors = ['#00ff9d', '#7b61ff', '#ff00e5', '#00ccff'];
@@ -831,7 +803,7 @@
             runClientExtractor();
             generateDataParticles();
             handleDashboardLoops();
-            setTimeout(dismissOverlay, 5000); // Overlay fallback safety net
+            setTimeout(dismissOverlay, 6000); // Safety fallback overlay dismiss routine
         });
     </script>
 </body>
