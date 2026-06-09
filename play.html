@@ -101,6 +101,7 @@
         .badge-primary { background: rgba(0, 255, 157, 0.1); border: 2px solid var(--primary); color: var(--primary); box-shadow: 0 0 10px rgba(0,255,157,0.3);}
         .badge-warning { background: rgba(255, 242, 0, 0.1); border: 2px solid var(--cyber-yellow); color: var(--cyber-yellow); }
         .badge-success { background: rgba(0, 204, 255, 0.1); border: 2px solid var(--cyber-blue); color: var(--cyber-blue); }
+        .badge-error { background: rgba(255, 0, 60, 0.1); border: 2px solid var(--cyber-red); color: var(--cyber-red); }
 
         .loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95);
@@ -126,6 +127,21 @@
         
         .back-button:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary); }
         
+        .extraction-details {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 11px;
+            word-break: break-all;
+            display: none;
+        }
+        
+        .extraction-details.active {
+            display: block;
+        }
+        
         @media (max-width: 768px) { #stream-frame, #direct-player { height: 400px; } .movie-title { font-size: 1.8rem; } .main-container { padding: 120px 15px 30px; } }
     </style>
 </head>
@@ -137,6 +153,7 @@
         <div class="loading-content">
             <div class="loading-text" id="loading-msg">INITIALIZING MAINFRAME...</div>
             <div class="loading-bar"></div>
+            <div id="loading-detail" style="margin-top: 20px; font-size: 12px; color: #888;"></div>
         </div>
     </div>
 
@@ -144,7 +161,7 @@
         <div class="header-content">
             <a href="index.html" class="site-title">MVHD CYBERCINEMA</a>
             <div class="user-info">
-                <div class="user-badge">👤 WEB EXTRACTOR PROTOCOL</div>
+                <div class="user-badge">👤 CLOUDNESTRA EXTRACTOR V2</div>
             </div>
         </div>
     </header>
@@ -173,7 +190,7 @@
 
         <div class="player-container">
             <iframe id="stream-frame" src="" allowfullscreen loading="lazy"></iframe>
-            <video id="direct-player" controls preload="auto"></video>
+            <video id="direct-player" controls preload="auto" playsinline></video>
         </div>
 
         <div class="status-badges">
@@ -184,18 +201,42 @@
                 🎬 TMDB ID: SCANNING...
             </div>
         </div>
+        
+        <div class="extraction-details" id="extractionDetails">
+            <strong>🔧 EXTRACTION LOG:</strong>
+            <div id="extractionLog"></div>
+        </div>
     </div>
 
     <script>
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
+        let extractionAttempts = 0;
+        let currentVideoUrl = null;
+
+        // Helper function to add extraction log
+        function addLog(message, isError = false) {
+            const logDiv = document.getElementById('extractionLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logEntry.style.color = isError ? 'var(--cyber-red)' : 'var(--cyber-blue)';
+            logEntry.style.marginBottom = '5px';
+            logDiv.appendChild(logEntry);
+            document.getElementById('extractionDetails').classList.add('active');
+            console.log(message);
+        }
+
+        function updateLoadingMessage(msg, detail = '') {
+            document.getElementById('loading-msg').textContent = msg;
+            document.getElementById('loading-detail').textContent = detail;
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const tmdbId = urlParams.get('tmdb');
 
             if (!tmdbId) {
-                document.getElementById('loading-msg').textContent = "ERROR: INVALID TMDB ID";
-                document.getElementById('loading-msg').style.color = "var(--cyber-red)";
+                updateLoadingMessage("ERROR: INVALID TMDB ID");
                 setTimeout(() => { window.location.href = 'index.html'; }, 3000);
             } else {
                 document.getElementById('badge-tmdb').innerHTML = `🎬 TMDB ID: ${tmdbId}`;
@@ -208,33 +249,181 @@
             setTimeout(() => { document.getElementById('loadingOverlay').style.display = 'none'; }, 500);
         }
 
+        // Decode Cloudnestra RCP URL (base64)
         function decodeCloudnestraUrl(cloudnestraUrl) {
             try {
+                addLog(`Decoding Cloudnestra URL: ${cloudnestraUrl.substring(0, 100)}...`);
                 const encodedPart = cloudnestraUrl.split('/rcp/')[1];
-                if (!encodedPart) return null;
-                const decoded = atob(encodedPart);
-                console.log('Decoded Cloudnestra:', decoded);
+                if (!encodedPart) {
+                    addLog("No /rcp/ part found in URL", true);
+                    return null;
+                }
                 
+                // Fix base64 URL-safe encoding
+                let base64 = encodedPart.replace(/-/g, '+').replace(/_/g, '/');
+                while (base64.length % 4) {
+                    base64 += '=';
+                }
+                
+                const decoded = atob(base64);
+                addLog(`Decoded content length: ${decoded.length} chars`);
+                
+                // Look for m3u8 URL
                 const m3u8Match = decoded.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
-                if (m3u8Match) return m3u8Match[1];
+                if (m3u8Match) {
+                    addLog(`Found m3u8 URL: ${m3u8Match[1].substring(0, 80)}...`);
+                    return m3u8Match[1];
+                }
                 
+                // Look for mp4 URL
                 const mp4Match = decoded.match(/(https?:\/\/[^\s"']+\.mp4[^\s"']*)/i);
-                if (mp4Match) return mp4Match[1];
+                if (mp4Match) {
+                    addLog(`Found mp4 URL: ${mp4Match[1].substring(0, 80)}...`);
+                    return mp4Match[1];
+                }
                 
-                const playlistMatch = decoded.match(/(https?:\/\/[^\s"']+\/playlist[^\s"']*)/i);
-                if (playlistMatch) return playlistMatch[1];
+                // Look for master playlist
+                const masterMatch = decoded.match(/(https?:\/\/[^\s"']+\/master[^\s"']*\.m3u8[^\s"']*)/i);
+                if (masterMatch) {
+                    addLog(`Found master playlist: ${masterMatch[1].substring(0, 80)}...`);
+                    return masterMatch[1];
+                }
                 
-                if (decoded.startsWith('http')) return decoded;
+                // Look for any URL containing m3u8
+                const anyM3u8 = decoded.match(/(https?:\/\/[^\s"']+[^\s"']*\.m3u8[^\s"']*)/i);
+                if (anyM3u8) {
+                    addLog(`Found m3u8 (any): ${anyM3u8[1].substring(0, 80)}...`);
+                    return anyM3u8[1];
+                }
+                
+                addLog("No video URL pattern found in decoded content", true);
                 return null;
             } catch (e) {
-                console.error('Decode failed:', e);
+                addLog(`Decode error: ${e.message}`, true);
+                return null;
+            }
+        }
+
+        // Method 1: Use a CORS proxy to fetch the page
+        async function extractWithProxy(tmdbId) {
+            addLog(`Method 1: Fetching from vidsrc.to via proxy...`);
+            updateLoadingMessage("EXTRACTING VIA PROXY...", "Connecting to vidsrc.to");
+            
+            const proxyUrls = [
+                `https://api.allorigins.win/get?url=${encodeURIComponent(`https://vidsrc.to/embed/movie/${tmdbId}`)}`,
+                `https://corsproxy.io/?${encodeURIComponent(`https://vidsrc.to/embed/movie/${tmdbId}`)}`,
+                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(`https://vidsrc.to/embed/movie/${tmdbId}`)}`
+            ];
+            
+            for (const proxyUrl of proxyUrls) {
+                try {
+                    addLog(`Trying proxy: ${proxyUrl.substring(0, 60)}...`);
+                    const response = await fetch(proxyUrl);
+                    if (!response.ok) continue;
+                    
+                    const data = await response.json();
+                    const html = data.contents || data;
+                    
+                    // Look for Cloudnestra URL
+                    const cloudnestraMatch = html.match(/(?:src|href)=["']([^"']*cloudnestra[^"']*\/rcp\/[^"']*)["']/i);
+                    if (cloudnestraMatch) {
+                        let rcpUrl = cloudnestraMatch[1];
+                        if (!rcpUrl.startsWith('http')) rcpUrl = 'https:' + rcpUrl;
+                        addLog(`Found Cloudnestra URL: ${rcpUrl.substring(0, 80)}...`);
+                        
+                        const videoUrl = decodeCloudnestraUrl(rcpUrl);
+                        if (videoUrl) {
+                            return videoUrl;
+                        }
+                    }
+                    
+                    // Look for direct m3u8
+                    const directM3u8 = html.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
+                    if (directM3u8) {
+                        addLog(`Found direct m3u8: ${directM3u8[1].substring(0, 80)}...`);
+                        return directM3u8[1];
+                    }
+                    
+                } catch (e) {
+                    addLog(`Proxy failed: ${e.message}`, true);
+                }
+            }
+            return null;
+        }
+
+        // Method 2: Alternative embed source (2embed)
+        async function extractFrom2Embed(tmdbId) {
+            addLog(`Method 2: Trying 2embed.cc...`);
+            updateLoadingMessage("TRYING ALTERNATIVE SOURCE...", "2embed.cc");
+            
+            try {
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://www.2embed.cc/embed/${tmdbId}`)}`;
+                const response = await fetch(proxyUrl);
+                if (!response.ok) return null;
+                
+                const data = await response.json();
+                const html = data.contents;
+                
+                // Look for iframe with cloudnestra
+                const iframeMatch = html.match(/<iframe[^>]+src=["']([^"']+cloudnestra[^"']+)["']/i);
+                if (iframeMatch) {
+                    const rcpUrl = iframeMatch[1];
+                    addLog(`Found Cloudnestra in iframe: ${rcpUrl.substring(0, 80)}...`);
+                    const videoUrl = decodeCloudnestraUrl(rcpUrl);
+                    if (videoUrl) return videoUrl;
+                }
+                
+                // Look for direct video source
+                const sourceMatch = html.match(/<source[^>]+src=["']([^"']+\.m3u8[^"']+)["']/i);
+                if (sourceMatch) {
+                    addLog(`Found source tag: ${sourceMatch[1]}`);
+                    return sourceMatch[1];
+                }
+                
+                return null;
+            } catch (e) {
+                addLog(`2Embed failed: ${e.message}`, true);
+                return null;
+            }
+        }
+
+        // Method 3: Direct API endpoint (if available)
+        async function extractFromApi(tmdbId) {
+            addLog(`Method 3: Trying moviesapi.xyz...`);
+            updateLoadingMessage("CHECKING API...", "moviesapi.xyz");
+            
+            try {
+                const apiUrl = `https://moviesapi.xyz/api/v2/embed/movie?tmdb=${tmdbId}`;
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
+                const response = await fetch(proxyUrl);
+                if (!response.ok) return null;
+                
+                const data = await response.json();
+                const content = data.contents;
+                
+                // Try to parse as JSON
+                try {
+                    const json = JSON.parse(content);
+                    if (json.url) {
+                        addLog(`API returned URL: ${json.url}`);
+                        return json.url;
+                    }
+                } catch(e) {}
+                
+                // Look for m3u8 in response
+                const m3u8Match = content.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
+                if (m3u8Match) return m3u8Match[1];
+                
+                return null;
+            } catch (e) {
+                addLog(`API failed: ${e.message}`, true);
                 return null;
             }
         }
 
         async function fetchMovieAndStream(id) {
             try {
-                document.getElementById('loading-msg').textContent = "FETCHING TMDB DATABASE...";
+                updateLoadingMessage("FETCHING TMDB DATABASE...", "Loading movie details");
                 const tmdbRes = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_API_KEY}&language=en-US`);
                 const movie = await tmdbRes.json();
 
@@ -255,90 +444,88 @@
 
                 document.getElementById('main-content').style.display = 'block';
 
-                document.getElementById('loading-msg').textContent = "EXTRACTING RAW STREAM FROM CLOUDNESTRA...";
-                
                 const iframeElement = document.getElementById('stream-frame');
                 const videoElement = document.getElementById('direct-player');
                 const playerBadge = document.getElementById('badge-player');
 
-                try {
-                    const targetUrl = `https://vidsrc.to/embed/movie/${id}`;
-                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-
-                    const extractRes = await fetch(proxyUrl);
-                    if (!extractRes.ok) throw new Error("Proxy failed");
+                // Try multiple extraction methods
+                updateLoadingMessage("EXTRACTING CLOUDNESTRA STREAM...", "Method 1/4");
+                let videoUrl = await extractWithProxy(id);
+                
+                if (!videoUrl) {
+                    updateLoadingMessage("METHOD 1 FAILED...", "Trying method 2/4");
+                    videoUrl = await extractFrom2Embed(id);
+                }
+                
+                if (!videoUrl) {
+                    updateLoadingMessage("METHOD 2 FAILED...", "Trying method 3/4");
+                    videoUrl = await extractFromApi(id);
+                }
+                
+                if (!videoUrl) {
+                    updateLoadingMessage("METHOD 3 FAILED...", "Using fallback iframe");
+                    addLog("All extraction methods failed. Using fallback iframe.", true);
                     
-                    const proxyData = await extractRes.json();
-                    const html = proxyData.contents;
-
-                    // Method 1: Find Cloudnestra RCP URL
-                    const rcpRegex = /(?:src|href)=["']([^"']*cloudnestra[^"']*\/rcp\/[^"']*)["']/i;
-                    const match = html.match(rcpRegex);
-
-                    if (match && match[1]) {
-                        let rcpUrl = match[1];
-                        if (!rcpUrl.startsWith('http')) rcpUrl = 'https:' + rcpUrl;
-                        
-                        const directVideoUrl = decodeCloudnestraUrl(rcpUrl);
-                        
-                        if (directVideoUrl) {
-                            iframeElement.style.display = 'none';
-                            videoElement.style.display = 'block';
-                            playerBadge.className = "status-badge badge-primary";
-                            playerBadge.innerHTML = "🚀 DIRECT STREAM ACQUIRED • CLOUDNESTRA EXTRACTED";
-
-                            if (directVideoUrl.includes('.m3u8')) {
-                                if (Hls.isSupported()) {
-                                    const hls = new Hls();
-                                    hls.loadSource(directVideoUrl);
-                                    hls.attachMedia(videoElement);
-                                } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
-                                    videoElement.src = directVideoUrl;
-                                }
-                            } else {
-                                videoElement.src = directVideoUrl;
-                            }
-                            hideLoading();
-                            return;
-                        }
-                    }
-                    
-                    // Method 2: Direct m3u8 extraction
-                    const directM3u8 = html.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
-                    if (directM3u8) {
-                        iframeElement.style.display = 'none';
-                        videoElement.style.display = 'block';
-                        playerBadge.className = "status-badge badge-primary";
-                        playerBadge.innerHTML = "🚀 DIRECT HLS STREAM FOUND";
-                        
-                        if (Hls.isSupported()) {
-                            const hls = new Hls();
-                            hls.loadSource(directM3u8[1]);
-                            hls.attachMedia(videoElement);
-                        }
-                        hideLoading();
-                        return;
-                    }
-                    
-                    throw new Error("No direct stream found");
-                    
-                } catch (extractError) {
-                    console.log("Extraction blocked or failed. Using fallback iframe...");
+                    // Fallback: Use iframe directly
                     videoElement.style.display = 'none';
                     iframeElement.style.display = 'block';
                     iframeElement.src = `https://vidsrc.to/embed/movie/${id}`;
                     playerBadge.className = "status-badge badge-warning";
-                    playerBadge.innerHTML = "⚠️ FALLBACK PLAYER • USING VIDSRC EMBED";
+                    playerBadge.innerHTML = "⚠️ FALLBACK PLAYER • VIDSRC EMBED";
+                    iframeElement.onload = hideLoading;
+                    setTimeout(hideLoading, 5000);
+                    return;
                 }
-
-                iframeElement.onload = hideLoading;
-                setTimeout(hideLoading, 8000);
-
+                
+                // Success! Play the extracted URL
+                addLog(`SUCCESS! Extracted video URL: ${videoUrl.substring(0, 100)}...`);
+                updateLoadingMessage("STREAM ACQUIRED!", "Starting player");
+                
+                iframeElement.style.display = 'none';
+                videoElement.style.display = 'block';
+                playerBadge.className = "status-badge badge-primary";
+                playerBadge.innerHTML = "🚀 CLOUDNESTRA STREAM EXTRACTED • PLAYING";
+                
+                currentVideoUrl = videoUrl;
+                
+                if (videoUrl.includes('.m3u8')) {
+                    addLog("Initializing HLS.js for m3u8 stream...");
+                    if (Hls.isSupported()) {
+                        const hls = new Hls({
+                            debug: false,
+                            enableWorker: true,
+                            lowLatencyMode: true,
+                            manifestLoadingTimeOut: 30000,
+                            manifestLoadingMaxRetry: 3
+                        });
+                        hls.loadSource(videoUrl);
+                        hls.attachMedia(videoElement);
+                        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                            addLog("HLS manifest loaded, playing...");
+                            videoElement.play().catch(e => addLog(`Play error: ${e.message}`, true));
+                        });
+                        hls.on(Hls.Events.ERROR, (event, data) => {
+                            addLog(`HLS Error: ${data.type} - ${data.details}`, true);
+                        });
+                    } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                        videoElement.src = videoUrl;
+                    } else {
+                        addLog("HLS not supported, using iframe fallback", true);
+                        iframeElement.style.display = 'block';
+                        videoElement.style.display = 'none';
+                        iframeElement.src = videoUrl;
+                    }
+                } else {
+                    videoElement.src = videoUrl;
+                }
+                
+                hideLoading();
+                
             } catch (error) {
                 console.error(error);
-                document.getElementById('loading-msg').textContent = "CRITICAL MAINFRAME ERROR";
-                document.getElementById('loading-msg').style.color = "var(--cyber-red)";
-                setTimeout(() => { window.location.href = 'index.html'; }, 3000);
+                addLog(`CRITICAL ERROR: ${error.message}`, true);
+                updateLoadingMessage("CRITICAL MAINFRAME ERROR", error.message);
+                setTimeout(() => { window.location.href = 'index.html'; }, 5000);
             }
         }
     </script>
