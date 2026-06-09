@@ -9,21 +9,62 @@
         :root {
             --primary: #00ff9d;
             --secondary: #7b61ff;
+            --accent: #ff00e5;
             --dark-bg: #0a0a0f;
             --card-bg: #13131f;
             --cyber-blue: #00ccff;
             --cyber-yellow: #fff200;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
         body {
             font-family: 'Exo 2', sans-serif;
             background: var(--dark-bg);
             color: white;
             min-height: 100vh;
-            background-image: linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(123, 97, 255, 0.03) 1px, transparent 1px);
+            background-image: linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(123, 97, 255, 0.03) 1px, transparent 1px);
             background-size: 50px 50px;
+        }
+
+        /* Cyberpunk grid overlay */
+        .cyber-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(0, 255, 157, 0.02) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(123, 97, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* Scan lines effect */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            z-index: -1;
+            opacity: 0.2;
+            pointer-events: none;
+            animation: scanlines 10s linear infinite;
+        }
+
+        @keyframes scanlines {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100px; }
         }
 
         header {
@@ -32,6 +73,8 @@
             text-align: center;
             border-bottom: 2px solid var(--primary);
             box-shadow: 0 0 25px rgba(0, 255, 157, 0.3);
+            position: relative;
+            z-index: 100;
         }
 
         h1 {
@@ -69,7 +112,7 @@
             box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
         }
 
-        #searchBtn, #tvBtn, #movieBtn {
+        #searchBtn {
             padding: 12px 24px;
             border: 1px solid var(--primary);
             background: rgba(0, 255, 157, 0.1);
@@ -80,7 +123,7 @@
             transition: all 0.3s;
         }
 
-        #searchBtn:hover, #tvBtn:hover, #movieBtn:hover {
+        #searchBtn:hover {
             background: var(--primary);
             color: #000;
             box-shadow: 0 0 20px var(--primary);
@@ -100,12 +143,18 @@
             color: var(--secondary);
             cursor: pointer;
             font-family: 'Share Tech Mono', monospace;
+            transition: all 0.3s;
         }
 
         .type-btn.active {
             background: var(--primary);
             color: #000;
             border-color: var(--primary);
+        }
+
+        .type-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
         }
 
         .movies-grid {
@@ -183,41 +232,78 @@
 
         .loading {
             text-align: center;
-            padding: 40px;
+            padding: 60px;
             color: var(--primary);
-            font-family: monospace;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
         }
-        
-        .note {
+
+        .loading .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 255, 157, 0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .footer {
             text-align: center;
-            color: #00ff9d;
-            font-size: 12px;
-            margin: 20px;
-            font-family: monospace;
+            padding: 30px;
+            color: var(--cyber-blue);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.8rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .movies-grid { gap: 20px; padding: 20px 15px; }
+            .movie-poster { height: 280px; }
+            .search-container { flex-direction: column; }
+            #searchBtn { width: 100%; }
         }
     </style>
 </head>
 <body>
+    <div class="cyber-grid"></div>
+    <div class="scanlines"></div>
+
     <header>
         <h1>MVHD CYBERCINEMA</h1>
         <div class="search-container">
             <input type="text" id="searchInput" placeholder="Search for a movie or TV show...">
-            <button id="searchBtn">Search</button>
+            <button id="searchBtn">🔍 SEARCH</button>
         </div>
         <div class="type-selector">
-            <button id="movieBtn" class="type-btn active">🎥 Movies</button>
-            <button id="tvBtn" class="type-btn">📺 TV Shows</button>
+            <button id="movieBtn" class="type-btn active">🎥 MOVIES</button>
+            <button id="tvBtn" class="type-btn">📺 TV SHOWS</button>
         </div>
     </header>
 
     <main>
-        <div id="moviesGrid" class="movies-grid"></div>
-        <div class="note">☁️ Cloudnestra Streaming • Click any poster to play</div>
+        <div id="moviesGrid" class="movies-grid">
+            <div class="loading">
+                <div class="spinner"></div>
+                <div>LOADING CYBERCINEMA DATA...</div>
+            </div>
+        </div>
+        <div class="footer">
+            ⚡ MVHD CYBERCINEMA • CLOUDNESTRA POWERED • STREAM ANYWHERE
+        </div>
     </main>
 
     <script>
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         let currentType = 'movie';
+        let currentPage = 1;
+        let isLoading = false;
 
         const moviesGrid = document.getElementById('moviesGrid');
         const searchInput = document.getElementById('searchInput');
@@ -225,39 +311,63 @@
         const movieBtn = document.getElementById('movieBtn');
         const tvBtn = document.getElementById('tvBtn');
 
-        function setGridMessage(message) {
-            moviesGrid.innerHTML = `<div class="loading">${message}</div>`;
+        function setGridMessage(message, showSpinner = false) {
+            moviesGrid.innerHTML = `
+                <div class="loading">
+                    ${showSpinner ? '<div class="spinner"></div>' : ''}
+                    <div>${message}</div>
+                </div>
+            `;
         }
 
         // Generate Cloudnestra URL from TMDB ID
-        function generateCloudnestraUrl(id, type) {
-            const vidsrcUrl = `https://vidsrc.to/embed/${type}/${id}`;
+        function generateCloudnestraUrl(id, type, season = 1, episode = 1) {
+            let vidsrcUrl;
+            if (type === 'tv') {
+                vidsrcUrl = `https://vidsrc.to/embed/tv/${id}/${season}/${episode}`;
+            } else {
+                vidsrcUrl = `https://vidsrc.to/embed/movie/${id}`;
+            }
             const encoded = btoa(vidsrcUrl);
             return `https://cloudnestra.com/rcp/${encoded}`;
         }
 
-        async function fetchContent() {
+        async function fetchContent(page = 1) {
+            if (isLoading) return;
+            isLoading = true;
+            
             try {
-                setGridMessage('Loading CyberCinema Data...');
+                setGridMessage('FETCHING FROM DATABASE...', true);
                 let url;
                 if (currentType === 'movie') {
-                    url = `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`;
+                    url = `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=${page}`;
                 } else {
-                    url = `https://api.themoviedb.org/3/tv/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`;
+                    url = `https://api.themoviedb.org/3/tv/popular?api_key=${TMDB_API_KEY}&language=en-US&page=${page}`;
                 }
                 const res = await fetch(url);
                 const data = await res.json();
                 displayItems(data.results);
             } catch (error) {
-                setGridMessage('Network error. Please refresh.');
+                console.error('Fetch error:', error);
+                setGridMessage('⚠️ NETWORK ERROR • PLEASE REFRESH');
+            } finally {
+                isLoading = false;
             }
         }
 
         async function searchContent() {
             const term = searchInput.value.trim();
-            if (!term) return fetchContent();
+            if (!term) {
+                currentPage = 1;
+                fetchContent();
+                return;
+            }
+            
+            if (isLoading) return;
+            isLoading = true;
+            
             try {
-                setGridMessage('Scanning Databases...');
+                setGridMessage(`SCANNING FOR "${term}"...`, true);
                 let url;
                 if (currentType === 'movie') {
                     url = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(term)}`;
@@ -268,37 +378,44 @@
                 const data = await res.json();
                 displayItems(data.results);
             } catch (error) {
-                setGridMessage('Error searching.');
+                console.error('Search error:', error);
+                setGridMessage('⚠️ SEARCH ERROR • TRY AGAIN');
+            } finally {
+                isLoading = false;
             }
         }
 
         function displayItems(items) {
             moviesGrid.innerHTML = '';
             if (!items || items.length === 0) {
-                setGridMessage('No results found.');
+                setGridMessage('🔍 NO RESULTS FOUND');
                 return;
             }
+            
             const fragment = document.createDocumentFragment();
             items.forEach(item => {
                 if (!item.poster_path) return;
+                
                 const card = document.createElement('div');
                 card.className = 'movie-card';
                 const title = item.title || item.name;
                 const date = item.release_date || item.first_air_date;
-                const year = date ? date.substring(0,4) : 'N/A';
+                const year = date ? date.substring(0, 4) : 'N/A';
                 const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
                 
                 card.onclick = () => {
                     const cloudUrl = generateCloudnestraUrl(item.id, currentType);
-                    window.location.href = `player.html?url=${encodeURIComponent(cloudUrl)}&title=${encodeURIComponent(title)}&id=${item.id}&type=${currentType}`;
+                    window.location.href = `play.html?url=${encodeURIComponent(cloudUrl)}&title=${encodeURIComponent(title)}&id=${item.id}&type=${currentType}`;
                 };
                 
                 card.innerHTML = `
-                    <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" class="movie-poster" onerror="this.src='https://via.placeholder.com/300x450/1a1a1a/ffffff?text=MVHD'">
+                    <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" 
+                         class="movie-poster" 
+                         onerror="this.src='https://via.placeholder.com/300x450/1a1a1a/ffffff?text=MVHD'">
                     <div class="movie-info">
-                        <div class="movie-title">${title}</div>
-                        <div class="movie-year">${year}</div>
-                        <div class="movie-rating">⭐ ${rating}</div>
+                        <div class="movie-title">${escapeHtml(title)}</div>
+                        <div class="movie-year">📅 ${year}</div>
+                        <div class="movie-rating">⭐ ${rating}/10</div>
                     </div>
                 `;
                 fragment.appendChild(card);
@@ -306,23 +423,40 @@
             moviesGrid.appendChild(fragment);
         }
 
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Event listeners
         movieBtn.addEventListener('click', () => {
+            if (currentType === 'movie') return;
             currentType = 'movie';
+            currentPage = 1;
             movieBtn.classList.add('active');
             tvBtn.classList.remove('active');
+            searchInput.value = '';
             fetchContent();
         });
 
         tvBtn.addEventListener('click', () => {
+            if (currentType === 'tv') return;
             currentType = 'tv';
+            currentPage = 1;
             tvBtn.classList.add('active');
             movieBtn.classList.remove('active');
+            searchInput.value = '';
             fetchContent();
         });
 
         searchBtn.addEventListener('click', searchContent);
-        searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchContent(); });
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchContent();
+        });
 
+        // Initial load
         fetchContent();
     </script>
 </body>
