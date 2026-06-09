@@ -187,6 +187,14 @@
             color: var(--primary);
             font-family: monospace;
         }
+        
+        .note {
+            text-align: center;
+            color: #00ff9d;
+            font-size: 12px;
+            margin: 20px;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
@@ -204,6 +212,7 @@
 
     <main>
         <div id="moviesGrid" class="movies-grid"></div>
+        <div class="note">☁️ Pure Cloudnestra Streaming • No Ads</div>
     </main>
 
     <script>
@@ -218,6 +227,13 @@
 
         function setGridMessage(message) {
             moviesGrid.innerHTML = `<div class="loading">${message}</div>`;
+        }
+
+        // Generate Cloudnestra URL from TMDB ID
+        function generateCloudnestraUrl(id, type) {
+            const vidsrcUrl = `https://vidsrc.to/embed/${type}/${id}`;
+            const encoded = btoa(vidsrcUrl);
+            return `https://cloudnestra.com/rcp/${encoded}`;
         }
 
         async function fetchContent() {
@@ -256,18 +272,6 @@
             }
         }
 
-        // Generate Cloudnestra URL from TMDB ID
-        function generateCloudnestraUrl(tmdbId, type, season = 1, episode = 1) {
-            let vidsrcUrl;
-            if (type === 'tv') {
-                vidsrcUrl = `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}`;
-            } else {
-                vidsrcUrl = `https://vidsrc.to/embed/movie/${tmdbId}`;
-            }
-            const encoded = btoa(vidsrcUrl);
-            return `https://cloudnestra.com/rcp/${encoded}`;
-        }
-
         function displayItems(items) {
             moviesGrid.innerHTML = '';
             if (!items || items.length === 0) {
@@ -286,7 +290,7 @@
                 
                 card.onclick = () => {
                     const cloudUrl = generateCloudnestraUrl(item.id, currentType);
-                    window.location.href = `video.html?url=${encodeURIComponent(cloudUrl)}&title=${encodeURIComponent(title)}&type=${currentType}&id=${item.id}`;
+                    window.location.href = `player.html?url=${encodeURIComponent(cloudUrl)}&title=${encodeURIComponent(title)}&id=${item.id}&type=${currentType}`;
                 };
                 
                 card.innerHTML = `
