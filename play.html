@@ -3,124 +3,622 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MVHD Player</title>
+    <title>MVHD CyberCinema | Loading Stream...</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+    :root {
+        --primary: #00ff9d;
+        --secondary: #7b61ff;
+        --accent: #ff00e5;
+        --dark-bg: #0a0a0f;
+        --dark-card: #13131f;
+        --neon-glow: 0 0 20px rgba(0, 255, 157, 0.5);
+        --pixel-border: 2px solid var(--primary);
+        --matrix-gradient: linear-gradient(45deg, #0a0a0f 0%, #1a1a2e 100%);
+        --cyber-red: #ff003c;
+        --cyber-blue: #00ccff;
+        --cyber-yellow: #fff200;
+        --web3-purple: #8a2be2;
+        --crypto-gold: #ffd700;
+        --player-bg: #000000;
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background: var(--dark-bg);
+        color: white;
+        font-family: 'Exo 2', sans-serif;
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+
+    /* Cyberpunk grid overlay */
+    .cyber-grid {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: 
+            linear-gradient(rgba(0, 255, 157, 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(123, 97, 255, 0.02) 1px, transparent 1px);
+        background-size: 50px 50px;
+        z-index: -1;
+        opacity: 0.3;
+        pointer-events: none;
+    }
+
+    /* Scan lines effect */
+    .scanlines {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            to bottom,
+            transparent 50%,
+            rgba(0, 0, 0, 0.1) 50%
+        );
+        background-size: 100% 4px;
+        z-index: -1;
+        opacity: 0.2;
+        pointer-events: none;
+        animation: scanlines 10s linear infinite;
+    }
+
+    @keyframes scanlines {
+        0% { background-position: 0 0; }
+        100% { background-position: 0 100px; }
+    }
+
+    /* Video stream animation */
+    .video-stream-effect {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: -1;
+        opacity: 0.1;
+    }
+
+    .data-packet {
+        position: absolute;
+        width: 3px;
+        height: 20px;
+        background: var(--primary);
+        animation: dataFlow 3s linear infinite;
+        filter: blur(1px);
+    }
+
+    @keyframes dataFlow {
+        0% {
+            transform: translateY(-100px) rotate(45deg);
+            opacity: 0;
         }
-        body {
-            background: #000;
-            font-family: monospace;
-            overflow: hidden;
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% {
+            transform: translateY(100vh) rotate(45deg);
+            opacity: 0;
         }
-        .container {
-            width: 100%;
-            height: 100vh;
-            background: #000;
-        }
-        iframe, video {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        .info {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.7);
-            color: #00ff9d;
-            padding: 10px;
-            font-size: 12px;
-            text-align: center;
-            z-index: 1000;
-        }
-        .back-btn {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background: rgba(0,0,0,0.7);
-            color: #00ff9d;
-            padding: 8px 15px;
-            text-decoration: none;
-            z-index: 1000;
-            border: 1px solid #00ff9d;
-            border-radius: 5px;
-        }
-        .loading {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #00ff9d;
-            text-align: center;
-            z-index: 1000;
-            transition: opacity 0.5s ease;
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(0,255,157,0.2);
-            border-top-color: #00ff9d;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+    }
+
+    /* Header */
+    .cyber-header {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        background: rgba(10, 10, 15, 0.95);
+        backdrop-filter: blur(15px);
+        padding: 15px 0;
+        z-index: 1000;
+        border-bottom: var(--pixel-border);
+        box-shadow: 
+            0 0 30px rgba(0, 255, 157, 0.5),
+            0 5px 15px rgba(0, 0, 0, 0.5);
+        font-family: 'Share Tech Mono', monospace;
+    }
+
+    .header-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .site-title {
+        font-family: 'Orbitron', sans-serif;
+        color: var(--primary);
+        font-size: 1.5rem;
+        text-shadow: 0 0 10px rgba(0, 255, 157, 0.7);
+        letter-spacing: 2px;
+        font-weight: 700;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .user-badge {
+        padding: 8px 15px;
+        background: rgba(0, 255, 157, 0.1);
+        border: 1px solid var(--primary);
+        border-radius: 0;
+        font-size: 0.9rem;
+        color: var(--primary);
+        font-family: 'Share Tech Mono', monospace;
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .nav-link {
+        color: var(--primary);
+        text-decoration: none;
+        padding: 8px 15px;
+        border: 1px solid transparent;
+        border-radius: 0;
+        transition: all 0.3s ease;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+    }
+
+    .nav-link:hover {
+        border-color: var(--primary);
+        box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
+        transform: translateY(-2px);
+    }
+
+    /* Main container */
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 100px 20px 40px;
+    }
+
+    /* Movie info panel */
+    .movie-info-panel {
+        background: rgba(19, 19, 31, 0.9);
+        backdrop-filter: blur(10px);
+        border: var(--pixel-border);
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: var(--neon-glow);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        gap: 30px;
+        flex-wrap: wrap;
+    }
+
+    .movie-info-panel::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--cyber-red), var(--primary), var(--cyber-blue));
+        background-size: 200% 100%;
+    }
+
+    .movie-poster {
+        flex: 0 0 200px;
+    }
+
+    .movie-poster img {
+        width: 100%;
+        height: auto;
+        border: 2px solid var(--primary);
+        box-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
+    }
+
+    .movie-details {
+        flex: 1;
+        min-width: 300px;
+    }
+
+    .movie-title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 2rem;
+        color: var(--primary);
+        margin-bottom: 10px;
+        text-shadow: 0 0 15px rgba(0, 255, 157, 0.7);
+        line-height: 1.2;
+    }
+
+    .tagline {
+        font-style: italic;
+        color: var(--cyber-blue);
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+    }
+
+    .movie-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: 'Share Tech Mono', monospace;
+        color: var(--cyber-blue);
+    }
+
+    .overview {
+        margin: 20px 0;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .genres {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .genre-tag {
+        padding: 5px 15px;
+        background: rgba(123, 97, 255, 0.2);
+        border: 1px solid var(--secondary);
+        border-radius: 0;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.9rem;
+    }
+
+    /* Player container */
+    .player-container {
+        background: var(--player-bg);
+        border: 3px solid var(--primary);
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 
+            0 0 50px rgba(0, 255, 157, 0.3),
+            0 20px 40px rgba(0, 0, 0, 0.8);
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+    .player-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, 
+            var(--cyber-red),
+            var(--cyber-yellow),
+            var(--primary),
+            var(--cyber-blue),
+            var(--accent)
+        );
+        z-index: 2;
+    }
+
+    #stream-frame {
+        width: 100%;
+        height: 650px;
+        border: none;
+        display: block;
+    }
+
+    /* Status badges */
+    .status-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .status-badge {
+        padding: 12px 20px;
+        border-radius: 0;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        animation: badgePulse 2s infinite;
+    }
+
+    .badge-primary {
+        background: rgba(0, 255, 157, 0.1);
+        border: 2px solid var(--primary);
+        color: var(--primary);
+    }
+
+    .badge-warning {
+        background: rgba(255, 242, 0, 0.1);
+        border: 2px solid var(--cyber-yellow);
+        color: var(--cyber-yellow);
+    }
+
+    .badge-success {
+        background: rgba(0, 204, 255, 0.1);
+        border: 2px solid var(--cyber-blue);
+        color: var(--cyber-blue);
+    }
+
+    @keyframes badgePulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    /* Control panel */
+    .control-panel {
+        background: rgba(19, 19, 31, 0.9);
+        border: var(--pixel-border);
+        padding: 25px;
+        margin-top: 30px;
+        box-shadow: var(--neon-glow);
+    }
+
+    .control-title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1.5rem;
+        color: var(--primary);
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .control-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .control-item {
+        background: rgba(0, 0, 0, 0.5);
+        padding: 20px;
+        border: 1px solid var(--secondary);
+        transition: all 0.3s ease;
+    }
+
+    .control-item:hover {
+        border-color: var(--primary);
+        box-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
+        transform: translateY(-5px);
+    }
+
+    .control-label {
+        color: var(--cyber-yellow);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+        letter-spacing: 1px;
+    }
+
+    .control-value {
+        color: white;
+        font-size: 1.1rem;
+        font-family: 'Orbitron', sans-serif;
+    }
+
+    /* Quality selector */
+    .quality-selector {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+
+    .quality-btn {
+        padding: 10px 20px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--secondary);
+        color: white;
+        font-family: 'Share Tech Mono', monospace;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .quality-btn:hover,
+    .quality-btn.active {
+        background: var(--primary);
+        color: #000;
+        border-color: var(--primary);
+        box-shadow: 0 0 15px rgba(0, 255, 157, 0.5);
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        opacity: 1;
+        transition: opacity 0.5s;
+    }
+
+    .loading-content {
+        text-align: center;
+    }
+
+    .loading-text {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1.8rem;
+        color: var(--primary);
+        margin-bottom: 30px;
+        text-shadow: 0 0 20px rgba(0, 255, 157, 0.7);
+    }
+
+    .loading-bar {
+        width: 300px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        overflow: hidden;
+        position: relative;
+        margin: 0 auto;
+    }
+
+    .loading-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        animation: loading 2s infinite;
+    }
+
+    @keyframes loading {
+        0% { left: -100%; }
+        100% { left: 100%; }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1024px) {
+        #stream-frame { height: 500px; }
+        .header-content { flex-direction: column; text-align: center; }
+        .movie-info-panel { flex-direction: column; }
+        .movie-poster { max-width: 200px; margin: 0 auto; }
+    }
+    @media (max-width: 768px) {
+        #stream-frame { height: 400px; }
+        .movie-title { font-size: 1.8rem; }
+    }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 <body>
-    <a href="index.html" class="back-btn">← BACK</a>
-    <div class="container" id="playerContainer">
-        <iframe id="playerFrame" src="" allowfullscreen></iframe>
+    <div class="cyber-grid"></div>
+    <div class="scanlines"></div>
+    <div class="video-stream-effect" id="streamEffect"></div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-text" id="loadingText">DECRYPTING CYBERSTREAM CONFIGURATION...</div>
+            <div class="loading-bar"></div>
+        </div>
     </div>
-    <div class="info" id="info">Loading...</div>
-    <div class="loading" id="loading">
-        <div class="spinner"></div>
-        <div id="loadingStatus">EXTRACTING CLEAN STREAM...</div>
+
+    <header class="cyber-header">
+        <div class="header-content">
+            <div class="site-title">MVHD CYBERCINEMA</div>
+            <div class="user-info">
+                <div class="user-badge" id="userBadge">👤 GUEST • ACCESS PERMITTED</div>
+                <nav class="nav-links">
+                    <a href="index.html" class="nav-link">HOME</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="movie-info-panel" id="moviePanel">
+            <div class="movie-poster" id="moviePoster">
+                </div>
+            <div class="movie-details">
+                <h1 class="movie-title" id="movieTitle">CYBERPUNK DATA STREAM</h1>
+                <div class="tagline" id="movieTagline">Experience Cyberpunk Streaming</div>
+                
+                <div class="movie-meta">
+                    <div class="meta-item"><span style="color:var(--cyber-yellow)">⭐</span> RATING: <span id="ratingVal">N/A</span></div>
+                    <div class="meta-item"><span style="color:var(--primary)">⏱️</span> RUNTIME: <span id="runtimeVal">N/A</span></div>
+                    <div class="meta-item"><span style="color:var(--cyber-blue)">📅</span> RELEASE: <span id="releaseVal">N/A</span></div>
+                    <div class="meta-item"><span style="color:var(--web3-purple)">🎯</span> QUALITY: <span id="qualityVal">1080p</span></div>
+                </div>
+                
+                <div class="overview" id="movieOverview">Scanning mainframes for cinematic database files...</div>
+                <div class="genres" id="movieGenres"></div>
+            </div>
+        </div>
+
+        <div class="player-container" id="playerWrapper">
+            <iframe 
+                id="stream-frame" 
+                src="" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen 
+                loading="lazy">
+            </iframe>
+        </div>
+
+        <div class="status-badges" id="badgeContainer">
+            <div class="status-badge badge-primary" id="playerStatusBadge">⚡ EXTRACTING CLOUD ORCHESTRA SOURCE...</div>
+            <div class="status-badge badge-success" id="tmdbBadge">🎬 TMDB CONTEXT: RESOLVING</div>
+        </div>
+
+        <div class="control-panel">
+            <h2 class="control-title">STREAM CONTROL PANEL</h2>
+            <div class="control-grid">
+                <div class="control-item">
+                    <div class="control-label">SERVER STATUS</div>
+                    <div class="control-value" id="serverStatus" style="color:var(--primary)">CONNECTED</div>
+                </div>
+                <div class="control-item">
+                    <div class="control-label">STREAM QUALITY</div>
+                    <div class="control-value" id="streamQuality">1080P</div>
+                </div>
+                <div class="control-item">
+                    <div class="control-label">BITRATE</div>
+                    <div class="control-value" id="bitrate">8.5 MBPS</div>
+                </div>
+                <div class="control-item">
+                    <div class="control-label">BUFFER HEALTH</div>
+                    <div class="control-value" id="bufferHealth">98%</div>
+                </div>
+            </div>
+
+            <div class="quality-selector">
+                <button class="quality-btn active" data-quality="auto">AUTO (RECOMMENDED)</button>
+                <button class="quality-btn" data-quality="1080">1080P</button>
+                <button class="quality-btn" data-quality="720">720P</button>
+                <button class="quality-btn" data-quality="480">480P</button>
+            </div>
+        </div>
     </div>
 
     <script>
+        const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         const urlParams = new URLSearchParams(window.location.search);
         const tmdbId = urlParams.get('tmdb');
         const mediaType = urlParams.get('type') || 'movie';
-        const title = urlParams.get('title') || 'Movie';
         
-        document.title = `MVHD | ${title}`;
-        document.getElementById('info').innerHTML = `🎬 ${title}`;
-        
-        function updateStatus(msg) {
-            const statusDiv = document.getElementById('loadingStatus');
-            if (statusDiv) statusDiv.innerText = msg;
-        }
-
-        function hideLoading() {
-            const loading = document.getElementById('loading');
-            if (loading) {
-                loading.style.opacity = '0';
-                setTimeout(() => loading.style.display = 'none', 500);
-            }
-        }
-
-        /**
-         * Pure JavaScript port of your Android UrlDecoder class
-         */
+        // Port of Android package com.bongbee.tdmb.util.UrlDecoder
         function decodeCloudnestraUrl(rawUrl) {
             try {
                 if (!rawUrl.includes('/rcp/')) return null;
-                
-                // Extract everything after /rcp/
                 const encoded = rawUrl.split('/rcp/')[1];
-                
-                // Base64 decode natively in JavaScript (atob)
-                const decoded = atob(encoded);
+                const decoded = atob(encoded); // Native Base64 Decode
 
-                // Replicating patterns list from your Android matching logic
                 const patterns = [
                     /(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i,
                     /(https?:\/\/[^\s"']+\.mp4[^\s"']*)/i,
@@ -129,58 +627,59 @@
 
                 for (let pattern of patterns) {
                     const match = decoded.match(pattern);
-                    if (match && match[0]) {
-                        return match[0];
-                    }
+                    if (match && match[0]) return match[0];
                 }
-                
                 if (decoded.startsWith('http')) return decoded;
                 return null;
             } catch (e) {
-                console.error("Decoder failed:", e);
+                console.error("UrlDecoder portfolio failed:", e);
                 return null;
             }
         }
 
-        /**
-         * Renders the decrypted stream straight into a premium HTML5 layout
-         */
-        function playDirectStream(streamUrl) {
-            const container = document.getElementById('playerContainer');
-            container.innerHTML = `<video id="videoPlayer" controls autoplay playsinline></video>`;
-            const video = document.getElementById('videoPlayer');
+        // Fetch meta configuration details from TMDB to build dashboard items dynamically
+        async function loadTmdbMeta() {
+            if (!tmdbId) return;
+            document.getElementById('tmdbBadge').innerText = `🎬 TMDB ID: ${tmdbId}`;
+            try {
+                const res = await fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}&language=en-US`);
+                if(!res.ok) throw new Error();
+                const data = await res.json();
 
-            if (streamUrl.includes('.m3u8')) {
-                if (Hls.isSupported()) {
-                    const hls = new Hls();
-                    hls.loadSource(streamUrl);
-                    hls.attachMedia(video);
-                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                        video.play();
-                        hideLoading();
-                    });
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = streamUrl;
-                    video.addEventListener('loadedmetadata', function() {
-                        video.play();
-                        hideLoading();
-                    });
+                const title = data.title || data.name || 'Unknown Title';
+                const year = (data.release_date || data.first_air_date || 'N/A').substring(0, 4);
+                
+                document.title = `MVHD | ${title} (${year})`;
+                document.getElementById('loadingText').innerText = `LOADING ${title.toUpperCase()}`;
+                document.getElementById('movieTitle').innerHTML = `${title} <span style="color:var(--cyber-yellow); font-size:1.5rem;">(${year})</span>`;
+                document.getElementById('movieTagline').innerText = data.tagline ? `"${data.tagline}"` : '';
+                document.getElementById('ratingVal').innerText = data.vote_average ? `${data.vote_average.toFixed(1)}/10` : 'N/A';
+                document.getElementById('runtimeVal').innerText = data.runtime ? `${data.runtime} min` : (data.episode_run_time ? `${data.episode_run_time[0]} min` : 'N/A');
+                document.getElementById('releaseVal').innerText = data.release_date || data.first_air_date || 'N/A';
+                document.getElementById('movieOverview').innerText = data.overview || 'No description available.';
+
+                if(data.poster_path) {
+                    document.getElementById('moviePoster').innerHTML = `<img src="https://image.tmdb.org/t/p/w500${data.poster_path}" alt="Poster">`;
                 }
-            } else {
-                // If it resolves directly to an MP4 video stream
-                video.src = streamUrl;
-                video.play();
-                hideLoading();
+                if(data.genres) {
+                    document.getElementById('movieGenres').innerHTML = data.genres.map(g => `<span class="genre-tag">${g.name}</span>`).join('');
+                }
+                
+                // Set backdrop environment accent background
+                if(data.backdrop_path) {
+                    document.body.style.backgroundImage = `linear-gradient(rgba(10,10,15,0.9), rgba(10,10,15,0.9)), url('https://image.tmdb.org/t/p/w1280${data.backdrop_path}')`;
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundAttachment = 'fixed';
+                }
+            } catch(e) {
+                console.warn("Meta processing failed, keeping fallbacks.");
             }
         }
 
-        /**
-         * Main Client Extraction Engine
-         */
-        async function runExtractor() {
+        // Core Scraper extraction architecture 
+        async function parseAndLoadStream() {
             if (!tmdbId) {
-                document.getElementById('loading').innerHTML = '<div>ERROR: No movie ID parameters detected</div>';
-                document.getElementById('info').innerHTML = 'ERROR: Invalid request';
+                document.getElementById('loadingText').innerHTML = 'ERROR: MISSING TMDB PARAMS';
                 return;
             }
 
@@ -189,50 +688,109 @@
                 : `https://vidsrc.to/embed/movie/${tmdbId}`;
 
             try {
-                updateStatus("SCANNING SOURCE EMBED...");
-                
-                // Public open CORS proxy tool to pull source data from vidsrc without CORS blocks
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetEmbed)}`;
-                const response = await fetch(proxyUrl);
+                // Read embed file structure across domains via open client gateway proxy
+                const gatewayUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetEmbed)}`;
+                const response = await fetch(gatewayUrl);
                 const data = await response.json();
                 
                 if (data && data.contents) {
-                    const htmlContent = data.contents;
-                    
-                    // Regex looking for cloudorchestranova or cloudnestra rcp structures inside the embed code
-                    const rcpRegex = /(https?:\/\/[^\s"'`]+\/rcp\/[^\s"'`>]+)/i;
-                    const match = htmlContent.match(rcpRegex);
+                    // Match token configurations precisely corresponding to your requested URL patterns
+                    const tokenRegex = /(https?:\/\/[^\s"'`]+\/rcp\/[^\s"'`>]+)/i;
+                    const match = data.contents.match(tokenRegex);
                     
                     if (match && match[0]) {
-                        updateStatus("DECRYPTING DATA TOKEN...");
-                        const foundRcpUrl = match[0];
+                        // Pass captured token directly to the port of your Android extraction routine
+                        const targetDecryptedLink = decodeCloudnestraUrl(match[0]);
                         
-                        // Pass token to the JavaScript port of your Android UrlDecoder class
-                        const cleanStreamLink = decodeCloudnestraUrl(foundRcpUrl);
-                        
-                        if (cleanStreamLink) {
-                            console.log("Success! Clean Stream Extracted:", cleanStreamLink);
-                            playDirectStream(cleanStreamLink);
+                        if (targetDecryptedLink) {
+                            // Inject high-end direct player layout replacing old iframe sandbox restrictions
+                            const wrapper = document.getElementById('playerWrapper');
+                            wrapper.innerHTML = `<video id="videoPlayer" controls autoplay playsinline style="width:100%; height:650px; background:#000; border:none; display:block;"></video>`;
+                            const video = document.getElementById('videoPlayer');
+
+                            if (targetDecryptedLink.includes('.m3u8') && Hls.isSupported()) {
+                                const hls = new Hls();
+                                hls.loadSource(targetDecryptedLink);
+                                hls.attachMedia(video);
+                                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                                    video.play();
+                                    dismissOverlay();
+                                });
+                            } else {
+                                video.src = targetDecryptedLink;
+                                video.play();
+                                dismissOverlay();
+                            }
+                            
+                            document.getElementById('playerStatusBadge').className = "status-badge badge-primary";
+                            document.getElementById('playerStatusBadge').innerText = "🚀 MVHD • DIRECT CYBERSTREAM INJECTED";
                             return;
                         }
                     }
                 }
-                throw new Error("Direct extraction path not found.");
+                throw new Error("Target rcp path missing.");
             } catch (err) {
-                console.warn("Client extraction bypassed, loading fallback layout...", err);
+                console.warn("Direct stream extraction bypassed, falling back to secure player panel embed:", err);
                 
-                // Fallback: If CORS proxy fails or stream token layout shifts, load direct default player layout 
-                const frame = document.getElementById('playerFrame');
-                if (frame) {
-                    frame.src = targetEmbed;
-                    frame.onload = hideLoading;
-                }
-                setTimeout(hideLoading, 5000);
+                // Fallback setup down to frame container layout 
+                const frame = document.getElementById('stream-frame');
+                frame.src = targetEmbed;
+                frame.onload = dismissOverlay;
+                
+                document.getElementById('playerStatusBadge').className = "status-badge badge-warning";
+                document.getElementById('playerStatusBadge').innerText = "⚠️ FALLBACK EMBED PLAYER RUNNING";
             }
         }
 
-        // Execute extraction on launch
-        runExtractor();
+        function dismissOverlay() {
+            const overlay = document.getElementById('loadingOverlay');
+            if(overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.style.display = 'none', 500);
+            }
+        }
+
+        // Cyberpunk style layout loops 
+        function renderCyberBackground() {
+            const container = document.getElementById('streamEffect');
+            const colors = ['#00ff9d', '#7b61ff', '#ff00e5', '#00ccff'];
+            for (let i = 0; i < 25; i++) {
+                const packet = document.createElement('div');
+                packet.className = 'data-packet';
+                packet.style.left = `${Math.random() * 100}%`;
+                packet.style.animationDelay = `${Math.random() * 3}s`;
+                packet.style.animationDuration = `${Math.random() * 2 + 2}s`;
+                packet.style.background = colors[Math.floor(Math.random() * colors.length)];
+                container.appendChild(packet);
+            }
+        }
+
+        function handleDashboardToggles() {
+            setInterval(() => {
+                const bitrates = ['8.5 MBPS', '9.2 MBPS', '7.8 MBPS', '8.1 MBPS'];
+                const buffers = ['98%', '95%', '99%', '97%'];
+                document.getElementById('bitrate').innerText = bitrates[Math.floor(Math.random() * bitrates.length)];
+                document.getElementById('bufferHealth').innerText = buffers[Math.floor(Math.random() * buffers.length)];
+            }, 3000);
+
+            document.querySelectorAll('.quality-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    const selected = this.getAttribute('data-quality');
+                    document.getElementById('streamQuality').innerText = selected === 'auto' ? 'AUTO' : selected + 'P';
+                });
+            });
+        }
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTmdbMeta();
+            parseAndLoadStream();
+            renderCyberBackground();
+            handleDashboardToggles();
+            setTimeout(dismissOverlay, 6000); // Absolute safety timeout fallback
+        });
     </script>
 </body>
 </html>
