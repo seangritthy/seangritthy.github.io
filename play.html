@@ -193,7 +193,7 @@
     <div class="loading-overlay" id="loadingOverlay">
         <div style="text-align:center;">
             <div class="loading-text" id="loadingText">BYPASSING FIREWALLS & EXTRACTING AD-FREE STREAM...</div>
-            <div style="color:var(--cyber-blue); font-family:monospace; margin-top:10px;" id="loadingLog">Connecting to vidsrc.to node...</div>
+            <div style="color:var(--cyber-blue); font-family:monospace; margin-top:10px;" id="loadingLog">Connecting to vsembed.ru node...</div>
         </div>
     </div>
 
@@ -332,15 +332,15 @@
             } catch (e) { logAction("Meta warning: TMDB sync failed."); }
         }
 
-        // --- THE PERFECT NO-ADS EXTRACTION ENGINE (SINGLE TARGET: vidsrc.to) ---
+        // --- THE PERFECT NO-ADS EXTRACTION ENGINE (TARGET: vsembed.ru) ---
         async function executePerfectExtractor() {
             if (!tmdbId) return dismissOverlay();
 
-            // Only use vidsrc.to as requested (ignoring down .xyz domain)
-            const targetEmbed = `https://vidsrc.to/embed/${mediaType}/${tmdbId}`;
+            // Switched target destination from vidsrc.to -> vsembed.ru
+            const targetEmbed = `https://vsembed.ru/embed/${mediaType}/${tmdbId}`;
             let extractedCleanUrl = null;
 
-            logAction(`Scanning Primary Node: vidsrc.to...`);
+            logAction(`Scanning Primary Node: vsembed.ru...`);
             
             try {
                 // Fetch using CORS proxy
@@ -384,7 +384,7 @@
                 extractionBadge.innerText = "🚀 MVHD: PERFECT NATIVE AD-FREE STREAM CONNECTED";
 
             } else {
-                // 2. FAILSAFE: If extraction fails, use normal iframe.
+                // 2. FAILSAFE: If extraction fails, use normal iframe with vsembed
                 logAction("Extraction failed. Booting standard embed protocol...");
                 const frame = document.getElementById('stream-frame');
                 if (frame) {
