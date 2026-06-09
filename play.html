@@ -1,681 +1,528 @@
-<?php
-// Add this to the TOP of your existing video.php
-session_start();
-
-// Check if this is an IPTV request
-if (isset($_GET['iptv']) && $_GET['iptv'] == '1') {
-    $tmdb_id = $_GET['tmdb'] ?? '';
-    
-    if (!empty($tmdb_id)) {
-        $embed_url = "https://www.2embed.cc/embed/$tmdb_id";
-        header("Location: $embed_url");
-        exit;
-    }
-}
-
-include 'tmdb-api-key.php';
-
-// Check if user is not a paid user
-if (!isset($_SESSION['user_type']) || strtolower($_SESSION['user_type']) != 'paid') {
-    die("
-    <!DOCTYPE html>
-    <html lang='km'>
-    <head>
-        <meta charset='UTF-8'>
-        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-        <link href='https://fonts.googleapis.com/css2?family=Moul&display=swap' rel='stylesheet'>
-        <style>
-            body {
-                margin: 0;
-                padding: 0;
-                font-family: 'Moul', serif;
-                background-color: #f0f0f0;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                flex-direction: column;
-                height: 100vh;
-                text-align: center;
-                padding: 20px;
-                box-sizing: border-box;
-            }
-            img {
-                max-width: 80%;
-                height: auto;
-                border-radius: 12px;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-                margin-bottom: 20px;
-            }
-            h2 {
-                color: #b30000;
-                font-size: 24px;
-                margin-bottom: 10px;
-            }
-            p {
-                font-size: 18px;
-                margin: 5px 0;
-            }
-            a {
-                color: blue;
-                text-decoration: none;
-            }
-        </style>
-    </head>
-    <body>
-        <img src='https://i.imgur.com/6b35j7X.png' alt='cute girl'>
-        <h2>សូមអភ័យទោស!</h2>
-        <p>អ្នកត្រូវតែជាសមាជិកគណនី <strong>Paid</strong> ដើម្បីអាចទស្សនាវីដេអូនេះ។</p>
-        <p>សូម <a href='profile.php'>ដំឡើងកំរិតគណនី</a></p>
-    </body>
-    </html>
-    ");
-}
-
-$user_type = strtolower($_SESSION['user_type']);
-
-if (!isset($_GET['tmdb'])) {
-    die("សំណើវីដេអូមិនត្រឹមត្រូវ។");
-}
-
-$tmdb_id = htmlspecialchars($_GET['tmdb']);
-$embed_url = "https://vidsrc.to/embed/movie/$tmdb_id";
-
-// IMPROVED: Function to extract Cloudnestra URL using multiple methods
-function extract_cloudnestra_url_improved($tmdb_id) {
-    $found_urls = [];
-    $debug_info = [];
-    
-    // METHOD 1: Try known Cloudnestra API endpoints
-    $cloudnestra_apis = [
-        "https://api.cloudnestra.xyz/movie/$tmdb_id",
-        "https://cloudnestra.com/api/stream/$tmdb_id",
-        "https://cdn.cloudnestra.net/movie/$tmdb_id"
-    ];
-    
-    foreach ($cloudnestra_apis as $api_url) {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $api_url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 5); // Short timeout
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0');
-        $response = curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        
-        if ($http_code == 200 && $response) {
-            $data = json_decode($response, true);
-            if ($data) {
-                if (isset($data['url'])) $found_urls[] = $data['url'];
-                if (isset($data['stream_url'])) $found_urls[] = $data['stream_url'];
-                if (isset($data['sources'][0]['url'])) $found_urls[] = $data['sources'][0]['url'];
-            }
-        }
-        $debug_info[] = "API $api_url: HTTP $http_code";
-    }
-    
-    // METHOD 2: Try different embed providers with faster timeouts
-    $providers = [
-        "https://vidsrc.to/embed/movie/$tmdb_id" => 3,
-        "https://www.2embed.cc/embed/$tmdb_id" => 3,
-        "https://embed.su/embed/movie/$tmdb_id" => 3
-    ];
-    
-    foreach ($providers as $provider_url => $timeout) {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $provider_url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
-        $html = curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        
-        if ($html && $http_code == 200) {
-            // Look for streaming URLs
-            $patterns = [
-                '/(?:https?:\/\/[^\s\'"<>]+\.m3u8[^\s\'"<>]*)/i',
-                '/(?:https?:\/\/[^\s\'"<>]+\.mp4[^\s\'"<>]*)/i',
-                '/(?:https?:\/\/[^\s\'"<>]+cloudnestra[^\s\'"<>]+)/i',
-                '/file:\s*["\']([^"\']+\.(?:m3u8|mp4)[^"\']*)["\']/i',
-                '/src:\s*["\']([^"\']+\.(?:m3u8|mp4)[^"\']*)["\']/i'
-            ];
-            
-            foreach ($patterns as $pattern) {
-                if (preg_match_all($pattern, $html, $matches)) {
-                    foreach ($matches[1] ?? $matches[0] as $match) {
-                        $clean_url = htmlspecialchars(trim($match));
-                        if (!in_array($clean_url, $found_urls) && filter_var($clean_url, FILTER_VALIDATE_URL)) {
-                            $found_urls[] = $clean_url;
-                        }
-                    }
-                }
-            }
-        }
-        $debug_info[] = "Provider $provider_url: HTTP $http_code";
-    }
-    
-    // Return both URLs and debug info
-    return ['urls' => array_unique($found_urls), 'debug' => $debug_info];
-}
-
-// Execute extraction with timeout handling
-$extraction_result = ['urls' => [], 'debug' => []];
-try {
-    $extraction_result = extract_cloudnestra_url_improved($tmdb_id);
-} catch (Exception $e) {
-    $extraction_result['debug'][] = "Error: " . $e->getMessage();
-}
-
-$cloudnestra_urls = $extraction_result['urls'];
-$debug_info = $extraction_result['debug'];
-
-// Also check if we have any URLs from query parameter (manual entry)
-if (isset($_GET['cloudnestra_url']) && !empty($_GET['cloudnestra_url'])) {
-    $manual_url = htmlspecialchars($_GET['cloudnestra_url']);
-    if (!in_array($manual_url, $cloudnestra_urls)) {
-        $cloudnestra_urls[] = $manual_url;
-    }
-}
-
-function fetch_tmdb_data($tmdb_id, $tmdb_api_key) {
-    $movie_kh = @file_get_contents("https://api.themoviedb.org/3/movie/$tmdb_id?api_key=$tmdb_api_key&language=km-KH");
-    $movie_en = @file_get_contents("https://api.themoviedb.org/3/movie/$tmdb_id?api_key=$tmdb_api_key&language=en-US");
-    $credits = @file_get_contents("https://api.themoviedb.org/3/movie/$tmdb_id/credits?api_key=$tmdb_api_key");
-
-    $movie_data = json_decode($movie_kh, true) ?: [];
-    $fallback_data = json_decode($movie_en, true) ?: [];
-    $credits_data = json_decode($credits, true) ?: [];
-
-    foreach ($fallback_data as $key => $value) {
-        if (empty($movie_data[$key])) {
-            $movie_data[$key] = $value;
-        }
-    }
-
-    return [$movie_data, $credits_data];
-}
-
-list($movie, $credits) = fetch_tmdb_data($tmdb_id, $tmdb_api_key);
-
-$video_title = $movie['title'] ?? 'មិនស្គាល់';
-$video_description = $movie['overview'] ?? 'មិនមានការពិពណ៌នា';
-$rating = $movie['vote_average'] ?? 0;
-$views = isset($movie['popularity']) ? round($movie['popularity'] * 1500) : 0;
-$genre = array_map(fn($g) => $g['name'], $movie['genres'] ?? []);
-
-$director = 'មិនស្គាល់';
-foreach ($credits['crew'] ?? [] as $member) {
-    if ($member['job'] === 'Director') {
-        $director = $member['name'];
-        break;
-    }
-}
-
-$actors = [];
-foreach (array_slice($credits['cast'] ?? [], 0, 10) as $actor) {
-    $actors[] = $actor['name'];
-}
-
-$country = implode(', ', array_map(fn($c) => $c['name'], $movie['production_countries'] ?? []));
-$company = array_map(fn($c) => $c['name'], $movie['production_companies'] ?? []);
-$budget = '$' . number_format($movie['budget'] ?? 0);
-$worldwide_gross = '$' . number_format($movie['revenue'] ?? 0);
-
-if (!empty($movie['runtime'])) {
-    $duration = floor($movie['runtime'] / 60) . 'h ' . ($movie['runtime'] % 60) . 'min';
-} else {
-    $duration = 'មិនមាន';
-}
-
-$release_date = $movie['release_date'] ?? 'មិនមានកាលបរិច្ឆេទ';
-
-$imdb_rating = rand(6, 9) + rand(0, 9) / 10;
-$rotten_tomatoes = rand(70, 100) . '%';
-$metacritic = rand(60, 85);
-$filmaffinity = rand(5, 8) + rand(0, 9) / 10;
-?>
-
 <!DOCTYPE html>
 <html lang="km">
 <head>
     <meta charset="UTF-8">
-    <title><?php echo htmlspecialchars($video_title); ?> - Cloudnestra Stream</title>
-    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloudnestra URL Extractor</title>
     <style>
-    body {
-        background-color: #000;
-        color: #fff;
-        font-family: 'Battambang', sans-serif;
-        margin: 0;
-        padding: 0;
-    }
-
-    .video-player {
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-    .video-container {
-        width: 100%;
-        height: 550px;
-        border-radius: 10px;
-        overflow: hidden;
-        background-color: #111;
-    }
-    iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-    }
-    .header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        background: rgba(0, 47, 255, 0.6);
-        color: #fff;
-        padding: 15px 0;
-        z-index: 1000;
-        font-size: 28px;
-        text-align: center;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-    }
-    .header nav {
-        margin-top: 10px;
-    }
-    .header nav a {
-        color: #fff;
-        margin: 0 12px;
-        text-decoration: none;
-        font-weight: bold;
-        font-size: 30px;
-    }
-    .header nav a:hover {
-        color: rgb(255, 255, 255);
-    }
-    .header-top {
-        display: flex;
-        justify-content: space-between;
-        padding: 0 20px;
-        font-size: 16px;
-        color: #ccc;
-    }
-    .video-title {
-        font-size: 40px;
-        margin-top: 380px;
-        color: #00ffcc;
-        text-align: left;
-    }
-    .back-link {
-        color: #fff;
-        margin-bottom: 20px;
-        text-decoration: none;
-        font-size: 15px;
-        display: block;
-    }
-    .back-link:hover {
-        color: red;
-        text-decoration: underline;
-    }
-    .video-description {
-        font-size: 10px;
-        color: #ccc;
-        text-align: left;
-        margin-top: 20px;
-        line-height: 1.6;
-    }
-    .video-info {
-        font-size: 10px;
-        color: #ccc;
-        margin-top: 20px;
-        text-align: left;
-        width: 100%;
-    }
-    .rating-stars {
-        margin-top: 10px;
-    }
-    .rating-stars span {
-        font-size: 22px;
-        margin-right: 8px;
-    }
-    .genres, .info-box {
-        margin: 15px 0;
-        text-align: left;
-    }
-    .genre-badge {
-        display: inline-block;
-        background-color: #222;
-        color: #00ccff;
-        border-radius: 5px;
-        padding: 5px 12px;
-        margin: 5px;
-        font-size: 10px;
-        text-decoration: none;
-        transition: background-color 0.3s, color 0.3s;
-    }
-    .genre-badge:hover {
-        background-color: #00ccff;
-        color: black;
-    }
-    .info-box a {
-        color: #00ccff;
-        text-decoration: none;
-        font-size: 10px;
-    }
-    .info-box a:hover {
-        text-decoration: underline;
-    }
-    
-    /* Cloudnestra URL Section Styles */
-    .cloudnestra-section {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        border: 2px solid #00ffcc;
-        border-radius: 15px;
-        padding: 20px;
-        margin: 20px 0;
-        box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
-        width: 100%;
-    }
-    .cloudnestra-title {
-        color: #00ffcc;
-        font-size: 24px;
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .cloudnestra-title::before {
-        content: "☁️";
-        font-size: 28px;
-    }
-    .cloudnestra-urls {
-        background-color: #0a0a0a;
-        border-radius: 10px;
-        padding: 15px;
-        margin-top: 10px;
-    }
-    .cloudnestra-url-item {
-        background-color: #1a1a1a;
-        margin: 10px 0;
-        padding: 12px;
-        border-radius: 8px;
-        border-left: 4px solid #00ffcc;
-        word-break: break-all;
-        font-family: monospace;
-        font-size: 12px;
-    }
-    .cloudnestra-url-item a {
-        color: #00ffcc;
-        text-decoration: none;
-    }
-    .cloudnestra-url-item a:hover {
-        text-decoration: underline;
-        color: #fff;
-    }
-    .copy-btn {
-        background-color: #00ffcc;
-        color: #000;
-        border: none;
-        padding: 5px 10px;
-        border-radius: 5px;
-        cursor: pointer;
-        margin-left: 10px;
-        font-size: 11px;
-        font-weight: bold;
-    }
-    .copy-btn:hover {
-        background-color: #fff;
-    }
-    .no-urls {
-        color: #ff6b6b;
-        text-align: center;
-        padding: 20px;
-        font-style: italic;
-    }
-    .badge {
-        display: inline-block;
-        background-color: #00ffcc;
-        color: #000;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-size: 10px;
-        font-weight: bold;
-        margin-left: 10px;
-    }
-    .debug-info {
-        background-color: #2a2a2a;
-        border-radius: 10px;
-        padding: 10px;
-        margin-top: 15px;
-        font-size: 11px;
-        color: #888;
-        border-left: 3px solid #ff6600;
-    }
-    .manual-input {
-        margin-top: 15px;
-        display: flex;
-        gap: 10px;
-    }
-    .manual-input input {
-        flex: 1;
-        padding: 8px;
-        border-radius: 5px;
-        border: 1px solid #00ffcc;
-        background: #1a1a1a;
-        color: #fff;
-        font-family: monospace;
-    }
-    .manual-input button {
-        background: #00ffcc;
-        color: #000;
-        border: none;
-        padding: 8px 15px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-weight: bold;
-    }
-    .url-counter {
-        font-size: 14px;
-        color: #00ffcc;
-        margin-left: 10px;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .input-group button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+        
+        .input-group button:hover {
+            transform: translateY(-2px);
+            background: #5a67d8;
+        }
+        
+        .url-list {
+            background: #f7f7f7;
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .url-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            word-break: break-all;
+        }
+        
+        .url-item a {
+            color: #667eea;
+            text-decoration: none;
+            flex: 1;
+            margin-right: 10px;
+        }
+        
+        .url-item a:hover {
+            text-decoration: underline;
+        }
+        
+        .copy-btn {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .copy-btn:hover {
+            background: #38a169;
+        }
+        
+        .test-btn {
+            background: #ed8936;
+        }
+        
+        .test-btn:hover {
+            background: #dd6b20;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+            display: block;
+        }
+        
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+            display: block;
+        }
+        
+        .status.info {
+            background: #bee3f8;
+            color: #2c5282;
+            border: 1px solid #90cdf4;
+            display: block;
+        }
+        
+        .proxy-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .url-item {
+                flex-direction: column;
+            }
+            
+            .url-item button {
+                margin-top: 10px;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
-
-<div class="header">
-    <nav>
-        <a href="index.php">ទំព័រដើម</a>
-        <?php if (isset($_SESSION['username'])): ?>
-            <a href="profile.php">ប្រវត្តិរូប</a>
-            <a href="contact.php">ទំនាក់ទំនងយើង</a>
-            <?php if ($user_type == 'paid'): ?>
-                <a href="premium.php">ពិសេស</a>
-            <?php elseif ($user_type == 'admin'): ?>
-                <a href="admin_dashboard.php">គ្រប់គ្រង</a>
-                <a href="3D_upload.php">បញ្ចូល 3D</a>
-            <?php endif; ?>
-            <a href="logout.php">ចាកចេញ</a>
-        <?php else: ?>
-            <a href="login.php">ចូលប្រើ</a>
-            <a href="signup.php">ចុះឈ្មោះ</a>
-        <?php endif; ?>
-    </nav>
-    <div class="header-top">
-        <div id="current-time"></div>
-        <div id="current-date"></div>
-    </div>
-</div>
-
-<div class="video-player">
-    <div class="video-title">🎬 <?php echo htmlspecialchars($video_title); ?></div>
-    <a class="back-link" href="index.php">← ត្រឡប់ក្រោយ</a>
-
-    <!-- Cloudnestra URLs Section -->
-    <div class="cloudnestra-section">
-        <div class="cloudnestra-title">
-            Cloudnestra Streaming URLs
-            <span class="badge"><?php echo count($cloudnestra_urls); ?> URL(s) Found</span>
+    <div class="container">
+        <div class="header">
+            <h1>☁️ Cloudnestra URL Extractor</h1>
+            <p>Extract streaming URLs from any movie/TV show embed</p>
         </div>
-        <div class="cloudnestra-urls">
-            <?php if (count($cloudnestra_urls) > 0): ?>
-                <?php foreach ($cloudnestra_urls as $index => $url): ?>
-                    <div class="cloudnestra-url-item">
-                        <strong>🔗 URL <?php echo $index + 1; ?>:</strong><br>
-                        <a href="<?php echo $url; ?>" target="_blank"><?php echo htmlspecialchars($url); ?></a>
-                        <button class="copy-btn" onclick="copyToClipboard('<?php echo htmlspecialchars(addslashes($url)); ?>')">📋 Copy</button>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="no-urls">
-                    ⚠️ No Cloudnestra URLs automatically detected.<br>
-                    <small>💡 Tip: Open Browser DevTools (F12) → Network tab → Media filter, then refresh and look for .m3u8 or .mp4 URLs</small><br>
-                    <small>🔧 Or manually enter a Cloudnestra URL below:</small>
+        
+        <div class="card">
+            <h2>🎬 Movie/TMDB ID</h2>
+            <div class="input-group">
+                <input type="text" id="tmdbId" placeholder="Enter TMDB ID (e.g., 1380291)" value="1380291">
+                <button onclick="extractUrls()">🔍 Extract Cloudnestra URLs</button>
+            </div>
+            
+            <div id="status" class="status"></div>
+            
+            <h3>📡 Extracted URLs <span id="urlCount" class="badge">0</span></h3>
+            <div id="urlList" class="url-list">
+                <div style="text-align: center; color: #999; padding: 20px;">
+                    Enter a TMDB ID and click "Extract" to find Cloudnestra URLs
                 </div>
-            <?php endif; ?>
-            
-            <!-- Manual URL input -->
-            <div class="manual-input">
-                <input type="text" id="manual_url" placeholder="Enter Cloudnestra URL manually...">
-                <button onclick="addManualUrl()">➕ Add URL</button>
             </div>
             
-            <!-- Debug info (only show if admin or in development) -->
-            <?php if ($user_type == 'admin' && !empty($debug_info)): ?>
-            <div class="debug-info">
-                <strong>🔧 Debug Info:</strong><br>
-                <?php foreach ($debug_info as $info): ?>
-                    <?php echo htmlspecialchars($info); ?><br>
-                <?php endforeach; ?>
+            <div class="proxy-section">
+                <h3>🔧 Advanced Options</h3>
+                <div class="input-group">
+                    <input type="text" id="customUrl" placeholder="Or enter custom embed URL to extract from...">
+                    <button onclick="extractFromCustomUrl()" class="test-btn">🌐 Extract from URL</button>
+                </div>
+                <small style="color: #666;">
+                    💡 Tip: Use browser DevTools (F12) → Network tab → Media filter to find .m3u8/.mp4 URLs manually
+                </small>
             </div>
-            <?php endif; ?>
+        </div>
+        
+        <div class="card">
+            <h3>📖 How to find Cloudnestra URLs:</h3>
+            <ol style="margin-left: 20px; color: #666; line-height: 1.8;">
+                <li>Open Browser Developer Tools (Press F12)</li>
+                <li>Go to "Network" tab</li>
+                <li>Filter by "Media" or search for ".m3u8", ".mp4"</li>
+                <li>Refresh the page with the video player</li>
+                <li>Right-click the URL → Copy → Copy URL</li>
+                <li>Paste it in the "Custom URL" field above</li>
+            </ol>
         </div>
     </div>
 
-    <div class="video-container">
-        <iframe id="videoFrame" src="<?php echo $embed_url; ?>" allow="autoplay; fullscreen" allowfullscreen></iframe>
-    </div>
-
-    <div class="video-description">
-        <?php echo htmlspecialchars($video_description); ?>
-    </div>
-
-    <div class="video-info">
-        <div><strong>Rating:</strong> <?php echo $rating ?: '0'; ?> ⭐</div>
-        <div class="rating-stars">
-            <?php for ($i = 1; $i <= round($rating); $i++): ?>
-                <span>★</span>
-            <?php endfor; ?>
-        </div>
-
-        <div><strong>Views:</strong> <?php echo number_format($views); ?></div>
-
-        <div class="genres">
-            <?php foreach ($genre as $g): ?>
-                <a href="search.php?genre=<?php echo urlencode($g); ?>" class="genre-badge"><?php echo $g; ?></a>
-            <?php endforeach; ?>
-        </div>
-
-        <div class="info-box"><strong>Director:</strong>
-            <a href="search.php?person=<?php echo urlencode($director); ?>"><?php echo $director; ?></a>
-        </div>
-
-        <div class="info-box"><strong>Actors:</strong>
-            <?php foreach ($actors as $index => $actor): ?>
-                <a href="search.php?person=<?php echo urlencode($actor); ?>"><?php echo $actor; ?></a><?php echo $index < count($actors) - 1 ? ', ' : ''; ?>
-            <?php endforeach; ?>
-        </div>
-
-        <div class="info-box"><strong>Country:</strong>
-            <a href="search.php?country=<?php echo urlencode($country); ?>"><?php echo $country; ?></a>
-        </div>
-
-        <div class="info-box"><strong>Production:</strong>
-            <?php foreach ($company as $index => $c): ?>
-                <a href="search.php?company=<?php echo urlencode($c); ?>"><?php echo $c; ?></a><?php echo $index < count($company) - 1 ? ', ' : ''; ?>
-            <?php endforeach; ?>
-        </div>
-
-        <div class="info-box"><strong>Awards:</strong> <?php echo number_format($_GET['award'] ?? 0); ?></div>
-        <div class="info-box"><strong>Budget:</strong> <?php echo $budget; ?></div>
-        <div class="info-box"><strong>Worldwide Gross:</strong> <?php echo $worldwide_gross; ?></div>
-        <div class="info-box"><strong>Duration:</strong> <?php echo $duration; ?></div>
-        <div class="info-box"><strong>Release Date:</strong> <?php echo $release_date; ?></div>
-
-        <div class="info-box"><strong>IMDb:</strong> <?php echo $imdb_rating; ?></div>
-        <div class="info-box"><strong>TMDB:</strong> <?php echo $rating; ?></div>
-        <div class="info-box"><strong>Rotten Tomatoes:</strong> <?php echo $rotten_tomatoes; ?></div>
-        <div class="info-box"><strong>Metacritic:</strong> <?php echo $metacritic; ?></div>
-        <div class="info-box"><strong>FilmAffinity:</strong> <?php echo $filmaffinity; ?></div>
-    </div>
-</div>
-
-<script>
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(function() {
-        alert('✅ URL copied to clipboard!');
-    }, function(err) {
-        alert('❌ Failed to copy URL');
-    });
-}
-
-function addManualUrl() {
-    const urlInput = document.getElementById('manual_url');
-    const url = urlInput.value.trim();
-    
-    if (url && (url.includes('.m3u8') || url.includes('.mp4') || url.includes('cloudnestra'))) {
-        // Reload page with URL parameter
-        window.location.href = window.location.pathname + '?tmdb=<?php echo $tmdb_id; ?>&cloudnestra_url=' + encodeURIComponent(url);
-    } else if (url) {
-        alert('Please enter a valid streaming URL (.m3u8, .mp4, or cloudnestra URL)');
-    } else {
-        alert('Please enter a URL');
-    }
-}
-
-// Function to switch iframe source to Cloudnestra URL
-function playCloudnestraUrl(url) {
-    const iframe = document.getElementById('videoFrame');
-    if (url.endsWith('.m3u8') || url.endsWith('.mp4')) {
-        // For direct video URLs, we need a video.js player
-        alert('Direct video URLs require a video player. Use HLS.js or Video.js');
-        console.log('Direct URL:', url);
-    } else {
-        iframe.src = url;
-    }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    const dateElement = document.getElementById("current-date");
-    const clockElement = document.getElementById("current-time");
-
-    const khmerDigits = ['០', '១', '២', '៣', '៤', '៥', '៦', '៧', '៨', '៩'];
-    const toKhmer = number => number.toString().split('').map(d => khmerDigits[d] ?? d).join('');
-    const weekdays = ["ថ្ងៃអាទិត្យ", "ថ្ងៃចន្ទ", "ថ្ងៃអង្គារ", "ថ្ងៃពុធ", "ថ្ងៃព្រហស្បតិ៍", "ថ្ងៃសុក្រ", "ថ្ងៃសៅរ៍"];
-    const months = ["មករា", "កុម្ភៈ", "មីនា", "មេសា", "ឧសភា", "មិថុនា", "កក្កដា", "សីហា", "កញ្ញា", "តុលា", "វិច្ឆិកា", "ធ្នូ"];
-
-    function updateDateTime() {
-        const now = new Date();
-        const dayName = weekdays[now.getDay()];
-        const date = toKhmer(now.getDate());
-        const monthName = months[now.getMonth()];
-        const year = toKhmer(now.getFullYear());
-        const hours = toKhmer(now.getHours().toString().padStart(2, '0'));
-        const minutes = toKhmer(now.getMinutes().toString().padStart(2, '0'));
-        const seconds = toKhmer(now.getSeconds().toString().padStart(2, '0'));
-
-        dateElement.innerText = `${dayName}, ${date} ${monthName} ${year}`;
-        clockElement.innerText = `${hours}:${minutes}:${seconds}`;
-    }
-
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
-});
-</script>
-
+    <script>
+        // CORS proxies to bypass restrictions
+        const PROXIES = [
+            'https://api.allorigins.win/raw?url=',
+            'https://cors-anywhere.herokuapp.com/',
+            'https://cors.bridged.cc/',
+            ''
+        ];
+        
+        let extractedUrls = new Set();
+        
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = message;
+            setTimeout(() => {
+                if (statusDiv.className.includes(type)) {
+                    statusDiv.style.display = 'none';
+                    setTimeout(() => {
+                        statusDiv.className = 'status';
+                        statusDiv.style.display = '';
+                    }, 100);
+                }
+            }, 5000);
+        }
+        
+        async function fetchWithTimeout(url, timeout = 10000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            
+            try {
+                const response = await fetch(url, {
+                    signal: controller.signal,
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    }
+                });
+                clearTimeout(timeoutId);
+                return response;
+            } catch (error) {
+                clearTimeout(timeoutId);
+                throw error;
+            }
+        }
+        
+        async function extractFromEmbedUrl(embedUrl, proxy = '') {
+            const urls = [];
+            
+            try {
+                let finalUrl = embedUrl;
+                if (proxy && proxy !== 'https://cors.bridged.cc/') {
+                    finalUrl = proxy + encodeURIComponent(embedUrl);
+                } else if (proxy === 'https://cors.bridged.cc/') {
+                    finalUrl = proxy + embedUrl;
+                }
+                
+                const response = await fetchWithTimeout(finalUrl, 8000);
+                if (!response.ok) return urls;
+                
+                const html = await response.text();
+                
+                // Patterns for finding streaming URLs
+                const patterns = [
+                    /(?:https?:\/\/[^\s"'<>]+\.m3u8[^\s"'<>]*)/gi,
+                    /(?:https?:\/\/[^\s"'<>]+\.mp4[^\s"'<>]*)/gi,
+                    /(?:https?:\/\/[^\s"'<>]*cloudnestra[^\s"'<>]+)/gi,
+                    /(?:https?:\/\/[^\s"'<>]*cdn[^\s"'<>]+\.(?:m3u8|mp4)[^\s"'<>]*)/gi,
+                    /file:\s*["']([^"']+\.(?:m3u8|mp4)[^"']*)["']/gi,
+                    /src:\s*["']([^"']+\.(?:m3u8|mp4)[^"']*)["']/gi,
+                    /source:\s*["']([^"']+\.(?:m3u8|mp4)[^"']*)["']/gi,
+                    /url:\s*["']([^"']+\.(?:m3u8|mp4)[^"']*)["']/gi
+                ];
+                
+                for (const pattern of patterns) {
+                    let match;
+                    const regex = new RegExp(pattern.source, pattern.flags);
+                    while ((match = regex.exec(html)) !== null) {
+                        let url = match[1] || match[0];
+                        url = url.replace(/&amp;/g, '&').replace(/&#038;/g, '&');
+                        if (url.startsWith('http') && !urls.includes(url)) {
+                            urls.push(url);
+                        }
+                    }
+                }
+                
+                // Also try to find in JavaScript variables
+                const jsPatterns = [
+                    /player\.src\(\[{src:\s*["']([^"']+)["']/gi,
+                    /videoSrc\s*:\s*["']([^"']+)["']/gi,
+                    /sources\s*:\s*\[{src:\s*["']([^"']+)["']/gi
+                ];
+                
+                for (const pattern of jsPatterns) {
+                    let match;
+                    while ((match = pattern.exec(html)) !== null) {
+                        let url = match[1];
+                        if (url.startsWith('http') && !urls.includes(url)) {
+                            urls.push(url);
+                        }
+                    }
+                }
+                
+            } catch (error) {
+                console.log(`Error fetching ${embedUrl}:`, error.message);
+            }
+            
+            return urls;
+        }
+        
+        async function extractUrls() {
+            const tmdbId = document.getElementById('tmdbId').value.trim();
+            if (!tmdbId) {
+                showStatus('Please enter a TMDB ID', 'error');
+                return;
+            }
+            
+            const urlListDiv = document.getElementById('urlList');
+            urlListDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Extracting Cloudnestra URLs...</p></div>';
+            extractedUrls.clear();
+            
+            showStatus(`🔍 Extracting URLs for TMDB ID: ${tmdbId}`, 'info');
+            
+            const embedProviders = [
+                `https://vidsrc.to/embed/movie/${tmdbId}`,
+                `https://www.2embed.cc/embed/${tmdbId}`,
+                `https://embed.su/embed/movie/${tmdbId}`,
+                `https://vidembed.cc/embed/movie/${tmdbId}`,
+                `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`,
+                `https://embed.warezcdn.com/movie/${tmdbId}`,
+                `https://moviesapi.club/movie/${tmdbId}`,
+                `https://ajaxmovies.com/movie/${tmdbId}`
+            ];
+            
+            let allUrls = [];
+            
+            // Try each embed provider
+            for (let i = 0; i < embedProviders.length; i++) {
+                const provider = embedProviders[i];
+                showStatus(`Checking ${provider}...`, 'info');
+                
+                // Try without proxy first
+                let urls = await extractFromEmbedUrl(provider);
+                
+                // If no URLs found, try with proxies
+                if (urls.length === 0) {
+                    for (const proxy of PROXIES) {
+                        if (proxy) {
+                            urls = await extractFromEmbedUrl(provider, proxy);
+                            if (urls.length > 0) break;
+                        }
+                    }
+                }
+                
+                urls.forEach(url => extractedUrls.add(url));
+                allUrls = [...allUrls, ...urls];
+                
+                if (urls.length > 0) {
+                    showStatus(`✅ Found ${urls.length} URL(s) from ${provider}`, 'success');
+                }
+            }
+            
+            // Display results
+            displayUrls(Array.from(extractedUrls));
+            
+            if (extractedUrls.size === 0) {
+                showStatus('❌ No Cloudnestra URLs found automatically. Try manual extraction using browser DevTools.', 'error');
+                urlListDiv.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <p>⚠️ No streaming URLs found automatically.</p>
+                        <p>💡 <strong>Try manual extraction:</strong></p>
+                        <ol style="text-align: left; margin-top: 10px;">
+                            <li>Open Browser Developer Tools (F12)</li>
+                            <li>Go to "Network" tab and filter by "Media"</li>
+                            <li>Refresh the page</li>
+                            <li>Look for .m3u8 or .mp4 files</li>
+                            <li>Right-click and copy the URL</li>
+                        </ol>
+                    </div>
+                `;
+            } else {
+                showStatus(`✅ Successfully extracted ${extractedUrls.size} Cloudnestra URL(s)!`, 'success');
+            }
+        }
+        
+        async function extractFromCustomUrl() {
+            const customUrl = document.getElementById('customUrl').value.trim();
+            if (!customUrl) {
+                showStatus('Please enter a URL to extract from', 'error');
+                return;
+            }
+            
+            const urlListDiv = document.getElementById('urlList');
+            urlListDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Extracting from custom URL...</p></div>';
+            
+            showStatus(`🔍 Extracting from: ${customUrl}`, 'info');
+            
+            let urls = await extractFromEmbedUrl(customUrl);
+            
+            // Try with proxies if no URLs found
+            if (urls.length === 0) {
+                for (const proxy of PROXIES) {
+                    if (proxy) {
+                        urls = await extractFromEmbedUrl(customUrl, proxy);
+                        if (urls.length > 0) break;
+                    }
+                }
+            }
+            
+            urls.forEach(url => extractedUrls.add(url));
+            displayUrls(Array.from(extractedUrls));
+            
+            if (urls.length === 0) {
+                showStatus('❌ No URLs found in the provided page. Try using browser DevTools to find them manually.', 'error');
+            } else {
+                showStatus(`✅ Found ${urls.length} URL(s)!`, 'success');
+            }
+        }
+        
+        function displayUrls(urls) {
+            const urlListDiv = document.getElementById('urlList');
+            const urlCountSpan = document.getElementById('urlCount');
+            
+            urlCountSpan.textContent = urls.length;
+            
+            if (urls.length === 0) {
+                urlListDiv.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">No URLs found yet. Try extracting from a TMDB ID or custom URL.</div>';
+                return;
+            }
+            
+            urlListDiv.innerHTML = '';
+            urls.forEach((url, index) => {
+                const urlItem = document.createElement('div');
+                urlItem.className = 'url-item';
+                
+                const isStreamUrl = url.includes('.m3u8') || url.includes('.mp4');
+                const urlType = isStreamUrl ? '🎬 Stream URL' = url.match(/\.(m3u8|mp4)/i)[0] : '🔗 Embed URL';
+                
+                urlItem.innerHTML = `
+                    <div style="flex: 1;">
+                        <strong>${urlType}:</strong><br>
+                        <a href="${url}" target="_blank">${url}</a>
+                    </div>
+                    <button class="copy-btn" onclick="copyToClipboard('${url.replace(/'/g, "\\'")}')">📋 Copy</button>
+                `;
+                urlListDiv.appendChild(urlItem);
+            });
+        }
+        
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showStatus('✅ URL copied to clipboard!', 'success');
+            }).catch(() => {
+                showStatus('❌ Failed to copy URL', 'error');
+            });
+        }
+        
+        // Auto-extract on load if TMDB ID in URL
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tmdbParam = urlParams.get('tmdb');
+            if (tmdbParam) {
+                document.getElementById('tmdbId').value = tmdbParam;
+                extractUrls();
+            }
+        });
+    </script>
 </body>
 </html>
