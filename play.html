@@ -55,6 +55,24 @@
         100% { background-position: 0 100px; }
     }
 
+    /* Video stream animation */
+    .video-stream-effect {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none; z-index: -1; opacity: 0.1;
+    }
+
+    .data-packet {
+        position: absolute; width: 3px; height: 20px; background: var(--primary);
+        animation: dataFlow 3s linear infinite; filter: blur(1px);
+    }
+
+    @keyframes dataFlow {
+        0% { transform: translateY(-100px) rotate(45deg); opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { transform: translateY(100vh) rotate(45deg); opacity: 0; }
+    }
+
     /* Header */
     .cyber-header {
         position: fixed; top: 0; width: 100%; background: rgba(10, 10, 15, 0.95);
@@ -108,7 +126,7 @@
     
     .genre-tag {
         padding: 5px 15px; background: rgba(123, 97, 255, 0.2);
-        border: 1px solid var(--secondary); font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; margin-right: 10px;
+        border: 1px solid var(--secondary); font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; margin-right: 10px; display: inline-block; margin-bottom: 5px;
     }
 
     /* Player */
@@ -138,13 +156,27 @@
 
     @keyframes badgePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
-    /* Loading */
+    /* Loading Overlay */
     .loading-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0, 0, 0, 0.95); display: flex; justify-content: center; align-items: center;
         z-index: 9999; transition: opacity 0.5s;
     }
     .loading-text { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; color: var(--primary); text-shadow: 0 0 20px rgba(0, 255, 157, 0.7); margin-bottom: 20px;}
+    
+    /* Control Panel */
+    .control-panel {
+        background: rgba(19, 19, 31, 0.9); border: var(--pixel-border);
+        padding: 25px; margin-top: 30px; box-shadow: var(--neon-glow);
+    }
+    .control-title { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: var(--primary); margin-bottom: 20px; text-align: center; }
+    .control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .control-item { background: rgba(0, 0, 0, 0.5); padding: 20px; border: 1px solid var(--secondary); transition: all 0.3s ease; }
+    .control-label { color: var(--cyber-yellow); font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; margin-bottom: 10px; }
+    .control-value { color: white; font-size: 1.1rem; font-family: 'Orbitron', sans-serif; }
+    .quality-selector { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+    .quality-btn { padding: 10px 20px; background: rgba(0, 0, 0, 0.5); border: 1px solid var(--secondary); color: white; font-family: 'Share Tech Mono', monospace; cursor: pointer; }
+    .quality-btn.active { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 15px rgba(0, 255, 157, 0.5); }
 
     @media (max-width: 768px) {
         #stream-frame, video { height: 400px; }
@@ -156,11 +188,12 @@
 <body>
     <div class="cyber-grid"></div>
     <div class="scanlines"></div>
+    <div class="video-stream-effect" id="streamEffect"></div>
 
     <div class="loading-overlay" id="loadingOverlay">
         <div style="text-align:center;">
             <div class="loading-text" id="loadingText">BYPASSING FIREWALLS & EXTRACTING AD-FREE STREAM...</div>
-            <div style="color:var(--cyber-blue); font-family:monospace; margin-top:10px;" id="loadingLog">Connecting to nodes...</div>
+            <div style="color:var(--cyber-blue); font-family:monospace; margin-top:10px;" id="loadingLog">Connecting to vidsrc.to node...</div>
         </div>
     </div>
 
@@ -194,6 +227,35 @@
             <div class="status-badge badge-primary" id="extractionBadge">🛡️ ORIGIN GUARD: EXECUTING SCRAPER PROTOCOL</div>
             <div class="status-badge badge-success" id="tmdbBadge">🎬 TMDB: CONNECTED</div>
         </div>
+        
+        <div class="control-panel">
+            <h2 class="control-title" id="controlPanelTitle">STREAM CONTROL PANEL</h2>
+            <div class="control-grid">
+                <div class="control-item">
+                    <div class="control-label">SERVER STATUS</div>
+                    <div class="control-value" id="serverStatus" style="color:var(--primary)">CONNECTED</div>
+                </div>
+                <div class="control-item">
+                    <div class="control-label">STREAM QUALITY</div>
+                    <div class="control-value" id="streamQuality">1080P</div>
+                </div>
+                <div class="control-item">
+                    <div class="control-label">BITRATE</div>
+                    <div class="control-value" id="bitrate">8.5 MBPS</div>
+                </div>
+                <div class="control-item">
+                    <div class="control-label">BUFFER HEALTH</div>
+                    <div class="control-value" id="bufferHealth">98%</div>
+                </div>
+            </div>
+
+            <div class="quality-selector">
+                <button class="quality-btn active" data-quality="auto">AUTO (RECOMMENDED)</button>
+                <button class="quality-btn" data-quality="1080">1080P</button>
+                <button class="quality-btn" data-quality="720">720P</button>
+                <button class="quality-btn" data-quality="480">480P</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -203,7 +265,8 @@
         const mediaType = urlParams.get('type') || 'movie';
         
         function logAction(msg) {
-            document.getElementById('loadingLog').innerText = msg;
+            const logEl = document.getElementById('loadingLog');
+            if (logEl) logEl.innerText = msg;
             console.log(msg);
         }
 
@@ -250,8 +313,9 @@
 
                 document.title = `MVHD | ${title}`;
                 document.getElementById('movieTitle').innerHTML = `${title} <span style="color:var(--cyber-yellow);">(${year})</span>`;
+                document.getElementById('controlPanelTitle').innerText = `STREAM CONTROL PANEL • ${title.toUpperCase()}`;
                 document.getElementById('ratingVal').innerText = data.vote_average ? `${data.vote_average.toFixed(1)}/10` : 'N/A';
-                document.getElementById('runtimeVal').innerText = data.runtime ? `${data.runtime} min` : 'N/A';
+                document.getElementById('runtimeVal').innerText = data.runtime ? `${data.runtime} min` : (data.episode_run_time ? `${data.episode_run_time[0]} min` : 'N/A');
                 document.getElementById('releaseVal').innerText = data.release_date || data.first_air_date || 'N/A';
                 document.getElementById('movieOverview').innerText = data.overview || '';
 
@@ -268,38 +332,32 @@
             } catch (e) { logAction("Meta warning: TMDB sync failed."); }
         }
 
-        // --- THE PERFECT NO-ADS EXTRACTION ENGINE ---
+        // --- THE PERFECT NO-ADS EXTRACTION ENGINE (SINGLE TARGET: vidsrc.to) ---
         async function executePerfectExtractor() {
             if (!tmdbId) return dismissOverlay();
 
-            // Rotate through multiple mirrors to bypass Cloudflare proxy blocks
-            const mirrors = [
-                `https://vidsrc.xyz/embed/${mediaType}/${tmdbId}`,
-                `https://vidsrc.to/embed/${mediaType}/${tmdbId}`,
-                `https://vidsrc.net/embed/${mediaType}/${tmdbId}`
-            ];
-
+            // Only use vidsrc.to as requested (ignoring down .xyz domain)
+            const targetEmbed = `https://vidsrc.to/embed/${mediaType}/${tmdbId}`;
             let extractedCleanUrl = null;
 
-            for (let i = 0; i < mirrors.length; i++) {
-                logAction(`Scanning Mirror Node [${i+1}/${mirrors.length}]...`);
-                try {
-                    const proxyGate = `https://api.allorigins.win/get?url=${encodeURIComponent(mirrors[i])}`;
-                    const res = await fetch(proxyGate);
-                    const data = await res.json();
+            logAction(`Scanning Primary Node: vidsrc.to...`);
+            
+            try {
+                // Fetch using CORS proxy
+                const proxyGate = `https://api.allorigins.win/get?url=${encodeURIComponent(targetEmbed)}`;
+                const res = await fetch(proxyGate);
+                const data = await res.json();
 
-                    if (data && data.contents) {
-                        // Locate the cloudorchestranova / cloudnestra token
-                        const match = data.contents.match(/(https?:\/\/[^\s"'`]+\/rcp\/[^\s"'`>]+)/i);
-                        if (match && match[0]) {
-                            logAction("Encrypted RCP Token Found! Decrypting...");
-                            extractedCleanUrl = decodeCloudnestraUrl(match[0]);
-                            if (extractedCleanUrl) break; // Success! Stop searching.
-                        }
+                if (data && data.contents) {
+                    // Locate the cloudorchestranova / cloudnestra token
+                    const match = data.contents.match(/(https?:\/\/[^\s"'`]+\/rcp\/[^\s"'`>]+)/i);
+                    if (match && match[0]) {
+                        logAction("Encrypted RCP Token Found! Decrypting...");
+                        extractedCleanUrl = decodeCloudnestraUrl(match[0]);
                     }
-                } catch (err) {
-                    logAction(`Mirror [${i+1}] blocked. Rerouting...`);
                 }
+            } catch (err) {
+                logAction(`Primary proxy fetch failed. Rerouting...`);
             }
 
             const container = document.getElementById('playerContainer');
@@ -327,11 +385,10 @@
 
             } else {
                 // 2. FAILSAFE: If extraction fails, use normal iframe.
-                // We REMOVE the sandbox attribute completely so Vidsrc works correctly.
                 logAction("Extraction failed. Booting standard embed protocol...");
                 const frame = document.getElementById('stream-frame');
                 if (frame) {
-                    frame.src = mirrors[0]; // load the base link
+                    frame.src = targetEmbed; 
                     frame.onload = dismissOverlay;
                 }
                 
@@ -340,8 +397,43 @@
             }
         }
 
+        // --- Cyberpunk Dashboard Animations ---
+        function generateDataParticles() {
+            const container = document.getElementById('streamEffect');
+            const colors = ['#00ff9d', '#7b61ff', '#ff00e5', '#00ccff'];
+            for (let i = 0; i < 25; i++) {
+                const packet = document.createElement('div');
+                packet.className = 'data-packet';
+                packet.style.left = `${Math.random() * 100}%`;
+                packet.style.animationDelay = `${Math.random() * 3}s`;
+                packet.style.animationDuration = `${Math.random() * 2 + 2}s`;
+                packet.style.background = colors[Math.floor(Math.random() * colors.length)];
+                container.appendChild(packet);
+            }
+        }
+
+        function handleDashboardLoops() {
+            setInterval(() => {
+                const bitrates = ['8.5 MBPS', '9.2 MBPS', '7.8 MBPS', '8.1 MBPS'];
+                const bufferLevels = ['98%', '95%', '99%', '97%'];
+                const brEl = document.getElementById('bitrate');
+                const bhEl = document.getElementById('bufferHealth');
+                if (brEl) brEl.innerText = bitrates[Math.floor(Math.random() * bitrates.length)];
+                if (bhEl) bhEl.innerText = bufferLevels[Math.floor(Math.random() * bufferLevels.length)];
+            }, 3000);
+
+            document.querySelectorAll('.quality-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    const value = this.getAttribute('data-quality');
+                    const sqEl = document.getElementById('streamQuality');
+                    if (sqEl) sqEl.innerText = value === 'auto' ? 'AUTO' : value + 'P';
+                });
+            });
+        }
+
         // --- Ad-Blocker Override for Fallback Clicks ---
-        // If it falls back to the iframe, block standard popup attempts on the parent window
         window.open = function() { console.warn("Origin Guard blocked a popup window."); return null; };
         document.addEventListener('click', (e) => {
             if(e.target.tagName === 'A' && e.target.href.includes('ads')) e.preventDefault();
@@ -351,6 +443,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             syncTmdbDetails();
             executePerfectExtractor();
+            generateDataParticles();
+            handleDashboardLoops();
             setTimeout(dismissOverlay, 8000); // Failsafe loader release
         });
     </script>
