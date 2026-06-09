@@ -83,23 +83,20 @@
     </div>
 
     <script>
+        // Get parameters from URL - using 'tmdb' parameter
         const urlParams = new URLSearchParams(window.location.search);
-        const tmdbId = urlParams.get('id');
+        const tmdbId = urlParams.get('tmdb');  // Changed from 'id' to 'tmdb'
         const mediaType = urlParams.get('type') || 'movie';
         const title = urlParams.get('title') || 'Movie';
         const season = urlParams.get('season') || 1;
         const episode = urlParams.get('episode') || 1;
         
+        console.log('TMDB ID:', tmdbId);
+        console.log('Media Type:', mediaType);
+        console.log('Title:', title);
+        
         document.title = `MVHD | ${title}`;
         document.getElementById('info').innerHTML = `🎬 ${title}`;
-        
-        // Build the embed URL - using 2embed.cc (works reliably)
-        let playerUrl;
-        if (mediaType === 'tv') {
-            playerUrl = `https://www.2embed.cc/embedtv/${tmdbId}&s=${season}&e=${episode}`;
-        } else {
-            playerUrl = `https://www.2embed.cc/embed/${tmdbId}`;
-        }
         
         function hideLoading() {
             const loading = document.getElementById('loading');
@@ -107,13 +104,25 @@
             setTimeout(() => loading.style.display = 'none', 500);
         }
         
-        if (tmdbId) {
+        if (tmdbId && tmdbId !== 'null') {
+            // Build the embed URL
+            let playerUrl;
+            if (mediaType === 'tv') {
+                playerUrl = `https://www.2embed.cc/embedtv/${tmdbId}&s=${season}&e=${episode}`;
+            } else {
+                playerUrl = `https://www.2embed.cc/embed/${tmdbId}`;
+            }
+            
+            console.log('Player URL:', playerUrl);
+            
             const iframe = document.getElementById('playerFrame');
             iframe.src = playerUrl;
             iframe.onload = hideLoading;
             setTimeout(hideLoading, 5000);
         } else {
-            document.getElementById('loading').innerHTML = '<div>ERROR: No movie ID</div>';
+            document.getElementById('loading').innerHTML = '<div>ERROR: No movie ID found</div>';
+            document.getElementById('info').innerHTML = 'ERROR: Invalid request';
+            console.error('No tmdbId found in URL parameters');
         }
     </script>
 </body>
