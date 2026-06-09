@@ -179,6 +179,34 @@
             margin-top: 10px;
         }
 
+        .input-group {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--primary);
+            color: #fff;
+            font-family: monospace;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+
         @media (max-width: 768px) {
             iframe { height: 400px; }
             .movie-info-panel { flex-direction: column; }
@@ -192,16 +220,28 @@
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
         <div class="loading-text" id="loadingText">INITIALIZING CLOUDNESTRA...</div>
-        <div class="loading-step" id="loadingStep">Connecting to stream server</div>
+        <div class="loading-step" id="loadingStep">Ready to stream</div>
     </div>
 
     <header class="cyber-header">
         <div class="header-content">
-            <a href="index.html" class="site-title">MVHD CYBERCINEMA</a>
+            <a href="#" class="site-title">MVHD CYBERCINEMA</a>
         </div>
     </header>
 
     <div class="main-container" id="mainContent">
+        <!-- Manual URL Input -->
+        <div class="movie-info-panel" style="margin-bottom: 20px;">
+            <div class="input-group">
+                <input type="text" id="manualUrl" placeholder="Paste CloudOrchestraNova URL here...">
+                <button onclick="playManualUrl()">▶ PLAY</button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="tmdbInput" placeholder="Or enter TMDB ID (e.g., 1380291)">
+                <button onclick="playTmdbId()">▶ PLAY TMDB</button>
+            </div>
+        </div>
+
         <div class="movie-info-panel">
             <div class="movie-poster">
                 <img id="moviePoster" src="" alt="Poster">
@@ -220,27 +260,17 @@
             <iframe id="playerFrame" src="" allowfullscreen></iframe>
         </div>
 
-        <div class="status-badge" id="statusBadge">🚀 CLOUDNESTRA STREAM</div>
+        <div class="status-badge" id="statusBadge">☁️ READY • ENTER URL ABOVE</div>
     </div>
 
     <script>
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         
-        // WORKING DOMAINS (cloudnestra.com doesn't work, use these)
-        const CLOUD_DOMAINS = [
-            'https://cloudorchestranova.com',
-            'https://cloudnestra.cc',
-            'https://cloudstream.to'
-        ];
-        
-        // Get TMDB ID from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        let tmdbId = urlParams.get('tmdb');
-        const mediaType = urlParams.get('type') || 'movie';
-        
-        // Default movie if none provided
-        if (!tmdbId) {
-            tmdbId = '1380291'; // Swapped (2026)
+        // Generate CloudOrchestraNova URL from TMDB ID
+        function generateCloudUrl(tmdbId, type = 'movie') {
+            const vidsrcUrl = `https://vidsrc.to/embed/${type}/${tmdbId}`;
+            const encoded = btoa(vidsrcUrl);
+            return `https://cloudorchestranova.com/rcp/${encoded}`;
         }
 
         function updateLoading(msg, step) {
@@ -257,54 +287,52 @@
             }, 500);
         }
 
-        // Generate Cloudnestra URL using working domain
-        function generateCloudnestraUrl(id, type, domain) {
-            const vidsrcUrl = `https://vidsrc.to/embed/${type}/${id}`;
-            const encoded = btoa(vidsrcUrl);
-            return `${domain}/rcp/${encoded}`;
+        function showLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.display = 'flex';
+            overlay.style.opacity = '1';
         }
 
-        // Try multiple domains
-        async function tryPlayWithDomains(id, type) {
-            for (const domain of CLOUD_DOMAINS) {
-                try {
-                    const cloudUrl = generateCloudnestraUrl(id, type, domain);
-                    console.log(`Trying ${domain}:`, cloudUrl);
-                    
-                    // Test if domain is reachable
-                    const testUrl = `${domain}/rcp/test`;
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 3000);
-                    const response = await fetch(testUrl, { signal: controller.signal, mode: 'no-cors' });
-                    clearTimeout(timeoutId);
-                    
-                    // If we get here, domain is reachable
-                    return cloudUrl;
-                } catch(e) {
-                    console.log(`${domain} not reachable, trying next...`);
-                }
+        // Play direct URL
+        function playManualUrl() {
+            const url = document.getElementById('manualUrl').value.trim();
+            if (!url) {
+                alert('Please enter a CloudOrchestraNova URL');
+                return;
             }
-            return null;
+            
+            showLoading();
+            updateLoading('LOADING STREAM...', 'Connecting to server');
+            
+            const iframe = document.getElementById('playerFrame');
+            iframe.src = url;
+            
+            document.getElementById('statusBadge').innerHTML = '☁️ STREAMING • DIRECT LINK';
+            document.getElementById('statusBadge').style.borderColor = '#00ff9d';
+            
+            iframe.onload = () => hideLoading();
+            setTimeout(() => hideLoading(), 5000);
         }
 
-        // Direct play with working URL (using the one you provided)
-        function playWithCloudOrchestra(id, type) {
-            const vidsrcUrl = `https://vidsrc.to/embed/${type}/${id}`;
-            const encoded = btoa(vidsrcUrl);
-            return `https://cloudorchestranova.com/rcp/${encoded}`;
-        }
-
-        async function loadMovie() {
+        // Play by TMDB ID
+        async function playTmdbId() {
+            const tmdbId = document.getElementById('tmdbInput').value.trim();
+            if (!tmdbId) {
+                alert('Please enter a TMDB ID');
+                return;
+            }
+            
+            showLoading();
+            updateLoading('FETCHING MOVIE DATA...', `TMDB ID: ${tmdbId}`);
+            
             try {
                 // Fetch movie info
-                updateLoading('FETCHING MOVIE DATA...', `TMDB ID: ${tmdbId}`);
-                const tmdbRes = await fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}&language=en-US`);
+                const tmdbRes = await fetch(`https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${TMDB_API_KEY}&language=en-US`);
                 const movie = await tmdbRes.json();
                 
                 const title = movie.title || movie.name;
-                const year = (movie.release_date || movie.first_air_date || '').substring(0,4);
+                const year = (movie.release_date || '').substring(0,4);
                 
-                document.title = `MVHD | ${title}`;
                 document.getElementById('movieTitle').textContent = title;
                 document.getElementById('movieYear').textContent = year ? `(${year})` : '';
                 document.getElementById('movieRating').textContent = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
@@ -312,49 +340,44 @@
                 document.getElementById('movieOverview').textContent = movie.overview || 'No description available.';
                 document.getElementById('moviePoster').src = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : 'https://via.placeholder.com/300x450/1a1a1a/ffffff?text=MVHD';
                 
-                if (movie.backdrop_path) {
-                    document.body.style.backgroundImage = `linear-gradient(rgba(10,10,15,0.9), rgba(10,10,15,0.9)), url('https://image.tmdb.org/t/p/original${movie.backdrop_path}')`;
-                    document.body.style.backgroundSize = 'cover';
-                }
-                
-                document.getElementById('mainContent').style.display = 'block';
-                
-                // Generate the CloudOrchestraNova URL (WORKING DOMAIN)
+                // Generate and play Cloud URL
                 updateLoading('GENERATING STREAM URL...', 'Creating secure link');
-                const cloudUrl = playWithCloudOrchestra(tmdbId, mediaType);
-                console.log('CloudOrchestraNova URL:', cloudUrl);
+                const cloudUrl = generateCloudUrl(tmdbId);
+                console.log('Cloud URL:', cloudUrl);
                 
-                // Load the iframe with the CloudOrchestraNova URL
                 const iframe = document.getElementById('playerFrame');
                 iframe.src = cloudUrl;
                 
                 document.getElementById('statusBadge').innerHTML = '☁️ CLOUDORCHESTRANOVA • STREAMING';
                 document.getElementById('statusBadge').style.borderColor = '#00ff9d';
+                document.getElementById('manualUrl').value = cloudUrl;
                 
-                // Hide loading after iframe loads
-                iframe.onload = () => {
-                    hideLoading();
-                };
-                
-                // Fallback timeout
-                setTimeout(() => {
-                    hideLoading();
-                }, 5000);
+                iframe.onload = () => hideLoading();
+                setTimeout(() => hideLoading(), 5000);
                 
             } catch(e) {
-                console.error('Error:', e);
+                console.error(e);
                 updateLoading('ERROR', e.message);
-                document.getElementById('statusBadge').innerHTML = '⚠️ ERROR LOADING STREAM';
+                document.getElementById('statusBadge').innerHTML = '⚠️ ERROR LOADING MOVIE';
                 document.getElementById('statusBadge').style.borderColor = '#ff003c';
-                
-                // Still try to load fallback
-                const fallbackUrl = playWithCloudOrchestra(tmdbId, mediaType);
-                document.getElementById('playerFrame').src = fallbackUrl;
-                setTimeout(() => hideLoading(), 3000);
+                setTimeout(() => hideLoading(), 2000);
             }
         }
 
-        loadMovie();
+        // Check URL parameters on load
+        const urlParams = new URLSearchParams(window.location.search);
+        const tmdbParam = urlParams.get('tmdb');
+        const urlParam = urlParams.get('url');
+        
+        if (tmdbParam) {
+            document.getElementById('tmdbInput').value = tmdbParam;
+            setTimeout(() => playTmdbId(), 100);
+        } else if (urlParam) {
+            document.getElementById('manualUrl').value = decodeURIComponent(urlParam);
+            setTimeout(() => playManualUrl(), 100);
+        } else {
+            hideLoading();
+        }
     </script>
 </body>
 </html>
