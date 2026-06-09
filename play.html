@@ -64,9 +64,13 @@
     .cast-name { font-family: 'Share Tech Mono', 'Battambang', monospace; font-size: 0.9rem; text-align: center; color: var(--cyber-blue); line-height: 1.2; margin-bottom: 5px; font-weight: bold; }
     .cast-character { font-size: 0.75rem; text-align: center; color: #aaa; line-height: 1.2; font-style: italic; }
 
-    .player-container { background: var(--player-bg); border: 3px solid var(--primary); border-radius: 10px; overflow: hidden; box-shadow: 0 0 50px rgba(0, 255, 157, 0.3); margin-bottom: 30px; position: relative; }
+    .player-container { background: var(--player-bg); border: 3px solid var(--primary); border-radius: 10px; overflow: hidden; box-shadow: 0 0 50px rgba(0, 255, 157, 0.3); margin-bottom: 20px; position: relative; }
     .player-container::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, var(--cyber-red), var(--cyber-yellow), var(--primary), var(--cyber-blue), var(--accent)); z-index: 2; }
     #stream-frame { width: 100%; height: 650px; border: none; display: block; background: #000; }
+
+    /* CC Helper Notice */
+    .cc-notice { background: rgba(0, 204, 255, 0.1); border: 1px solid var(--cyber-blue); color: var(--cyber-blue); padding: 15px; border-radius: 5px; font-family: 'Share Tech Mono', 'Battambang', monospace; text-align: center; margin-bottom: 30px; font-size: 0.95rem; }
+    .cc-notice b { color: #fff; }
 
     .status-badges { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 15px; margin-top: 20px; }
     .status-badge { padding: 12px 20px; font-family: 'Share Tech Mono', 'Battambang', monospace; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 10px; animation: badgePulse 2s infinite; }
@@ -152,6 +156,11 @@
             <iframe id="stream-frame" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
 
+        <!-- CC Notice Helper -->
+        <div class="cc-notice" id="ccNotice">
+            💡 <b>SUBTITLES (CC):</b> Click the 'CC' icon inside the video player to enable Khmer, English, or Chinese subtitles.
+        </div>
+
         <div class="status-badges">
             <div class="status-badge badge-primary" id="originGuardBadge">🛡️ ORIGIN GUARD: VSEMBED PLAYER ACTIVE</div>
             <div class="status-badge badge-success" id="tmdbBadgeLabel">🎬 TMDB: CONNECTED</div>
@@ -208,7 +217,8 @@
                 bufferHealth: "BUFFER HEALTH",
                 auto: "AUTO (RECOMMENDED)",
                 unknownRole: "Unknown Role",
-                na: "N/A"
+                na: "N/A",
+                ccNotice: "💡 <b>SUBTITLES (CC):</b> Click the 'CC' icon inside the video player to enable Khmer, English, or Chinese subtitles."
             },
             km: {
                 returnBtn: "← ត្រឡប់ទៅទំព័រដើម",
@@ -228,7 +238,8 @@
                 bufferHealth: "សុខភាពបណ្តាញ",
                 auto: "ស្វ័យប្រវត្តិ",
                 unknownRole: "មិនស្គាល់តួអង្គ",
-                na: "មិនមាន"
+                na: "មិនមាន",
+                ccNotice: "💡 <b>ចំណងជើងរង (CC):</b> ចុចលើរូបតំណាង 'CC' នៅក្នុងផ្ទាំងវីដេអូដើម្បីជ្រើសរើសចំណងជើងរងជាភាសាខ្មែរ អង់គ្លេស ឬចិន។"
             },
             zh: {
                 returnBtn: "← 返回主页",
@@ -248,7 +259,8 @@
                 bufferHealth: "缓冲健康度",
                 auto: "自动 (推荐)",
                 unknownRole: "未知角色",
-                na: "无"
+                na: "无",
+                ccNotice: "💡 <b>字幕 (CC):</b> 点击视频播放器内的 'CC' 图标以启用高棉语、英语或中文字幕。"
             }
         };
 
@@ -292,6 +304,7 @@
             document.getElementById('lblBitrate').innerText = t.bitrate;
             document.getElementById('lblBuffer').innerText = t.bufferHealth;
             document.getElementById('btnAuto').innerText = t.auto;
+            document.getElementById('ccNotice').innerHTML = t.ccNotice;
 
             const titleEl = document.getElementById('movieTitle');
             if (titleEl.innerText === "DECRYPTING..." || titleEl.innerText === "កំពុងបកប្រែទិន្នន័យ..." || titleEl.innerText === "正在解密...") {
