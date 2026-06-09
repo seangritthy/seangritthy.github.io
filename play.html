@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MVHD CyberCinema | Secure Stream</title>
+    
+    <meta property="og:title" id="ogTitle" content="MVHD CyberCinema">
+    <meta property="og:image" id="ogImage" content="">
+    <meta property="og:url" id="ogUrl" content="">
+    <meta property="og:type" content="video.movie">
+
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Exo+2:wght@300;400;600&family=Noto+Sans+SC:wght@400;500;700&family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
     :root {
@@ -46,9 +52,15 @@
     .meta-link { color: var(--cyber-yellow); text-decoration: none; border-bottom: 1px dashed transparent; transition: all 0.3s ease; }
     .meta-link:hover { color: #fff; border-color: #fff; text-shadow: 0 0 10px var(--cyber-yellow); }
     
-    .ai-audio-btn { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(0, 204, 255, 0.1); border: 1px solid var(--cyber-blue); color: var(--cyber-blue); font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.85rem; cursor: pointer; border-radius: 4px; transition: all 0.3s ease; margin-bottom: 10px; }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 10px; }
+    .ai-audio-btn { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(0, 204, 255, 0.1); border: 1px solid var(--cyber-blue); color: var(--cyber-blue); font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.85rem; cursor: pointer; border-radius: 4px; transition: all 0.3s ease; }
     .ai-audio-btn:hover { background: var(--cyber-blue); color: #000; box-shadow: 0 0 15px rgba(0, 204, 255, 0.6); }
     .ai-audio-btn.playing { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 0 15px var(--accent); animation: pulseAudio 1.5s infinite; }
+    
+    /* NEW SHARE BUTTON */
+    .share-btn { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(123, 97, 255, 0.1); border: 1px solid var(--secondary); color: var(--secondary); font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.85rem; cursor: pointer; border-radius: 4px; transition: all 0.3s ease; }
+    .share-btn:hover { background: var(--secondary); color: #fff; box-shadow: 0 0 15px rgba(123, 97, 255, 0.6); }
+
     @keyframes pulseAudio { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
     .overview { margin: 10px 0 20px; line-height: 1.7; color: rgba(255, 255, 255, 0.9); font-size: 1.05rem; }
@@ -95,6 +107,20 @@
     .quality-btn { padding: 10px 20px; background: rgba(0, 0, 0, 0.5); border: 1px solid var(--secondary); color: white; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; cursor: pointer; }
     .quality-btn.active { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 15px rgba(0, 255, 157, 0.5); }
 
+    /* SHARE MODAL STYLES */
+    .share-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); z-index: 10000; justify-content: center; align-items: center; }
+    .share-modal.active { display: flex; animation: fadeIn 0.3s ease; }
+    .share-modal-content { background: var(--dark-card); border: 2px solid var(--secondary); padding: 30px; border-radius: 10px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 0 30px rgba(123, 97, 255, 0.4); position: relative; }
+    .share-close { position: absolute; top: 10px; right: 15px; color: white; font-size: 1.8rem; cursor: pointer; transition: color 0.3s; }
+    .share-close:hover { color: var(--cyber-red); }
+    .share-poster-img { width: 100%; max-width: 180px; border-radius: 5px; border: 1px solid var(--primary); margin-bottom: 15px; box-shadow: 0 0 15px rgba(0, 255, 157, 0.4); }
+    .share-title { font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; color: var(--secondary); margin-bottom: 15px; font-size: 1.2rem; }
+    .copy-container { display: flex; gap: 10px; margin-top: 15px; }
+    .copy-input { flex: 1; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--cyber-blue); color: var(--cyber-blue); font-family: 'Share Tech Mono', monospace; border-radius: 4px; outline: none; }
+    .copy-btn { padding: 10px 15px; background: var(--cyber-blue); color: black; border: none; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-weight: bold; cursor: pointer; border-radius: 4px; transition: all 0.3s; }
+    .copy-btn:hover { box-shadow: 0 0 15px var(--cyber-blue); background: #fff; }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
     @media (max-width: 768px) { 
         .ui-lang-wrapper { top: 10px; right: 10px; }
         #stream-frame { height: 400px; } 
@@ -129,7 +155,6 @@
     </header>
 
     <div class="main-container">
-        <!-- Metadata -->
         <div class="movie-info-panel">
             <div class="movie-poster" id="moviePoster"></div>
             <div class="movie-details">
@@ -143,8 +168,10 @@
                     <div class="meta-item">🗣️ <span id="langVal">N/A</span></div>
                 </div>
                 
-                <!-- AI AUDIO BUTTON -->
-                <button class="ai-audio-btn" id="aiSpeechBtn">🔊 AI SYSTEM AUDIO</button>
+                <div class="btn-group">
+                    <button class="ai-audio-btn" id="aiSpeechBtn">🔊 AI SYSTEM AUDIO</button>
+                    <button class="share-btn" id="shareMovieBtn">🔗 SHARE MOVIE</button>
+                </div>
 
                 <div class="overview" id="movieOverview">Loading encrypted data...</div>
                 
@@ -156,12 +183,10 @@
             </div>
         </div>
 
-        <!-- Video Player -->
         <div class="player-container">
             <iframe id="stream-frame" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
 
-        <!-- CC Notice Helper -->
         <div class="cc-notice" id="ccNotice">
             💡 <b>SUBTITLES (CC):</b> Click the 'CC' icon inside the video player to enable Khmer, English, or Chinese subtitles.
         </div>
@@ -171,7 +196,6 @@
             <div class="status-badge badge-success" id="tmdbBadgeLabel">🎬 TMDB: CONNECTED</div>
         </div>
 
-        <!-- Control Panel -->
         <div class="control-panel">
             <h2 class="control-title" id="cpTitle">STREAM CONTROL PANEL</h2>
             <div class="control-grid">
@@ -197,6 +221,18 @@
                 <button class="quality-btn" data-quality="1080">1080P</button>
                 <button class="quality-btn" data-quality="720">720P</button>
                 <button class="quality-btn" data-quality="480">480P</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="share-modal" id="shareModal">
+        <div class="share-modal-content">
+            <span class="share-close" id="shareClose">&times;</span>
+            <h2 class="share-title" id="shareModalTitle">SHARE THIS MOVIE</h2>
+            <img src="" id="shareModalPoster" class="share-poster-img" alt="Poster">
+            <div class="copy-container">
+                <input type="text" id="shareUrlInput" class="copy-input" readonly>
+                <button class="copy-btn" id="copyUrlBtn">COPY</button>
             </div>
         </div>
     </div>
@@ -230,8 +266,12 @@
                 unknownRole: "Unknown Role",
                 na: "N/A",
                 ccNotice: "💡 <b>SUBTITLES (CC):</b> Click the 'CC' icon inside the video player to enable Khmer, English, or Chinese subtitles.",
-                aiReadBtn: "🔊 READ DESCRIPTION",
-                aiStopBtn: "⏹️ STOP AUDIO"
+                aiReadBtn: "🔊 AI SYSTEM AUDIO",
+                aiStopBtn: "⏹️ STOP AUDIO",
+                shareBtn: "🔗 SHARE MOVIE",
+                shareTitle: "SHARE THIS MOVIE",
+                copyBtn: "COPY",
+                copiedBtn: "COPIED!"
             },
             km: {
                 returnBtn: "← ត្រឡប់ទៅទំព័រដើម",
@@ -254,7 +294,11 @@
                 na: "មិនមាន",
                 ccNotice: "💡 <b>ចំណងជើងរង (CC):</b> ចុចលើរូបតំណាង 'CC' នៅក្នុងផ្ទាំងវីដេអូដើម្បីជ្រើសរើសចំណងជើងរងជាភាសាខ្មែរ អង់គ្លេស ឬចិន។",
                 aiReadBtn: "🔊 អានការពិពណ៌នា",
-                aiStopBtn: "⏹️ បញ្ឈប់សំឡេង"
+                aiStopBtn: "⏹️ បញ្ឈប់សំឡេង",
+                shareBtn: "🔗 ចែករំលែក",
+                shareTitle: "ចែករំលែកភាពយន្តនេះ",
+                copyBtn: "ចម្លង",
+                copiedBtn: "បានចម្លង!"
             },
             zh: {
                 returnBtn: "← 返回主页",
@@ -277,7 +321,11 @@
                 na: "无",
                 ccNotice: "💡 <b>字幕 (CC):</b> 点击视频播放器内的 'CC' 图标以启用高棉语、英语或中文字幕。",
                 aiReadBtn: "🔊 语音朗读简介",
-                aiStopBtn: "⏹️ 停止语音"
+                aiStopBtn: "⏹️ 停止语音",
+                shareBtn: "🔗 分享电影",
+                shareTitle: "分享此电影",
+                copyBtn: "复制",
+                copiedBtn: "已复制!"
             }
         };
 
@@ -285,7 +333,7 @@
             window.open = function() { console.warn("🛡️ Origin Guard: Blocked popup"); return { focus: function(){}, close: function(){} }; };
             window.onbeforeunload = function(e) { if (document.activeElement && document.activeElement.tagName === 'IFRAME') return "Origin Guard block."; };
             document.addEventListener('click', function(e) {
-                if (e.target.closest('.genre-tag') || e.target.closest('.cast-card') || e.target.closest('.meta-link') || e.target.closest('.ai-audio-btn')) return; 
+                if (e.target.closest('.genre-tag') || e.target.closest('.cast-card') || e.target.closest('.meta-link') || e.target.closest('.ai-audio-btn') || e.target.closest('.share-btn')) return; 
                 if (e.target.tagName === 'A' && (e.target.href.includes('ad') || e.target.href.includes('bet'))) e.preventDefault();
             }, true);
         })();
@@ -298,7 +346,15 @@
 
         const uiLangSelect = document.getElementById('uiLangSelect');
         const aiSpeechBtn = document.getElementById('aiSpeechBtn');
+        const shareMovieBtn = document.getElementById('shareMovieBtn');
+        const shareModal = document.getElementById('shareModal');
+        const shareClose = document.getElementById('shareClose');
+        const copyUrlBtn = document.getElementById('copyUrlBtn');
+        const shareUrlInput = document.getElementById('shareUrlInput');
+        const shareModalPoster = document.getElementById('shareModalPoster');
+        
         let isSpeaking = false;
+        let currentPosterUrl = "";
 
         function getT() {
             return translations[localStorage.getItem('uiLang') || 'en'];
@@ -327,6 +383,13 @@
             document.getElementById('ccNotice').innerHTML = t.ccNotice;
             
             aiSpeechBtn.innerText = isSpeaking ? t.aiStopBtn : t.aiReadBtn;
+            
+            // Share UI updates
+            shareMovieBtn.innerText = t.shareBtn;
+            document.getElementById('shareModalTitle').innerText = t.shareTitle;
+            if (copyUrlBtn.innerText !== t.copiedBtn) {
+                copyUrlBtn.innerText = t.copyBtn;
+            }
 
             const titleEl = document.getElementById('movieTitle');
             if (titleEl.innerText === "DECRYPTING..." || titleEl.innerText === "កំពុងបកប្រែទិន្នន័យ..." || titleEl.innerText === "正在解密...") {
@@ -381,7 +444,16 @@
                 document.getElementById('langVal').innerHTML = data.spoken_languages && data.spoken_languages.length > 0 
                     ? data.spoken_languages.map(l => `<a href="index.html?lang=${l.iso_639_1}&langName=${encodeURIComponent(l.name)}&type=${mediaType}" class="meta-link">${l.name}</a>`).join(', ') : t.na;
 
-                if (data.poster_path) document.getElementById('moviePoster').innerHTML = `<img src="https://image.tmdb.org/t/p/w500${data.poster_path}">`;
+                // Setup Posters & Share Meta Tags
+                if (data.poster_path) {
+                    currentPosterUrl = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+                    document.getElementById('moviePoster').innerHTML = `<img src="${currentPosterUrl}">`;
+                    shareModalPoster.src = currentPosterUrl;
+                    document.getElementById('ogImage').setAttribute("content", currentPosterUrl);
+                }
+                document.getElementById('ogTitle').setAttribute("content", `Watch ${currentMovieTitle} on MVHD CyberCinema`);
+                document.getElementById('ogUrl').setAttribute("content", window.location.href);
+
                 if (data.backdrop_path) {
                     document.body.style.backgroundImage = `linear-gradient(rgba(10,10,15,0.9), rgba(10,10,15,0.9)), url('https://image.tmdb.org/t/p/w1280${data.backdrop_path}')`;
                     document.body.style.backgroundSize = 'cover'; document.body.style.backgroundPosition = 'center'; document.body.style.backgroundAttachment = 'fixed';
@@ -412,6 +484,51 @@
             } catch (e) { console.warn("TMDB sync failed."); }
         }
 
+        // --- SHARE SYSTEM LOGIC ---
+        shareMovieBtn.addEventListener('click', async () => {
+            const shareData = {
+                title: `Watch ${currentMovieTitle} on MVHD`,
+                text: `Check out ${currentMovieTitle} on MVHD CyberCinema!`,
+                url: window.location.href
+            };
+
+            // Attempt Native Mobile Share First
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareData);
+                    return; // Native share succeeded, don't open modal
+                } catch (err) {
+                    console.log("Native share cancelled or not fully supported.");
+                }
+            }
+
+            // Fallback: Open Custom Cyberpunk Share Modal
+            shareUrlInput.value = window.location.href;
+            shareModal.classList.add('active');
+        });
+
+        // Close Modal Listeners
+        shareClose.addEventListener('click', () => shareModal.classList.remove('active'));
+        window.addEventListener('click', (e) => { 
+            if (e.target === shareModal) shareModal.classList.remove('active'); 
+        });
+
+        // Copy Link Action
+        copyUrlBtn.addEventListener('click', () => {
+            shareUrlInput.select();
+            document.execCommand('copy');
+            
+            const t = getT();
+            copyUrlBtn.innerText = t.copiedBtn;
+            copyUrlBtn.style.background = "var(--primary)";
+            
+            setTimeout(() => { 
+                copyUrlBtn.innerText = t.copyBtn; 
+                copyUrlBtn.style.background = "var(--cyber-blue)";
+            }, 2000);
+        });
+
+        // --- AI AUDIO LOGIC ---
         aiSpeechBtn.addEventListener('click', () => {
             if (!('speechSynthesis' in window)) return alert("Your browser does not support AI Speech.");
             
