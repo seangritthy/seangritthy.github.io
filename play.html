@@ -38,16 +38,18 @@
     .movie-meta { display: flex; flex-wrap: wrap; gap: 15px 25px; margin-bottom: 20px; font-family: 'Share Tech Mono', monospace; color: var(--cyber-blue); background: rgba(0,0,0,0.4); padding: 15px; border-radius: 5px; border: 1px solid rgba(0, 204, 255, 0.2); }
     .meta-item { display: flex; align-items: center; gap: 8px; }
     
+    /* NEW META LINK HOVER FOR COUNTRY/LANGUAGE */
+    .meta-link { color: var(--cyber-yellow); text-decoration: none; border-bottom: 1px dashed transparent; transition: all 0.3s ease; }
+    .meta-link:hover { color: #fff; border-color: #fff; text-shadow: 0 0 10px var(--cyber-yellow); }
+    
     .overview { margin: 20px 0; line-height: 1.7; color: rgba(255, 255, 255, 0.9); font-size: 1.05rem; }
     
     .tags-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
     .section-label { width: 100%; color: var(--primary); font-family: 'Orbitron', sans-serif; font-size: 1rem; margin-top: 25px; margin-bottom: 10px; letter-spacing: 2px; border-bottom: 1px solid rgba(0, 255, 157, 0.2); padding-bottom: 5px; }
     
-    /* Clickable Interactive Tags */
     .genre-tag { padding: 6px 16px; background: rgba(123, 97, 255, 0.1); border: 1px solid var(--secondary); font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; color: white; text-decoration: none; transition: all 0.3s ease; cursor: pointer; border-radius: 4px; }
     .genre-tag:hover { background: var(--secondary); color: #fff; box-shadow: 0 0 15px rgba(123, 97, 255, 0.6); transform: translateY(-3px); }
 
-    /* NEW: Pro Actor Cards */
     .cast-grid { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 15px; scrollbar-width: thin; scrollbar-color: var(--cyber-blue) transparent; }
     .cast-grid::-webkit-scrollbar { height: 8px; }
     .cast-grid::-webkit-scrollbar-thumb { background: var(--cyber-blue); border-radius: 4px; }
@@ -113,7 +115,6 @@
                 <div class="section-label">CATEGORIES</div>
                 <div class="tags-container" id="movieGenres"></div>
                 
-                <!-- Pro Actor Grid Section -->
                 <div class="section-label">KEY PERSONNEL</div>
                 <div class="cast-grid" id="movieCast"></div>
             </div>
@@ -136,8 +137,8 @@
             window.open = function() { console.warn("🛡️ Origin Guard: Blocked popup"); return { focus: function(){}, close: function(){} }; };
             window.onbeforeunload = function(e) { if (document.activeElement && document.activeElement.tagName === 'IFRAME') return "Origin Guard block."; };
             document.addEventListener('click', function(e) {
-                // Ignore block rule if they are clicking a legit Pro Genre/Actor Tag route
-                if (e.target.closest('.genre-tag') || e.target.closest('.cast-card')) return; 
+                // Ignore block rule for our internal links
+                if (e.target.closest('.genre-tag') || e.target.closest('.cast-card') || e.target.closest('.meta-link')) return; 
                 if (e.target.tagName === 'A' && (e.target.href.includes('ad') || e.target.href.includes('bet'))) e.preventDefault();
             }, true);
         })();
@@ -155,7 +156,6 @@
         async function syncTmdbDetails() {
             if (!tmdbId) return;
             try {
-                // 1. Fetch Main Data (Includes Countries & Languages)
                 const res = await fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}`);
                 const data = await res.json();
 
@@ -169,11 +169,13 @@
                 document.getElementById('releaseVal').innerText = data.release_date || data.first_air_date || 'N/A';
                 document.getElementById('movieOverview').innerText = data.overview || '';
 
-                // NEW: Populate Countries and Languages
-                document.getElementById('countryVal').innerText = data.production_countries && data.production_countries.length > 0 
-                    ? data.production_countries.map(c => c.name).join(', ') : 'N/A';
-                document.getElementById('langVal').innerText = data.spoken_languages && data.spoken_languages.length > 0 
-                    ? data.spoken_languages.map(l => l.english_name).join(', ') : 'N/A';
+                // Generate Clickable Country Tags
+                document.getElementById('countryVal').innerHTML = data.production_countries && data.production_countries.length > 0 
+                    ? data.production_countries.map(c => `<a href="index.html?country=${c.iso_3166_1}&countryName=${encodeURIComponent(c.name)}&type=${mediaType}" class="meta-link">${c.name}</a>`).join(', ') : 'N/A';
+                
+                // Generate Clickable Language Tags
+                document.getElementById('langVal').innerHTML = data.spoken_languages && data.spoken_languages.length > 0 
+                    ? data.spoken_languages.map(l => `<a href="index.html?lang=${l.iso_639_1}&langName=${encodeURIComponent(l.english_name)}&type=${mediaType}" class="meta-link">${l.english_name}</a>`).join(', ') : 'N/A';
 
                 if (data.poster_path) document.getElementById('moviePoster').innerHTML = `<img src="https://image.tmdb.org/t/p/w500${data.poster_path}">`;
                 if (data.backdrop_path) {
@@ -181,20 +183,17 @@
                     document.body.style.backgroundSize = 'cover'; document.body.style.backgroundPosition = 'center'; document.body.style.backgroundAttachment = 'fixed';
                 }
 
-                // Generates PRO Clickable Genre Anchors
                 if (data.genres) {
                     document.getElementById('movieGenres').innerHTML = data.genres.map(g => 
                         `<a href="index.html?genre=${g.id}&genreName=${encodeURIComponent(g.name)}&type=${mediaType}" class="genre-tag">📁 ${g.name}</a>`
                     ).join('');
                 }
 
-                // 2. Fetch Cast & Crew Data (Photos & Character names)
                 const castRes = await fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}/credits?api_key=${TMDB_API_KEY}`);
                 const castData = await castRes.json();
                 
-                // Generates Visual Actor Cards
                 if (castData.cast) {
-                    const topCast = castData.cast.slice(0, 12); // Show up to 12 main actors
+                    const topCast = castData.cast.slice(0, 12);
                     document.getElementById('movieCast').innerHTML = topCast.map(actor => {
                         const imgPath = actor.profile_path ? `https://image.tmdb.org/t/p/w185${actor.profile_path}` : 'https://via.placeholder.com/150x150/13131f/00ccff?text=NO+PHOTO';
                         return `
