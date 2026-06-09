@@ -56,6 +56,7 @@
             color: #00ff9d;
             text-align: center;
             z-index: 1000;
+            transition: opacity 0.5s ease;
         }
         .spinner {
             width: 40px;
@@ -79,7 +80,7 @@
     <div class="info" id="info">Loading...</div>
     <div class="loading" id="loading">
         <div class="spinner"></div>
-        <div>LOADING STREAM...</div>
+        <div>LOADING CYBERSTREAM...</div>
     </div>
 
     <script>
@@ -93,26 +94,53 @@
         
         function hideLoading() {
             const loading = document.getElementById('loading');
-            loading.style.opacity = '0';
-            setTimeout(() => loading.style.display = 'none', 500);
+            if (loading) {
+                loading.style.opacity = '0';
+                setTimeout(() => loading.style.display = 'none', 500);
+            }
         }
         
-        if (tmdbId) {
-            let playerUrl;
-            if (mediaType === 'tv') {
-                playerUrl = `https://vidsrc.to/embed/tv/${tmdbId}/1/1`;
-            } else {
-                playerUrl = `https://vidsrc.to/embed/movie/${tmdbId}`;
+        async function initializeStream() {
+            if (!tmdbId) {
+                document.getElementById('loading').innerHTML = '<div>ERROR: No movie ID parameters detected</div>';
+                document.getElementById('info').innerHTML = 'ERROR: Invalid request';
+                return;
             }
-            
-            console.log('Loading:', playerUrl);
-            document.getElementById('playerFrame').src = playerUrl;
-            document.getElementById('playerFrame').onload = hideLoading;
-            setTimeout(hideLoading, 5000);
-        } else {
-            document.getElementById('loading').innerHTML = '<div>ERROR: No movie ID</div>';
-            document.getElementById('info').innerHTML = 'ERROR: Invalid request';
+
+            const frame = document.getElementById('playerFrame');
+
+            // Handle TV Shows (Using default proxy fallback player)
+            if (mediaType === 'tv') {
+                frame.src = `https://vidsrc.to/embed/tv/${tmdbId}/1/1`;
+                frame.onload = hideLoading;
+                setTimeout(hideLoading, 5000);
+                return;
+            }
+
+            // Handle Movies via your Backend /api/extract Vercel function
+            try {
+                const response = await fetch(`/api/extract?tmdb=${tmdbId}`);
+                if (!response.ok) throw new Error('API down');
+                
+                const data = await response.json();
+                if (data && data.success && data.url) {
+                    frame.src = data.url;
+                } else {
+                    // Fallback URL if extraction returned false
+                    frame.src = data.url || `https://vidsrc.to/embed/movie/${tmdbId}`;
+                }
+            } catch (error) {
+                console.error("Extraction failed, falling back to direct stream:", error);
+                frame.src = `https://vidsrc.to/embed/movie/${tmdbId}`;
+            }
+
+            frame.onload = hideLoading;
+            // absolute safety net timeout to remove spinner if iframe takes long
+            setTimeout(hideLoading, 6000);
         }
+
+        // Run
+        initializeStream();
     </script>
 </body>
 </html>
