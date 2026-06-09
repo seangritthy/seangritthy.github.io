@@ -131,15 +131,7 @@
             width: 100%;
             height: 650px;
             border: none;
-            display: none;
-        }
-
-        video {
-            width: 100%;
-            height: 650px;
-            outline: none;
-            background: #000;
-            display: none;
+            display: block;
         }
 
         .status-badge {
@@ -188,7 +180,7 @@
         }
 
         @media (max-width: 768px) {
-            iframe, video { height: 400px; }
+            iframe { height: 400px; }
             .movie-info-panel { flex-direction: column; }
             .movie-poster { max-width: 200px; margin: 0 auto; }
         }
@@ -200,7 +192,7 @@
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
         <div class="loading-text" id="loadingText">INITIALIZING CLOUDNESTRA...</div>
-        <div class="loading-step" id="loadingStep">Starting extraction engine</div>
+        <div class="loading-step" id="loadingStep">Connecting to stream server</div>
     </div>
 
     <header class="cyber-header">
@@ -226,14 +218,20 @@
 
         <div class="player-container">
             <iframe id="playerFrame" src="" allowfullscreen></iframe>
-            <video id="directPlayer" controls autoplay playsinline></video>
         </div>
 
-        <div class="status-badge" id="statusBadge">🚀 CLOUDNESTRA EXTRACTING...</div>
+        <div class="status-badge" id="statusBadge">🚀 CLOUDNESTRA STREAM</div>
     </div>
 
     <script>
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
+        
+        // WORKING DOMAINS (cloudnestra.com doesn't work, use these)
+        const CLOUD_DOMAINS = [
+            'https://cloudorchestranova.com',
+            'https://cloudnestra.cc',
+            'https://cloudstream.to'
+        ];
         
         // Get TMDB ID from URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -259,152 +257,44 @@
             }, 500);
         }
 
-        // Decode Cloudnestra URL to get actual video URL
-        function decodeCloudnestraUrl(cloudnestraUrl) {
-            try {
-                console.log('Decoding URL:', cloudnestraUrl);
-                
-                // Extract encoded part after /rcp/
-                const match = cloudnestraUrl.match(/\/rcp\/([A-Za-z0-9+\/=]+)/);
-                if (!match) return null;
-                
-                let encoded = match[1];
-                // Fix URL-safe base64
-                encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
-                while (encoded.length % 4) encoded += '=';
-                
-                // Decode base64
-                const decoded = atob(encoded);
-                console.log('Decoded:', decoded);
-                
-                // Extract m3u8 URL from decoded content
-                const m3u8Patterns = [
-                    /(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i,
-                    /(https?:\/\/[^\s"']+\/master[^\s"']*\.m3u8)/i,
-                    /(https?:\/\/[^\s"']+\/playlist[^\s"']*\.m3u8)/i,
-                    /(https?:\/\/[^\s"']+\/index[^\s"']*\.m3u8)/i
-                ];
-                
-                for (const pattern of m3u8Patterns) {
-                    const match = decoded.match(pattern);
-                    if (match) {
-                        console.log('Found m3u8:', match[1]);
-                        return match[1];
-                    }
-                }
-                
-                // Check for direct vidsrc URL
-                const vidsrcMatch = decoded.match(/https?:\/\/vidsrc\.to\/[^\s"']+/i);
-                if (vidsrcMatch) {
-                    console.log('Found vidsrc URL:', vidsrcMatch[1]);
-                    return vidsrcMatch[1];
-                }
-                
-                // If decoded itself is a URL
-                if (decoded.startsWith('http')) {
-                    return decoded;
-                }
-                
-                return null;
-            } catch(e) {
-                console.error('Decode error:', e);
-                return null;
-            }
-        }
-
-        // Generate Cloudnestra URL from TMDB ID
-        function generateCloudnestraUrl(id, type) {
+        // Generate Cloudnestra URL using working domain
+        function generateCloudnestraUrl(id, type, domain) {
             const vidsrcUrl = `https://vidsrc.to/embed/${type}/${id}`;
             const encoded = btoa(vidsrcUrl);
-            return `https://cloudnestra.com/rcp/${encoded}`;
+            return `${domain}/rcp/${encoded}`;
         }
 
-        // Try alternative Cloudnestra domains
-        function tryAlternativeDomains(id, type) {
-            const vidsrcUrl = `https://vidsrc.to/embed/${type}/${id}`;
-            const encoded = btoa(vidsrcUrl);
-            const domains = [
-                'https://cloudnestra.com',
-                'https://cloudorchestranova.com',
-                'https://cloudstream.to'
-            ];
-            return domains.map(d => `${d}/rcp/${encoded}`);
-        }
-
-        // Fetch actual stream from vidsrc page
-        async function fetchStreamFromVidSrc(vidsrcUrl) {
-            updateLoading('FETCHING STREAM...', 'Connecting to vidsrc.to');
-            
-            const proxies = [
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(vidsrcUrl)}`,
-                `https://corsproxy.io/?${encodeURIComponent(vidsrcUrl)}`
-            ];
-            
-            for (const proxy of proxies) {
+        // Try multiple domains
+        async function tryPlayWithDomains(id, type) {
+            for (const domain of CLOUD_DOMAINS) {
                 try {
+                    const cloudUrl = generateCloudnestraUrl(id, type, domain);
+                    console.log(`Trying ${domain}:`, cloudUrl);
+                    
+                    // Test if domain is reachable
+                    const testUrl = `${domain}/rcp/test`;
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000);
-                    const response = await fetch(proxy, { signal: controller.signal });
+                    const timeoutId = setTimeout(() => controller.abort(), 3000);
+                    const response = await fetch(testUrl, { signal: controller.signal, mode: 'no-cors' });
                     clearTimeout(timeoutId);
                     
-                    if (response.ok) {
-                        const html = await response.text();
-                        const m3u8Match = html.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
-                        if (m3u8Match) {
-                            return m3u8Match[1];
-                        }
-                    }
+                    // If we get here, domain is reachable
+                    return cloudUrl;
                 } catch(e) {
-                    console.log('Proxy failed:', e.message);
+                    console.log(`${domain} not reachable, trying next...`);
                 }
             }
             return null;
         }
 
-        // Play video with HLS.js
-        function playVideo(url) {
-            const video = document.getElementById('directPlayer');
-            const iframe = document.getElementById('playerFrame');
-            const statusBadge = document.getElementById('statusBadge');
-            
-            if (url.includes('.m3u8')) {
-                if (typeof Hls !== 'undefined' && Hls.isSupported()) {
-                    iframe.style.display = 'none';
-                    video.style.display = 'block';
-                    statusBadge.innerHTML = '🚀 HLS STREAM • PLAYING DIRECTLY';
-                    statusBadge.style.borderColor = '#00ff9d';
-                    
-                    const hls = new Hls({ debug: false, enableWorker: true });
-                    hls.loadSource(url);
-                    hls.attachMedia(video);
-                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                        video.play().catch(e => console.log('Autoplay blocked'));
-                    });
-                    hls.on(Hls.Events.ERROR, (event, data) => {
-                        console.error('HLS Error:', data);
-                        statusBadge.innerHTML = '⚠️ HLS ERROR • TRING FALLBACK';
-                        useIframeFallback();
-                    });
-                } else {
-                    useIframeFallback();
-                }
-            } else {
-                useIframeFallback();
-            }
+        // Direct play with working URL (using the one you provided)
+        function playWithCloudOrchestra(id, type) {
+            const vidsrcUrl = `https://vidsrc.to/embed/${type}/${id}`;
+            const encoded = btoa(vidsrcUrl);
+            return `https://cloudorchestranova.com/rcp/${encoded}`;
         }
 
-        function useIframeFallback() {
-            const video = document.getElementById('directPlayer');
-            const iframe = document.getElementById('playerFrame');
-            const statusBadge = document.getElementById('statusBadge');
-            
-            video.style.display = 'none';
-            iframe.style.display = 'block';
-            statusBadge.innerHTML = '☁️ CLOUDNESTRA STREAM • EMBEDDED';
-        }
-
-        // Main function
-        async function main() {
+        async function loadMovie() {
             try {
                 // Fetch movie info
                 updateLoading('FETCHING MOVIE DATA...', `TMDB ID: ${tmdbId}`);
@@ -429,46 +319,42 @@
                 
                 document.getElementById('mainContent').style.display = 'block';
                 
-                // Try to extract actual stream URL
-                updateLoading('EXTRACTING CLOUDNESTRA...', 'Decoding stream URL');
+                // Generate the CloudOrchestraNova URL (WORKING DOMAIN)
+                updateLoading('GENERATING STREAM URL...', 'Creating secure link');
+                const cloudUrl = playWithCloudOrchestra(tmdbId, mediaType);
+                console.log('CloudOrchestraNova URL:', cloudUrl);
                 
-                // Generate Cloudnestra URL
-                const cloudUrl = generateCloudnestraUrl(tmdbId, mediaType);
-                console.log('Cloudnestra URL:', cloudUrl);
+                // Load the iframe with the CloudOrchestraNova URL
+                const iframe = document.getElementById('playerFrame');
+                iframe.src = cloudUrl;
                 
-                // Try to decode it
-                const decodedUrl = decodeCloudnestraUrl(cloudUrl);
+                document.getElementById('statusBadge').innerHTML = '☁️ CLOUDORCHESTRANOVA • STREAMING';
+                document.getElementById('statusBadge').style.borderColor = '#00ff9d';
                 
-                if (decodedUrl && decodedUrl.includes('.m3u8')) {
-                    updateLoading('STREAM FOUND!', 'Starting video player');
-                    playVideo(decodedUrl);
-                } else if (decodedUrl && decodedUrl.includes('vidsrc.to')) {
-                    updateLoading('FETCHING FROM VIDSRC...', 'Getting actual stream');
-                    const streamUrl = await fetchStreamFromVidSrc(decodedUrl);
-                    if (streamUrl) {
-                        playVideo(streamUrl);
-                    } else {
-                        useIframeFallback();
-                        document.getElementById('playerFrame').src = cloudUrl;
-                    }
-                } else {
-                    useIframeFallback();
-                    document.getElementById('playerFrame').src = cloudUrl;
-                }
+                // Hide loading after iframe loads
+                iframe.onload = () => {
+                    hideLoading();
+                };
                 
-                hideLoading();
+                // Fallback timeout
+                setTimeout(() => {
+                    hideLoading();
+                }, 5000);
                 
             } catch(e) {
                 console.error('Error:', e);
                 updateLoading('ERROR', e.message);
-                // Still try to show something
-                document.getElementById('playerFrame').src = generateCloudnestraUrl(tmdbId, mediaType);
-                document.getElementById('playerFrame').style.display = 'block';
-                hideLoading();
+                document.getElementById('statusBadge').innerHTML = '⚠️ ERROR LOADING STREAM';
+                document.getElementById('statusBadge').style.borderColor = '#ff003c';
+                
+                // Still try to load fallback
+                const fallbackUrl = playWithCloudOrchestra(tmdbId, mediaType);
+                document.getElementById('playerFrame').src = fallbackUrl;
+                setTimeout(() => hideLoading(), 3000);
             }
         }
 
-        main();
+        loadMovie();
     </script>
 </body>
 </html>
