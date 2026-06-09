@@ -75,6 +75,7 @@
 <body>
     <a href="index.html" class="back-btn">← BACK</a>
     <div class="container">
+        <!-- Changed from empty src to fallback setup -->
         <iframe id="playerFrame" src="" allowfullscreen></iframe>
     </div>
     <div class="info" id="info">Loading...</div>
@@ -100,7 +101,7 @@
             }
         }
         
-        async function initializeStream() {
+        function initializeStream() {
             if (!tmdbId) {
                 document.getElementById('loading').innerHTML = '<div>ERROR: No movie ID parameters detected</div>';
                 document.getElementById('info').innerHTML = 'ERROR: Invalid request';
@@ -109,34 +110,16 @@
 
             const frame = document.getElementById('playerFrame');
 
-            // Handle TV Shows (Using default proxy fallback player)
+            // Pure Frontend Routing - Works flawlessly on GitHub Pages!
             if (mediaType === 'tv') {
                 frame.src = `https://vidsrc.to/embed/tv/${tmdbId}/1/1`;
-                frame.onload = hideLoading;
-                setTimeout(hideLoading, 5000);
-                return;
-            }
-
-            // Handle Movies via your Backend /api/extract Vercel function
-            try {
-                const response = await fetch(`/api/extract?tmdb=${tmdbId}`);
-                if (!response.ok) throw new Error('API down');
-                
-                const data = await response.json();
-                if (data && data.success && data.url) {
-                    frame.src = data.url;
-                } else {
-                    // Fallback URL if extraction returned false
-                    frame.src = data.url || `https://vidsrc.to/embed/movie/${tmdbId}`;
-                }
-            } catch (error) {
-                console.error("Extraction failed, falling back to direct stream:", error);
+            } else {
                 frame.src = `https://vidsrc.to/embed/movie/${tmdbId}`;
             }
 
             frame.onload = hideLoading;
-            // absolute safety net timeout to remove spinner if iframe takes long
-            setTimeout(hideLoading, 6000);
+            // Safety net to remove loading spinner if the embed provider takes a few seconds to load
+            setTimeout(hideLoading, 4000);
         }
 
         // Run
