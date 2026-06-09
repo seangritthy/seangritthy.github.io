@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MVHD | CyberCinema</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         :root {
             --primary: #00ff9d;
@@ -220,25 +219,28 @@
             <iframe id="playerFrame" src="" allowfullscreen></iframe>
         </div>
 
-        <div class="status-badge" id="statusBadge">☁️ CLOUDNESTRA STREAM</div>
+        <div class="status-badge" id="statusBadge">☁️ CLOUDORCHESTRANOVA • READY</div>
     </div>
 
     <script>
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         
-        // Fix cloudnestra.com to cloudorchestranova.com
+        // WORKING DOMAIN - ONLY use cloudorchestranova.com
+        const WORKING_DOMAIN = 'https://cloudorchestranova.com';
+        
+        // Generate Cloud URL from TMDB ID (using working domain)
+        function generateCloudUrl(tmdbId, type = 'movie') {
+            const vidsrcUrl = `https://vidsrc.to/embed/${type}/${tmdbId}`;
+            const encoded = btoa(vidsrcUrl);
+            return `${WORKING_DOMAIN}/rcp/${encoded}`;
+        }
+
+        // Fix any cloudnestra.com URL to cloudorchestranova.com
         function fixCloudUrl(url) {
             if (url.includes('cloudnestra.com')) {
                 return url.replace('cloudnestra.com', 'cloudorchestranova.com');
             }
             return url;
-        }
-
-        // Generate Cloud URL from TMDB ID
-        function generateCloudUrl(tmdbId, type = 'movie') {
-            const vidsrcUrl = `https://vidsrc.to/embed/${type}/${tmdbId}`;
-            const encoded = btoa(vidsrcUrl);
-            return `https://cloudorchestranova.com/rcp/${encoded}`;
         }
 
         function updateLoading(msg, step) {
@@ -255,15 +257,10 @@
             }, 500);
         }
 
-        async function loadMovie(tmdbId, type = 'movie') {
+        async function loadMovieInfo(tmdbId, type = 'movie') {
             try {
-                updateLoading('FETCHING MOVIE DATA...', `TMDB ID: ${tmdbId}`);
                 const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${TMDB_API_KEY}&language=en-US`);
-                
-                if (!tmdbRes.ok) {
-                    throw new Error('Movie not found');
-                }
-                
+                if (!tmdbRes.ok) return false;
                 const movie = await tmdbRes.json();
                 
                 const title = movie.title || movie.name;
@@ -281,12 +278,9 @@
                     document.body.style.backgroundImage = `linear-gradient(rgba(10,10,15,0.9), rgba(10,10,15,0.9)), url('https://image.tmdb.org/t/p/original${movie.backdrop_path}')`;
                     document.body.style.backgroundSize = 'cover';
                 }
-                
                 return true;
             } catch(e) {
                 console.error('TMDB error:', e);
-                document.getElementById('movieTitle').textContent = 'Movie Not Found';
-                document.getElementById('movieOverview').textContent = 'Unable to fetch movie details. Stream may still work.';
                 return false;
             }
         }
@@ -297,10 +291,11 @@
             let cloudUrl = urlParams.get('url');
             const mediaType = urlParams.get('type') || 'movie';
             const titleParam = urlParams.get('title');
+            const idParam = urlParams.get('id');
             
-            // Handle title parameter
-            if (titleParam) {
-                document.getElementById('movieTitle').textContent = decodeURIComponent(titleParam);
+            // Use id parameter as fallback for tmdb
+            if (!tmdbId && idParam) {
+                tmdbId = idParam;
             }
             
             // Case 1: Direct Cloud URL provided
@@ -315,12 +310,10 @@
                 document.getElementById('statusBadge').innerHTML = '☁️ CLOUDORCHESTRANOVA • STREAMING';
                 document.getElementById('statusBadge').style.borderColor = '#00ff9d';
                 
-                // Try to get movie info from TMDB if ID is present
-                const tmdbIdFromUrl = urlParams.get('id');
-                if (tmdbIdFromUrl) {
-                    await loadMovie(tmdbIdFromUrl, mediaType);
+                // Try to get movie info if we have ID
+                if (tmdbId) {
+                    await loadMovieInfo(tmdbId, mediaType);
                 } else if (titleParam) {
-                    // Use title from URL
                     document.getElementById('movieTitle').textContent = decodeURIComponent(titleParam);
                 }
                 
@@ -329,14 +322,14 @@
                 return;
             }
             
-            // Case 2: TMDB ID provided
+            // Case 2: TMDB ID provided - THIS IS THE PREFERRED METHOD
             if (tmdbId) {
                 updateLoading('LOADING MOVIE...', `TMDB ID: ${tmdbId}`);
                 
                 // Load movie info
-                await loadMovie(tmdbId, mediaType);
+                await loadMovieInfo(tmdbId, mediaType);
                 
-                // Generate Cloud URL
+                // Generate Cloud URL using WORKING DOMAIN
                 updateLoading('GENERATING STREAM...', 'Creating secure link');
                 const generatedUrl = generateCloudUrl(tmdbId, mediaType);
                 console.log('Generated URL:', generatedUrl);
@@ -355,7 +348,7 @@
             // Case 3: No parameters - show demo
             updateLoading('DEMO MODE', 'Loading sample movie');
             const demoId = '1380291';
-            await loadMovie(demoId, 'movie');
+            await loadMovieInfo(demoId, 'movie');
             const demoUrl = generateCloudUrl(demoId, 'movie');
             document.getElementById('playerFrame').src = demoUrl;
             document.getElementById('statusBadge').innerHTML = '☁️ DEMO • CLOUDORCHESTRANOVA';
