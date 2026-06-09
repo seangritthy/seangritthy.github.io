@@ -168,7 +168,7 @@
     <header class="cyber-header">
         <div class="header-content">
             <a href="index.html" class="site-title">MVHD CYBERCINEMA</a>
-            <div class="user-badge" id="statusBadge">🎬 CLOUDNESTRA EXTRACTOR V5</div>
+            <div class="user-badge" id="statusBadge">🎬 VIDSRC EXTRACTOR V6</div>
         </div>
     </header>
 
@@ -202,6 +202,7 @@
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         
         let currentMovieId = null;
+        let extractionComplete = false;
         
         function addLog(message, type = 'info') {
             const logDiv = document.getElementById('statusLog');
@@ -211,7 +212,6 @@
             logDiv.appendChild(logEntry);
             console.log(message);
             document.getElementById('extractionStatus').classList.add('active');
-            // Auto-scroll to bottom
             logDiv.scrollTop = logDiv.scrollHeight;
         }
         
@@ -228,7 +228,7 @@
             }, 500);
         }
         
-        // Decode Cloudnestra base64 URL
+        // Decode Cloudnestra base64 URL (from your Android code)
         function decodeCloudnestraUrl(cloudnestraUrl) {
             try {
                 addLog(`Decoding Cloudnestra URL...`);
@@ -239,19 +239,21 @@
                 }
                 
                 let encoded = match[1];
+                // Fix URL-safe base64
                 encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
                 while (encoded.length % 4) encoded += '=';
                 
                 const decoded = atob(encoded);
                 addLog(`Decoded content length: ${decoded.length} chars`);
                 
-                // Find m3u8 URL
+                // Find video URL patterns (same as Android)
                 const patterns = [
                     /(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i,
                     /(https?:\/\/[^\s"']+\.mp4[^\s"']*)/i,
                     /(https?:\/\/[^\s"']+\/master[^\s"']*\.m3u8)/i,
                     /(https?:\/\/[^\s"']+\/playlist[^\s"']*\.m3u8)/i,
-                    /(https?:\/\/[^\s"']+\/index[^\s"']*\.m3u8)/i
+                    /(https?:\/\/[^\s"']+\/index[^\s"']*\.m3u8)/i,
+                    /(https?:\/\/[^\s"']+\/manifest[^\s"']*)/i
                 ];
                 
                 for (const pattern of patterns) {
@@ -262,13 +264,13 @@
                     }
                 }
                 
-                // If decoded string itself looks like a URL
+                // Check if decoded string itself is a URL
                 if (decoded.startsWith('http')) {
                     addLog(`Decoded string is a URL directly`, 'success');
                     return decoded;
                 }
                 
-                addLog(`No video URL pattern found in decoded content`, 'error');
+                addLog(`No video URL pattern found`, 'error');
                 return null;
             } catch(e) {
                 addLog(`Decode error: ${e.message}`, 'error');
@@ -276,7 +278,7 @@
             }
         }
 
-        // Fetch page source using CORS proxy
+        // Fetch page source using CORS proxy (bypasses Cloudflare)
         async function fetchPageSource(url) {
             const proxies = [
                 `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
@@ -288,7 +290,7 @@
                 try {
                     addLog(`Trying proxy: ${proxy.substring(0, 60)}...`);
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 8000);
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
                     const response = await fetch(proxy, { signal: controller.signal });
                     clearTimeout(timeoutId);
                     
@@ -304,54 +306,84 @@
             return null;
         }
 
-        // Extract Cloudnestra URL from vidsrc.to page
-        async function extractCloudnestraUrl(tmdbId) {
-            addLog(`Starting extraction for movie ID: ${tmdbId}`);
+        // Main extraction function - mimics your Android VidSrcExtractor
+        async function extractVideoUrl(embedUrl) {
+            addLog(`Starting extraction for: ${embedUrl}`);
+            updateLoading("EXTRACTING VIDSRC...", "Loading embed page");
             
-            const urlsToTry = [
-                `https://vidsrc.to/embed/movie/${tmdbId}`,
-                `https://vidsrc.xyz/embed/movie/${tmdbId}`,
-                `https://vidsrc.net/embed/movie/${tmdbId}`,
-                `https://vidsrc.me/embed/movie/${tmdbId}`
+            // Fetch the embed page HTML
+            const html = await fetchPageSource(embedUrl);
+            if (!html) {
+                addLog(`Failed to fetch page source`, 'error');
+                return null;
+            }
+            
+            // 1. Look for Cloudnestra RCP URL (like your shouldInterceptRequest)
+            addLog(`Searching for Cloudnestra RCP URL...`);
+            const cloudnestraPatterns = [
+                /https?:\/\/[^\s"']*cloudnestra[^\s"']*\/rcp\/[^\s"']+/gi,
+                /["']([^"']*\/rcp\/[^"']+)["']/gi,
+                /(?:src|href)=["']([^"']*cloudnestra[^"']*\/rcp\/[^"']*)["']/gi,
+                /url:\s*["']([^"']*cloudnestra[^"']*\/rcp\/[^"']*)["']/gi,
+                /file:\s*["']([^"']*cloudnestra[^"']*\/rcp\/[^"']*)["']/gi
             ];
             
-            for (const url of urlsToTry) {
-                addLog(`Fetching: ${url}`);
-                updateLoading("FETCHING VIDSRC PAGE...", `Attempting ${url.split('/')[2]}`);
-                
-                const html = await fetchPageSource(url);
-                if (!html) continue;
-                
-                // Look for Cloudnestra RCP URL
-                const cloudnestraPatterns = [
-                    /https?:\/\/[^\s"']*cloudnestra[^\s"']*\/rcp\/[^\s"']+/gi,
-                    /["']([^"']*\/rcp\/[^"']+)["']/gi,
-                    /(?:src|href)=["']([^"']*cloudnestra[^"']*\/rcp\/[^"']*)["']/gi
-                ];
-                
-                for (const pattern of cloudnestraPatterns) {
-                    const matches = html.matchAll(pattern);
-                    for (const match of matches) {
-                        let cloudUrl = match[1] || match[0];
-                        if (!cloudUrl.startsWith('http')) {
-                            cloudUrl = 'https:' + cloudUrl;
-                        }
-                        addLog(`Found Cloudnestra URL: ${cloudUrl.substring(0, 80)}...`, 'success');
-                        const videoUrl = decodeCloudnestraUrl(cloudUrl);
-                        if (videoUrl) {
-                            return videoUrl;
-                        }
+            for (const pattern of cloudnestraPatterns) {
+                const matches = html.matchAll(pattern);
+                for (const match of matches) {
+                    let cloudUrl = match[1] || match[0];
+                    if (!cloudUrl.startsWith('http')) {
+                        cloudUrl = 'https:' + cloudUrl;
                     }
-                }
-                
-                // Look for direct m3u8 as fallback
-                const m3u8Match = html.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
-                if (m3u8Match) {
-                    addLog(`Found direct m3u8 URL`, 'success');
-                    return m3u8Match[1];
+                    addLog(`Found Cloudnestra URL: ${cloudUrl.substring(0, 80)}...`, 'success');
+                    const videoUrl = decodeCloudnestraUrl(cloudUrl);
+                    if (videoUrl) {
+                        return videoUrl;
+                    }
                 }
             }
             
+            // 2. Look for direct video URLs (m3u8, mp4, playlist, manifest)
+            addLog(`Searching for direct video URLs...`);
+            const videoPatterns = [
+                /https?:\/\/[^\s"']+\.m3u8[^\s"']*/gi,
+                /https?:\/\/[^\s"']+\.mp4[^\s"']*/gi,
+                /https?:\/\/[^\s"']+\/playlist[^\s"']*\.m3u8/gi,
+                /https?:\/\/[^\s"']+\/master[^\s"']*\.m3u8/gi,
+                /https?:\/\/[^\s"']+\/index[^\s"']*\.m3u8/gi,
+                /https?:\/\/[^\s"']+\/manifest[^\s"']*/gi
+            ];
+            
+            for (const pattern of videoPatterns) {
+                const matches = html.match(pattern);
+                if (matches && matches.length > 0) {
+                    const videoUrl = matches[0];
+                    // Filter out ads and telemetry (like your Android code)
+                    if (!videoUrl.toLowerCase().includes('ads') && 
+                        !videoUrl.toLowerCase().includes('telemetry') &&
+                        !videoUrl.toLowerCase().includes('segment') &&
+                        !videoUrl.toLowerCase().includes('.ts')) {
+                        addLog(`Found video URL: ${videoUrl.substring(0, 80)}...`, 'success');
+                        return videoUrl;
+                    }
+                }
+            }
+            
+            // 3. Look for iframe sources that might contain the player
+            addLog(`Searching for iframe sources...`);
+            const iframePattern = /<iframe[^>]+src=["']([^"']+)["'][^>]*>/gi;
+            const iframeMatches = html.matchAll(iframePattern);
+            for (const match of iframeMatches) {
+                const iframeUrl = match[1];
+                if (iframeUrl && (iframeUrl.includes('cloudnestra') || iframeUrl.includes('vidplay') || iframeUrl.includes('filemoon'))) {
+                    addLog(`Found iframe: ${iframeUrl.substring(0, 80)}...`);
+                    // Recursively extract from iframe
+                    const videoUrl = await extractVideoUrl(iframeUrl);
+                    if (videoUrl) return videoUrl;
+                }
+            }
+            
+            addLog(`No video URL found in page`, 'error');
             return null;
         }
 
@@ -383,15 +415,18 @@
                 const videoPlayer = document.getElementById('direct-player');
                 const fallbackFrame = document.getElementById('fallback-frame');
                 
-                // Try to extract Cloudnestra URL
-                updateLoading("EXTRACTING CLOUDNESTRA...", "Fetching and decoding stream URL");
-                const videoUrl = await extractCloudnestraUrl(id);
+                // Build the embed URL (same as your Android code)
+                const embedUrl = `https://vidsrc.to/embed/movie/${id}`;
                 
-                if (videoUrl && videoUrl.includes('.m3u8')) {
-                    addLog(`SUCCESS! Playing extracted Cloudnestra HLS stream`, 'success');
+                // Extract video URL using the same logic as your Android extractor
+                updateLoading("EXTRACTING VIDEO URL...", "Using VidSrcExtractor logic");
+                const videoUrl = await extractVideoUrl(embedUrl);
+                
+                if (videoUrl && (videoUrl.includes('.m3u8') || videoUrl.includes('/playlist') || videoUrl.includes('/manifest'))) {
+                    addLog(`SUCCESS! Playing extracted stream`, 'success');
                     videoPlayer.style.display = 'block';
                     fallbackFrame.style.display = 'none';
-                    document.getElementById('statusBadge').innerHTML = `☁️ CLOUDNESTRA • ${movie.title}`;
+                    document.getElementById('statusBadge').innerHTML = `☁️ EXTRACTED • ${movie.title}`;
                     
                     if (Hls.isSupported()) {
                         const hls = new Hls({
@@ -414,15 +449,15 @@
                     }
                     hideLoading();
                 } else if (videoUrl && videoUrl.includes('.mp4')) {
-                    addLog(`SUCCESS! Playing extracted Cloudnestra MP4 stream`, 'success');
+                    addLog(`SUCCESS! Playing MP4 stream`, 'success');
                     videoPlayer.style.display = 'block';
                     fallbackFrame.style.display = 'none';
                     videoPlayer.src = videoUrl;
-                    document.getElementById('statusBadge').innerHTML = `☁️ CLOUDNESTRA • ${movie.title}`;
+                    document.getElementById('statusBadge').innerHTML = `🎬 MP4 • ${movie.title}`;
                     hideLoading();
                 } else {
-                    // Fallback to vidsrc.to iframe
-                    addLog(`Extraction failed, using vidsrc.to fallback iframe`, 'error');
+                    // Fallback to vidsrc.to iframe (same as your Android fallback)
+                    addLog(`Extraction failed, using vidsrc.to iframe fallback`, 'error');
                     videoPlayer.style.display = 'none';
                     fallbackFrame.style.display = 'block';
                     fallbackFrame.src = `https://vidsrc.to/embed/movie/${id}`;
@@ -434,7 +469,6 @@
                 console.error(error);
                 addLog(`Critical error: ${error.message}`, 'error');
                 updateLoading("ERROR", "Failed to load movie");
-                // Still show fallback
                 document.getElementById('fallback-frame').style.display = 'block';
                 document.getElementById('fallback-frame').src = `https://vidsrc.to/embed/movie/${id}`;
                 hideLoading();
