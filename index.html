@@ -20,13 +20,64 @@
             background-size: 50px 50px;
         }
         
+        /* HEADER SCROLL LOGIC */
         header {
-            padding: 40px 20px 20px; background: rgba(10, 10, 15, 0.95); text-align: center;
-            border-bottom: 2px solid var(--primary); box-shadow: 0 0 25px rgba(0, 255, 157, 0.3);
+            padding: 20px; 
+            background: rgba(10, 10, 15, 0.95); 
+            border-bottom: 2px solid var(--primary); 
+            box-shadow: 0 0 25px rgba(0, 255, 157, 0.3);
             position: sticky; top: 0; z-index: 1000;
+            transition: transform 0.4s cubic-bezier(0.3, 1, 0.2, 1);
+            will-change: transform;
         }
         
-        .ui-lang-wrapper { position: absolute; top: 15px; right: 20px; }
+        .header-hidden {
+            transform: translateY(-100%);
+        }
+
+        /* COMPACT TOP BAR */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; 
+            color: var(--primary); 
+            font-size: 2rem; 
+            text-shadow: 0 0 15px rgba(0, 255, 157, 0.6); 
+            letter-spacing: 2px;
+            margin: 0; /* Removed bottom margin */
+        }
+
+        .menu-toggle-btn {
+            padding: 8px 20px;
+            background: transparent; border: 1px solid var(--cyber-blue);
+            color: var(--cyber-blue); font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif;
+            font-weight: bold; cursor: pointer; transition: all 0.3s; letter-spacing: 2px;
+            border-radius: 4px;
+        }
+        .menu-toggle-btn:hover, .menu-toggle-btn.active {
+            background: var(--cyber-blue); color: #000; box-shadow: 0 0 15px var(--cyber-blue);
+        }
+
+        /* EXPANDABLE MENU CONTAINER */
+        .menu-container {
+            max-height: 0; overflow: hidden; opacity: 0;
+            transition: all 0.5s cubic-bezier(0.3, 1, 0.2, 1);
+            display: flex; flex-direction: column; gap: 20px;
+            max-width: 1400px; margin: 0 auto;
+        }
+        .menu-container.active {
+            max-height: 800px; opacity: 1;
+            padding-top: 20px; margin-top: 20px;
+            border-top: 1px dashed rgba(123, 97, 255, 0.4);
+        }
+
+        .ui-lang-wrapper { text-align: center; }
         .ui-lang-select {
             background: rgba(0, 0, 0, 0.8); border: 1px solid var(--primary); color: var(--primary);
             padding: 5px 10px; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; outline: none; cursor: pointer;
@@ -35,12 +86,7 @@
         .ui-lang-select:hover { box-shadow: 0 0 10px var(--primary); }
         .ui-lang-select option { background: var(--dark-bg); color: white; }
 
-        h1 {
-            font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; 
-            color: var(--primary); margin-bottom: 20px;
-            font-size: 2.8rem; text-shadow: 0 0 15px rgba(0, 255, 157, 0.6); letter-spacing: 4px;
-        }
-        .search-container { display: flex; justify-content: center; gap: 15px; max-width: 600px; margin: 0 auto; flex-wrap: wrap; }
+        .search-container { display: flex; justify-content: center; gap: 15px; max-width: 600px; margin: 0 auto; width: 100%; flex-wrap: wrap; }
         #searchInput {
             flex: 1; padding: 12px 15px; background: rgba(0, 0, 0, 0.8); border: 1px solid var(--secondary);
             color: var(--primary); font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 1rem; outline: none;
@@ -52,28 +98,6 @@
         }
         #searchBtn:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary); }
         
-        /* NEW MENU STYLES */
-        .menu-toggle-btn {
-            display: inline-block; margin-top: 20px; padding: 10px 25px;
-            background: transparent; border: 1px solid var(--cyber-blue);
-            color: var(--cyber-blue); font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif;
-            font-weight: bold; cursor: pointer; transition: all 0.3s; letter-spacing: 2px;
-            border-radius: 4px;
-        }
-        .menu-toggle-btn:hover, .menu-toggle-btn.active {
-            background: var(--cyber-blue); color: #000; box-shadow: 0 0 15px var(--cyber-blue);
-        }
-
-        .menu-container {
-            max-height: 0; overflow: hidden; opacity: 0;
-            transition: all 0.5s cubic-bezier(0.3, 1, 0.2, 1);
-        }
-        .menu-container.active {
-            max-height: 500px; opacity: 1;
-            padding-top: 20px; margin-top: 15px;
-            border-top: 1px dashed rgba(123, 97, 255, 0.4);
-        }
-
         .type-selector { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
         .type-btn { padding: 8px 20px; background: rgba(0, 255, 157, 0.05); border: 1px solid var(--secondary); color: var(--secondary); cursor: pointer; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; }
         .type-btn.active { background: var(--primary); color: #000; border-color: var(--primary); }
@@ -108,34 +132,37 @@
         .page-info { font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; color: var(--cyber-yellow); font-size: 1.2rem; letter-spacing: 2px;}
 
         @media (max-width: 768px) { 
-            h1 { font-size: 2rem; margin-top: 20px; } 
-            .ui-lang-wrapper { top: 10px; right: 10px; }
+            h1 { font-size: 1.3rem; } 
+            .menu-toggle-btn { padding: 6px 12px; font-size: 0.9rem;}
             .movies-grid { gap: 20px; padding: 20px 15px; } 
             .movie-poster { height: 280px; } 
             .search-container { flex-direction: column; } 
             #searchBtn { width: 100%; } 
+            header { padding: 15px; }
         }
     </style>
 </head>
 <body>
     <header id="mainHeader">
-        <div class="ui-lang-wrapper">
-            <select id="uiLangSelect" class="ui-lang-select">
-                <option value="en">🇬🇧 English</option>
-                <option value="km">🇰🇭 ភាសាខ្មែរ</option>
-                <option value="zh">🇨🇳 中文</option>
-            </select>
+        <div class="top-bar">
+            <h1 id="siteTitle">MVHD CYBERCINEMA</h1>
+            <button id="menuToggleBtn" class="menu-toggle-btn">☰ MENU</button>
         </div>
-
-        <h1 id="siteTitle">MVHD CYBERCINEMA</h1>
-        <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Search Database...">
-            <button id="searchBtn">🔍 SEARCH</button>
-        </div>
-        
-        <button id="menuToggleBtn" class="menu-toggle-btn">☰ MENU</button>
 
         <div id="menuContainer" class="menu-container">
+            <div class="ui-lang-wrapper">
+                <select id="uiLangSelect" class="ui-lang-select">
+                    <option value="en">🇬🇧 English</option>
+                    <option value="km">🇰🇭 ភាសាខ្មែរ</option>
+                    <option value="zh">🇨🇳 中文</option>
+                </select>
+            </div>
+
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search Database...">
+                <button id="searchBtn">🔍 SEARCH</button>
+            </div>
+            
             <div class="type-selector">
                 <button id="movieBtn" class="type-btn active">🎥 MOVIES</button>
                 <button id="tvBtn" class="type-btn">📺 TV SHOWS</button>
@@ -179,6 +206,24 @@
         menuToggleBtn.addEventListener('click', () => {
             menuContainer.classList.toggle('active');
             menuToggleBtn.classList.toggle('active');
+        });
+
+        // --- HEADER HIDE ON SCROLL LOGIC ---
+        let lastScrollY = window.scrollY;
+        const mainHeader = document.getElementById('mainHeader');
+        
+        window.addEventListener('scroll', () => {
+            // Only hide header if scrolled past its own height (so it doesn't glitch at the top)
+            if (window.scrollY > lastScrollY && window.scrollY > mainHeader.offsetHeight) {
+                // Scrolling DOWN - Hide Header (also closes the menu if left open)
+                mainHeader.classList.add('header-hidden');
+                menuContainer.classList.remove('active');
+                menuToggleBtn.classList.remove('active');
+            } else {
+                // Scrolling UP - Show Header
+                mainHeader.classList.remove('header-hidden');
+            }
+            lastScrollY = window.scrollY;
         });
 
         // Automatic Browser Language Detection on First Visit
