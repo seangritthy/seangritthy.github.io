@@ -134,9 +134,11 @@
     </div>
 
     <script>
-        // Get the Cloudnestra URL from the 'url' parameter
+        // Get parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
         let cloudnestraUrl = urlParams.get('url');
+        const tmdbId = urlParams.get('id');
+        const mediaType = urlParams.get('type') || 'movie';
         const title = urlParams.get('title') || '';
 
         if (title) {
@@ -165,11 +167,6 @@
         function showError(msg) {
             updateStatus(msg, true);
             updateLoading('ERROR', msg);
-            // Also show error on the video player area
-            const video = document.getElementById('videoPlayer');
-            video.style.objectFit = 'contain';
-            video.poster = '';
-            // Display error message on video element
             const errorDiv = document.createElement('div');
             errorDiv.style.cssText = `
                 position: fixed;
@@ -194,14 +191,20 @@
             setTimeout(() => hideLoading(), 3000);
         }
 
-        // Decode Cloudnestra URL to get the actual vidsrc URL
+        // Generate Cloudnestra URL from TMDB ID
+        function generateCloudnestraUrl(id, type) {
+            const vidsrcUrl = `https://vidsrc.to/embed/${type}/${id}`;
+            const encoded = btoa(vidsrcUrl);
+            return `https://cloudnestra.com/rcp/${encoded}`;
+        }
+
+        // Decode Cloudnestra URL to get vidsrc URL
         function decodeCloudnestraUrl(cloudUrl) {
             try {
                 const match = cloudUrl.match(/\/rcp\/([A-Za-z0-9+\/=]+)/);
                 if (!match) throw new Error('Invalid Cloudnestra URL');
                 
                 let encoded = match[1];
-                // Fix URL-safe base64
                 encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
                 while (encoded.length % 4) encoded += '=';
                 
@@ -214,22 +217,20 @@
             }
         }
 
-        // Fetch the actual .m3u8 stream URL from the vidsrc page
+        // Fetch the actual stream URL from vidsrc page
         async function fetchStreamFromVidSrc(vidsrcUrl) {
             updateLoading('FETCHING STREAM...', 'Connecting to vidsrc.to');
             
-            // Try multiple CORS proxies
             const proxies = [
                 `https://api.allorigins.win/raw?url=${encodeURIComponent(vidsrcUrl)}`,
-                `https://corsproxy.io/?${encodeURIComponent(vidsrcUrl)}`,
-                `https://cors-anywhere.herokuapp.com/${vidsrcUrl}`
+                `https://corsproxy.io/?${encodeURIComponent(vidsrcUrl)}`
             ];
             
             for (const proxy of proxies) {
                 try {
                     updateLoading('FETCHING STREAM...', `Trying to fetch...`);
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 15000);
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
                     const response = await fetch(proxy, { signal: controller.signal });
                     clearTimeout(timeoutId);
                     
@@ -237,13 +238,11 @@
                         const html = await response.text();
                         updateLoading('PARSING RESPONSE...', 'Looking for video stream');
                         
-                        // Look for m3u8 URL in the response
                         const patterns = [
                             /(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i,
                             /(https?:\/\/[^\s"']+\/master[^\s"']*\.m3u8)/i,
                             /(https?:\/\/[^\s"']+\/playlist[^\s"']*\.m3u8)/i,
-                            /(https?:\/\/[^\s"']+\/index[^\s"']*\.m3u8)/i,
-                            /(https?:\/\/[^\s"']+\/manifest[^\s"']*)/i
+                            /(https?:\/\/[^\s"']+\/index[^\s"']*\.m3u8)/i
                         ];
                         
                         for (const pattern of patterns) {
@@ -305,38 +304,55 @@
             }
         }
 
-        // Main function to process the Cloudnestra URL
+        // Main function
         async function main() {
-            if (!cloudnestraUrl) {
-                showError('No Cloudnestra URL provided');
+            let cloudUrl = cloudnestraUrl;
+            
+            // If no Cloudnestra URL but have TMDB ID, generate one
+            if (!cloudUrl && tmdbId) {
+                updateLoading('GENERATING CLOUDNESTRA URL...', `TMDB ID: ${tmdbId}`);
+                cloudUrl = generateCloudnestraUrl(tmdbId, mediaType);
+                console.log('Generated Cloudnestra URL:', cloudUrl);
+            }
+            
+            if (!cloudUrl) {
+                showError('No Cloudnestra URL or TMDB ID provided');
                 return;
             }
             
             try {
-                // Step 1: Decode Cloudnestra URL to get vidsrc URL
-                updateLoading('DECODING CLOUDNESTRA...', 'Extracting vidsrc URL');
-                const vidsrcUrl = decodeCloudnestraUrl(cloudnestraUrl);
-                
-                if (!vidsrcUrl) {
+                // First decode to verify it's valid
+                const decodedUrl = decodeCloudnestraUrl(cloudUrl);
+                if (!decodedUrl) {
                     showError('Invalid Cloudnestra URL format');
                     return;
                 }
-                console.log('Decoded to vidsrc URL:', vidsrcUrl);
+                console.log('Decoded to:', decodedUrl);
                 
-                // Step 2: Fetch the actual .m3u8 stream from the vidsrc page
-                const streamUrl = await fetchStreamFromVidSrc(vidsrcUrl);
+                // Fetch the actual stream
+                const streamUrl = await fetchStreamFromVidSrc(decodedUrl);
                 
                 if (streamUrl) {
                     playVideo(streamUrl);
                 } else {
-                    showError('Could not extract stream from Cloudnestra');
+                    // Fallback: Try to use the decoded URL directly
+                    updateLoading('FALLBACK MODE...', 'Using direct vidsrc embed');
+                    const iframe = document.createElement('iframe');
+                    iframe.src = decodedUrl;
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%';
+                    iframe.style.border = 'none';
+                    document.querySelector('.container').innerHTML = '';
+                    document.querySelector('.container').appendChild(iframe);
+                    updateStatus('FALLBACK MODE', true);
+                    hideLoading();
                 }
             } catch(e) {
                 showError(e.message);
             }
         }
 
-        // Start the player
+        // Start
         main();
     </script>
 </body>
