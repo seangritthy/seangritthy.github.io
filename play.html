@@ -179,34 +179,6 @@
             margin-top: 10px;
         }
 
-        .input-group {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        input {
-            flex: 1;
-            padding: 12px;
-            background: rgba(0,0,0,0.5);
-            border: 1px solid var(--primary);
-            color: #fff;
-            font-family: monospace;
-            border-radius: 5px;
-        }
-
-        button {
-            padding: 12px 24px;
-            background: var(--primary);
-            color: #000;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 5px;
-            font-family: monospace;
-        }
-
         @media (max-width: 768px) {
             iframe { height: 400px; }
             .movie-info-panel { flex-direction: column; }
@@ -219,29 +191,17 @@
 
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
-        <div class="loading-text" id="loadingText">INITIALIZING CLOUDNESTRA...</div>
-        <div class="loading-step" id="loadingStep">Ready to stream</div>
+        <div class="loading-text" id="loadingText">INITIALIZING...</div>
+        <div class="loading-step" id="loadingStep">Loading stream</div>
     </div>
 
     <header class="cyber-header">
         <div class="header-content">
-            <a href="#" class="site-title">MVHD CYBERCINEMA</a>
+            <a href="index.html" class="site-title">MVHD CYBERCINEMA</a>
         </div>
     </header>
 
     <div class="main-container" id="mainContent">
-        <!-- Manual URL Input -->
-        <div class="movie-info-panel" style="margin-bottom: 20px;">
-            <div class="input-group">
-                <input type="text" id="manualUrl" placeholder="Paste CloudOrchestraNova URL here...">
-                <button onclick="playManualUrl()">▶ PLAY</button>
-            </div>
-            <div class="input-group">
-                <input type="text" id="tmdbInput" placeholder="Or enter TMDB ID (e.g., 1380291)">
-                <button onclick="playTmdbId()">▶ PLAY TMDB</button>
-            </div>
-        </div>
-
         <div class="movie-info-panel">
             <div class="movie-poster">
                 <img id="moviePoster" src="" alt="Poster">
@@ -260,13 +220,21 @@
             <iframe id="playerFrame" src="" allowfullscreen></iframe>
         </div>
 
-        <div class="status-badge" id="statusBadge">☁️ READY • ENTER URL ABOVE</div>
+        <div class="status-badge" id="statusBadge">☁️ CLOUDNESTRA STREAM</div>
     </div>
 
     <script>
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         
-        // Generate CloudOrchestraNova URL from TMDB ID
+        // Fix cloudnestra.com to cloudorchestranova.com
+        function fixCloudUrl(url) {
+            if (url.includes('cloudnestra.com')) {
+                return url.replace('cloudnestra.com', 'cloudorchestranova.com');
+            }
+            return url;
+        }
+
+        // Generate Cloud URL from TMDB ID
         function generateCloudUrl(tmdbId, type = 'movie') {
             const vidsrcUrl = `https://vidsrc.to/embed/${type}/${tmdbId}`;
             const encoded = btoa(vidsrcUrl);
@@ -287,97 +255,114 @@
             }, 500);
         }
 
-        function showLoading() {
-            const overlay = document.getElementById('loadingOverlay');
-            overlay.style.display = 'flex';
-            overlay.style.opacity = '1';
-        }
-
-        // Play direct URL
-        function playManualUrl() {
-            const url = document.getElementById('manualUrl').value.trim();
-            if (!url) {
-                alert('Please enter a CloudOrchestraNova URL');
-                return;
-            }
-            
-            showLoading();
-            updateLoading('LOADING STREAM...', 'Connecting to server');
-            
-            const iframe = document.getElementById('playerFrame');
-            iframe.src = url;
-            
-            document.getElementById('statusBadge').innerHTML = '☁️ STREAMING • DIRECT LINK';
-            document.getElementById('statusBadge').style.borderColor = '#00ff9d';
-            
-            iframe.onload = () => hideLoading();
-            setTimeout(() => hideLoading(), 5000);
-        }
-
-        // Play by TMDB ID
-        async function playTmdbId() {
-            const tmdbId = document.getElementById('tmdbInput').value.trim();
-            if (!tmdbId) {
-                alert('Please enter a TMDB ID');
-                return;
-            }
-            
-            showLoading();
-            updateLoading('FETCHING MOVIE DATA...', `TMDB ID: ${tmdbId}`);
-            
+        async function loadMovie(tmdbId, type = 'movie') {
             try {
-                // Fetch movie info
-                const tmdbRes = await fetch(`https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${TMDB_API_KEY}&language=en-US`);
+                updateLoading('FETCHING MOVIE DATA...', `TMDB ID: ${tmdbId}`);
+                const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${TMDB_API_KEY}&language=en-US`);
+                
+                if (!tmdbRes.ok) {
+                    throw new Error('Movie not found');
+                }
+                
                 const movie = await tmdbRes.json();
                 
                 const title = movie.title || movie.name;
-                const year = (movie.release_date || '').substring(0,4);
+                const year = (movie.release_date || movie.first_air_date || '').substring(0,4);
                 
+                document.title = `MVHD | ${title}`;
                 document.getElementById('movieTitle').textContent = title;
                 document.getElementById('movieYear').textContent = year ? `(${year})` : '';
                 document.getElementById('movieRating').textContent = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
-                document.getElementById('movieRuntime').textContent = movie.runtime ? `${movie.runtime} min` : 'N/A';
+                document.getElementById('movieRuntime').textContent = movie.runtime ? `${movie.runtime} min` : (movie.episode_run_time?.[0] ? `${movie.episode_run_time[0]} min` : 'N/A');
                 document.getElementById('movieOverview').textContent = movie.overview || 'No description available.';
                 document.getElementById('moviePoster').src = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : 'https://via.placeholder.com/300x450/1a1a1a/ffffff?text=MVHD';
                 
-                // Generate and play Cloud URL
-                updateLoading('GENERATING STREAM URL...', 'Creating secure link');
-                const cloudUrl = generateCloudUrl(tmdbId);
-                console.log('Cloud URL:', cloudUrl);
+                if (movie.backdrop_path) {
+                    document.body.style.backgroundImage = `linear-gradient(rgba(10,10,15,0.9), rgba(10,10,15,0.9)), url('https://image.tmdb.org/t/p/original${movie.backdrop_path}')`;
+                    document.body.style.backgroundSize = 'cover';
+                }
+                
+                return true;
+            } catch(e) {
+                console.error('TMDB error:', e);
+                document.getElementById('movieTitle').textContent = 'Movie Not Found';
+                document.getElementById('movieOverview').textContent = 'Unable to fetch movie details. Stream may still work.';
+                return false;
+            }
+        }
+
+        async function init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let tmdbId = urlParams.get('tmdb');
+            let cloudUrl = urlParams.get('url');
+            const mediaType = urlParams.get('type') || 'movie';
+            const titleParam = urlParams.get('title');
+            
+            // Handle title parameter
+            if (titleParam) {
+                document.getElementById('movieTitle').textContent = decodeURIComponent(titleParam);
+            }
+            
+            // Case 1: Direct Cloud URL provided
+            if (cloudUrl) {
+                updateLoading('LOADING STREAM...', 'Connecting to server');
+                cloudUrl = decodeURIComponent(cloudUrl);
+                cloudUrl = fixCloudUrl(cloudUrl);
                 
                 const iframe = document.getElementById('playerFrame');
                 iframe.src = cloudUrl;
                 
                 document.getElementById('statusBadge').innerHTML = '☁️ CLOUDORCHESTRANOVA • STREAMING';
                 document.getElementById('statusBadge').style.borderColor = '#00ff9d';
-                document.getElementById('manualUrl').value = cloudUrl;
+                
+                // Try to get movie info from TMDB if ID is present
+                const tmdbIdFromUrl = urlParams.get('id');
+                if (tmdbIdFromUrl) {
+                    await loadMovie(tmdbIdFromUrl, mediaType);
+                } else if (titleParam) {
+                    // Use title from URL
+                    document.getElementById('movieTitle').textContent = decodeURIComponent(titleParam);
+                }
                 
                 iframe.onload = () => hideLoading();
-                setTimeout(() => hideLoading(), 5000);
-                
-            } catch(e) {
-                console.error(e);
-                updateLoading('ERROR', e.message);
-                document.getElementById('statusBadge').innerHTML = '⚠️ ERROR LOADING MOVIE';
-                document.getElementById('statusBadge').style.borderColor = '#ff003c';
-                setTimeout(() => hideLoading(), 2000);
+                setTimeout(() => hideLoading(), 3000);
+                return;
             }
+            
+            // Case 2: TMDB ID provided
+            if (tmdbId) {
+                updateLoading('LOADING MOVIE...', `TMDB ID: ${tmdbId}`);
+                
+                // Load movie info
+                await loadMovie(tmdbId, mediaType);
+                
+                // Generate Cloud URL
+                updateLoading('GENERATING STREAM...', 'Creating secure link');
+                const generatedUrl = generateCloudUrl(tmdbId, mediaType);
+                console.log('Generated URL:', generatedUrl);
+                
+                const iframe = document.getElementById('playerFrame');
+                iframe.src = generatedUrl;
+                
+                document.getElementById('statusBadge').innerHTML = '☁️ CLOUDORCHESTRANOVA • STREAMING';
+                document.getElementById('statusBadge').style.borderColor = '#00ff9d';
+                
+                iframe.onload = () => hideLoading();
+                setTimeout(() => hideLoading(), 3000);
+                return;
+            }
+            
+            // Case 3: No parameters - show demo
+            updateLoading('DEMO MODE', 'Loading sample movie');
+            const demoId = '1380291';
+            await loadMovie(demoId, 'movie');
+            const demoUrl = generateCloudUrl(demoId, 'movie');
+            document.getElementById('playerFrame').src = demoUrl;
+            document.getElementById('statusBadge').innerHTML = '☁️ DEMO • CLOUDORCHESTRANOVA';
+            setTimeout(() => hideLoading(), 2000);
         }
 
-        // Check URL parameters on load
-        const urlParams = new URLSearchParams(window.location.search);
-        const tmdbParam = urlParams.get('tmdb');
-        const urlParam = urlParams.get('url');
-        
-        if (tmdbParam) {
-            document.getElementById('tmdbInput').value = tmdbParam;
-            setTimeout(() => playTmdbId(), 100);
-        } else if (urlParam) {
-            document.getElementById('manualUrl').value = decodeURIComponent(urlParam);
-            setTimeout(() => playManualUrl(), 100);
-        } else {
-            hideLoading();
-        }
+        init();
     </script>
 </body>
 </html>
