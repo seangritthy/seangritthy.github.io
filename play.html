@@ -531,7 +531,7 @@
 
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-content">
-            <div class="loading-text" id="loadingText">SCANNING CONFIGURATION CORES...</div>
+            <div class="loading-text" id="loadingText">ACTIVATING ORIGIN GUARD SHIELD...</div>
             <div class="loading-bar"></div>
         </div>
     </div>
@@ -550,8 +550,7 @@
 
     <div class="main-container">
         <div class="movie-info-panel">
-            <div class="movie-poster" id="moviePoster">
-                </div>
+            <div class="movie-poster" id="moviePoster"></div>
             <div class="movie-details">
                 <h1 class="movie-title" id="movieTitle">CYBERPUNK DATA STREAM</h1>
                 <div class="tagline" id="movieTagline"></div>
@@ -570,6 +569,7 @@
             <iframe 
                 id="stream-frame" 
                 src="" 
+                sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowfullscreen 
                 loading="lazy">
@@ -577,7 +577,7 @@
         </div>
 
         <div class="status-badges">
-            <div class="status-badge badge-primary" id="extractionBadge">🚀 MVHD • DECRYPTING TARGET STREAM URL</div>
+            <div class="status-badge badge-primary" id="extractionBadge">🛡️ ORIGIN GUARD: INITIALIZING POPUP INTERCEPTOR</div>
             <div class="status-badge badge-success" id="tmdbBadge">🎬 TMDB NODE ID: RESOLVING</div>
         </div>
 
@@ -612,6 +612,40 @@
     </div>
 
     <script>
+        /* =========================================================================
+           🛡️ ORIGIN GUARD ANTI-POPUP & REDIRECT ENGINE (CLIENT-SIDE AD BLOCKER)
+           ========================================================================= */
+        (function applyOriginGuard() {
+            // 1. Block unauthorized new windows or popunder window triggers
+            const originalWindowOpen = window.open;
+            window.open = function(url, name, specs, replace) {
+                console.warn("🛡️ Origin Guard: Blocked popup request targeting ->", url);
+                return { 
+                    focus: function() {}, 
+                    blur: function() {},
+                    close: function() {},
+                    document: {} 
+                }; 
+            };
+
+            // 2. Heavy mitigation against background tab context theft or frame redirections
+            window.onbeforeunload = function(e) {
+                // If an embedded layout attempts to crash or hijack the screen, force freeze it
+                if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+                    console.warn("🛡️ Origin Guard: Intercepted forceful redirection attempt from frame.");
+                    return "Origin Guard blocked a suspicious page redirect. Stay here to play video.";
+                }
+            };
+
+            // 3. Prevent clicking backgrounds from initializing invisible click-under layout redirects
+            document.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A' && (e.target.href.includes('ad') || e.target.href.includes('bet') || e.target.href.includes('crypto'))) {
+                    e.preventDefault();
+                    console.warn("🛡️ Origin Guard: Dropped suspicious ad link click.");
+                }
+            }, true);
+        })();
+
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         const urlParams = new URLSearchParams(window.location.search);
         const tmdbId = urlParams.get('tmdb');
@@ -646,7 +680,7 @@
                 if (decoded.startsWith('http')) return decoded;
                 return null;
             } catch (e) {
-                console.error("Decoder runtime crash:", e);
+                console.error("Decoder runtime exception:", e);
                 return null;
             }
         }
@@ -718,9 +752,9 @@
                         const directSourceUrl = decodeCloudnestraUrl(match[0]);
                         
                         if (directSourceUrl) {
-                            // Inject HTML5 video player instead of standard frame window
+                            // Inject native clean HTML5 video player layout (Completely removes popups/ad scripts)
                             const container = document.getElementById('playerContainer');
-                            container.innerHTML = `<video id="videoPlayer" controls autoplay playsinline></video>`;
+                            container.innerHTML = `<video id="videoPlayer" controls autoplay playsinline style="width:100%; height:650px; background:#000; border:none; display:block;"></video>`;
                             const video = document.getElementById('videoPlayer');
 
                             if (directSourceUrl.includes('.m3u8') && Hls.isSupported()) {
@@ -738,22 +772,23 @@
                             }
                             
                             document.getElementById('extractionBadge').className = "status-badge badge-primary";
-                            document.getElementById('extractionBadge').innerText = "🚀 MVHD • DIRECT CYBERSTREAM INJECTED";
+                            document.getElementById('extractionBadge').innerText = "🛡️ ORIGIN GUARD: CLEAN DIRECT STREAM RUNNING";
                             return;
                         }
                     }
                 }
                 throw new Error("rcp token missing.");
             } catch (err) {
-                console.warn("Extraction link unavailable, mounting target embed source:", err);
+                console.warn("Extraction link unavailable, mounting isolated safe iframe:", err);
                 
                 const frame = document.getElementById('stream-frame');
                 if (frame) {
+                    // The sandbox attribute prevents the iframe from opening new popup windows or refreshing the master tab
                     frame.src = targetEmbed;
                     frame.onload = dismissOverlay;
                 }
                 document.getElementById('extractionBadge').className = "status-badge badge-warning";
-                document.getElementById('extractionBadge').innerText = "⚠️ FALLBACK EMBED PLAYER RUNNING";
+                document.getElementById('extractionBadge').innerText = "⚠️ FALLBACK SANBOXED IFRAME PROTECTION ACTIVE";
             }
         }
 
