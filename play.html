@@ -44,10 +44,6 @@
 
         @keyframes scanlines { 0% { background-position: 0 0; } 100% { background-position: 0 100px; } }
 
-        .video-stream-effect { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; opacity: 0.1; }
-        .data-packet { position: absolute; width: 3px; height: 20px; background: var(--primary); animation: dataFlow 3s linear infinite; filter: blur(1px); }
-        @keyframes dataFlow { 0% { transform: translateY(-100px) rotate(45deg); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(100vh) rotate(45deg); opacity: 0; } }
-
         .cyber-header {
             position: fixed; top: 0; width: 100%; background: rgba(10, 10, 15, 0.95);
             backdrop-filter: blur(15px); padding: 15px 0; z-index: 1000; border-bottom: var(--pixel-border);
@@ -101,18 +97,6 @@
         .badge-success { background: rgba(0, 204, 255, 0.1); border: 2px solid var(--cyber-blue); color: var(--cyber-blue); }
         @keyframes badgePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
-        .control-panel { background: rgba(19, 19, 31, 0.9); border: var(--pixel-border); padding: 25px; margin-top: 30px; box-shadow: var(--neon-glow); }
-        .control-title { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: var(--primary); margin-bottom: 20px; text-align: center; }
-        .control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .control-item { background: rgba(0, 0, 0, 0.5); padding: 20px; border: 1px solid var(--secondary); transition: all 0.3s ease; }
-        .control-item:hover { border-color: var(--primary); box-shadow: 0 0 20px rgba(0, 255, 157, 0.3); transform: translateY(-5px); }
-        .control-label { color: var(--cyber-yellow); font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; margin-bottom: 10px; }
-        .control-value { color: white; font-size: 1.1rem; font-family: 'Orbitron', sans-serif; }
-
-        .quality-selector { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
-        .quality-btn { padding: 10px 20px; background: rgba(0, 0, 0, 0.5); border: 1px solid var(--secondary); color: white; font-family: 'Share Tech Mono', monospace; cursor: pointer; transition: all 0.3s ease; }
-        .quality-btn:hover, .quality-btn.active { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 15px rgba(0, 255, 157, 0.5); }
-
         .loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95);
             display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; gap: 20px;
@@ -125,13 +109,35 @@
         .loading-bar::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, var(--primary), transparent); animation: loading 2s infinite; }
         @keyframes loading { 0% { left: -100%; } 100% { left: 100%; } }
 
+        /* Server Selector */
+        .server-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .server-btn {
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-family: monospace;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .server-btn:hover, .server-btn.active {
+            background: var(--primary);
+            color: #000;
+        }
+
         @media (max-width: 768px) { #stream-frame { height: 400px; } .movie-title { font-size: 1.5rem; } .main-container { padding: 120px 15px 30px; } .movie-info-panel { flex-direction: column; } .movie-poster { max-width: 200px; margin: 0 auto; } }
     </style>
 </head>
 <body>
     <div class="cyber-grid"></div>
     <div class="scanlines"></div>
-    <div class="video-stream-effect" id="streamEffect"></div>
 
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
@@ -146,19 +152,25 @@
     </header>
 
     <div class="main-container" id="mainContent">
+        <!-- Server Selector -->
+        <div class="server-selector" id="serverSelector">
+            <button class="server-btn active" data-server="vidsrc">🎬 VidSrc.to</button>
+            <button class="server-btn" data-server="embed2">📺 2Embed</button>
+            <button class="server-btn" data-server="auto">🔄 AutoEmbed</button>
+            <button class="server-btn" data-server="multi">📽️ MultiEmbed</button>
+        </div>
+
         <div class="movie-info-panel" id="moviePanel">
             <div class="movie-poster">
                 <img id="moviePoster" src="" alt="Poster">
             </div>
             <div class="movie-details">
                 <h1 class="movie-title"><span id="movieTitle">Loading...</span> <span id="movieYear" style="color: var(--cyber-yellow);"></span></h1>
-                <div class="tagline" id="originalTitle" style="color: var(--cyber-blue); display: none;"></div>
                 <div class="tagline" id="taglineText" style="display: none;"></div>
                 <div class="movie-meta">
                     <div class="meta-item">⭐ RATING: <span id="movieRating">-</span>/10 (<span id="voteCount">0</span> votes)</div>
                     <div class="meta-item">⏱️ RUNTIME: <span id="movieRuntime">-</span></div>
                     <div class="meta-item">📅 RELEASE: <span id="releaseDate">-</span></div>
-                    <div class="meta-item">🎯 QUALITY: <span id="streamQuality">1080p</span></div>
                 </div>
                 <div class="overview" id="movieOverview"></div>
                 <div class="genres" id="genresContainer"></div>
@@ -170,24 +182,7 @@
         </div>
 
         <div class="status-badges">
-            <div class="status-badge" id="cloudBadge">🚀 EXTRACTING CLOUDNESTRA...</div>
             <div class="status-badge badge-success" id="tmdbBadge">🎬 TMDB ID: -</div>
-        </div>
-
-        <div class="control-panel">
-            <h2 class="control-title">STREAM CONTROL PANEL • <span id="panelTitle"></span></h2>
-            <div class="control-grid">
-                <div class="control-item"><div class="control-label">SERVER STATUS</div><div class="control-value" id="serverStatus">CONNECTED</div></div>
-                <div class="control-item"><div class="control-label">STREAM QUALITY</div><div class="control-value" id="displayQuality">1080p</div></div>
-                <div class="control-item"><div class="control-label">BITRATE</div><div class="control-value" id="bitrate">8.5 MBPS</div></div>
-                <div class="control-item"><div class="control-label">BUFFER HEALTH</div><div class="control-value" id="bufferHealth">98%</div></div>
-            </div>
-            <div class="quality-selector">
-                <button class="quality-btn active" data-quality="auto">AUTO (RECOMMENDED)</button>
-                <button class="quality-btn" data-quality="1080">1080P</button>
-                <button class="quality-btn" data-quality="720">720P</button>
-                <button class="quality-btn" data-quality="480">480P</button>
-            </div>
         </div>
     </div>
 
@@ -196,188 +191,173 @@
         
         // Get TMDB ID from URL
         const urlParams = new URLSearchParams(window.location.search);
-        const tmdbId = urlParams.get('tmdb');
+        let tmdbId = urlParams.get('tmdb');
         const mediaType = urlParams.get('type') || 'movie';
+        const season = urlParams.get('season') || 1;
+        const episode = urlParams.get('episode') || 1;
         
+        // Default demo movie
         if (!tmdbId) {
-            document.getElementById('loadingText').textContent = "ERROR: INVALID TMDB ID";
-            document.getElementById('loadingText').style.color = "#ff003c";
-        } else {
-            document.getElementById('tmdbBadge').innerHTML = `🎬 TMDB ID: ${tmdbId}`;
-            fetchMovieAndStream(tmdbId);
+            tmdbId = '1380291';
         }
-
-        // Generate Cloudnestra URL (same as PHP function)
-        async function getCloudNestraUrl(tmdbId) {
-            const url = `https://vidsrc.xyz/embed/movie/${tmdbId}`;
-            
-            try {
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-                const response = await fetch(proxyUrl);
-                const data = await response.json();
-                const html = data.contents;
-                
-                const iframeMatch = html.match(/iframe[^>]+src=["']([^"']*cloudnestra[^"']*)["']/i);
-                if (iframeMatch) {
-                    let cloudUrl = iframeMatch[1];
-                    if (!cloudUrl.startsWith('http')) cloudUrl = 'https:' + cloudUrl;
-                    return cloudUrl;
+        
+        // Server configurations (working embed sources)
+        const servers = {
+            vidsrc: {
+                name: 'VidSrc.to',
+                getUrl: () => {
+                    if (mediaType === 'tv') {
+                        return `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}`;
+                    }
+                    return `https://vidsrc.to/embed/movie/${tmdbId}`;
                 }
-                return null;
-            } catch(e) {
-                console.log('Cloudnestra extraction failed:', e);
-                return null;
+            },
+            embed2: {
+                name: '2Embed',
+                getUrl: () => {
+                    if (mediaType === 'tv') {
+                        return `https://www.2embed.cc/embedtv/${tmdbId}&s=${season}&e=${episode}`;
+                    }
+                    return `https://www.2embed.cc/embed/${tmdbId}`;
+                }
+            },
+            auto: {
+                name: 'AutoEmbed',
+                getUrl: () => {
+                    if (mediaType === 'tv') {
+                        return `https://autoembed.to/tv/tmdb/${tmdbId}/${season}/${episode}`;
+                    }
+                    return `https://autoembed.to/movie/tmdb/${tmdbId}`;
+                }
+            },
+            multi: {
+                name: 'MultiEmbed',
+                getUrl: () => {
+                    if (mediaType === 'tv') {
+                        return `https://multiembed.mov/video/${tmdbId}/tv-${season}-${episode}`;
+                    }
+                    return `https://multiembed.mov/video/${tmdbId}`;
+                }
             }
+        };
+        
+        let currentServer = 'vidsrc';
+        
+        function updateLoading(text) {
+            document.getElementById('loadingText').textContent = text;
         }
-
-        async function fetchMovieAndStream(id) {
+        
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+            }, 500);
+        }
+        
+        // Fetch movie info from TMDB
+        async function fetchMovieInfo() {
             try {
-                document.getElementById('loadingText').textContent = "FETCHING TMDB DATABASE...";
+                const url = `https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}&language=en-US`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Movie not found');
                 
-                // Fetch movie info
-                const tmdbRes = await fetch(`https://api.themoviedb.org/3/${mediaType}/${id}?api_key=${TMDB_API_KEY}&language=en-US`);
-                const movie = await tmdbRes.json();
-
-                const title = movie.title || movie.name;
-                const year = (movie.release_date || movie.first_air_date || '').substring(0,4);
+                const data = await response.json();
+                const title = data.title || data.name;
+                const year = (data.release_date || data.first_air_date || '').substring(0,4);
                 
                 document.title = `MVHD | ${title}`;
                 document.getElementById('movieTitle').textContent = title;
                 document.getElementById('movieYear').textContent = year ? `(${year})` : '';
-                document.getElementById('movieRating').textContent = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
-                document.getElementById('voteCount').textContent = movie.vote_count || 0;
-                document.getElementById('movieRuntime').textContent = movie.runtime ? `${movie.runtime} min` : (movie.episode_run_time?.[0] ? `${movie.episode_run_time[0]} min` : 'N/A');
-                document.getElementById('releaseDate').textContent = movie.release_date || movie.first_air_date || 'N/A';
-                document.getElementById('movieOverview').textContent = movie.overview || 'No description available.';
-                document.getElementById('panelTitle').textContent = title.toUpperCase();
+                document.getElementById('movieRating').textContent = data.vote_average ? data.vote_average.toFixed(1) : 'N/A';
+                document.getElementById('voteCount').textContent = data.vote_count || 0;
+                document.getElementById('movieRuntime').textContent = data.runtime ? `${data.runtime} min` : (data.episode_run_time?.[0] ? `${data.episode_run_time[0]} min` : 'N/A');
+                document.getElementById('releaseDate').textContent = data.release_date || data.first_air_date || 'N/A';
+                document.getElementById('movieOverview').textContent = data.overview || 'No description available.';
                 document.getElementById('tmdbBadge').innerHTML = `🎬 ${title} (${year})`;
                 
-                if (movie.poster_path) {
-                    document.getElementById('moviePoster').src = `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
+                if (data.poster_path) {
+                    document.getElementById('moviePoster').src = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
                 }
                 
-                if (movie.backdrop_path) {
-                    document.body.style.backgroundImage = `linear-gradient(rgba(10,10,15,0.9), rgba(10,10,15,0.9)), url('https://image.tmdb.org/t/p/original${movie.backdrop_path}')`;
+                if (data.backdrop_path) {
+                    document.body.style.backgroundImage = `linear-gradient(rgba(10,10,15,0.9), rgba(10,10,15,0.9)), url('https://image.tmdb.org/t/p/original${data.backdrop_path}')`;
                     document.body.style.backgroundSize = 'cover';
                 }
 
-                if (movie.original_title && movie.original_title !== title) {
-                    document.getElementById('originalTitle').innerHTML = `Original: ${movie.original_title}`;
-                    document.getElementById('originalTitle').style.display = 'block';
-                }
-
-                if (movie.tagline) {
-                    document.getElementById('taglineText').innerHTML = `"${movie.tagline}"`;
+                if (data.tagline) {
+                    document.getElementById('taglineText').innerHTML = `"${data.tagline}"`;
                     document.getElementById('taglineText').style.display = 'block';
                 }
 
-                if (movie.genres && movie.genres.length > 0) {
+                if (data.genres && data.genres.length > 0) {
                     const genresDiv = document.getElementById('genresContainer');
-                    movie.genres.forEach(g => {
+                    genresDiv.innerHTML = '';
+                    data.genres.forEach(g => {
                         const span = document.createElement('span');
                         span.className = 'genre-tag';
                         span.textContent = g.name;
                         genresDiv.appendChild(span);
                     });
                 }
-
-                const qualities = ['4K HDR', '1080p', '720p', '480p'];
-                const streamQuality = qualities[id % qualities.length];
-                document.getElementById('streamQuality').textContent = streamQuality;
-                document.getElementById('displayQuality').textContent = streamQuality;
-
-                document.getElementById('mainContent').style.display = 'block';
-
-                // Try to extract Cloudnestra URL (like PHP function)
-                document.getElementById('loadingText').textContent = "EXTRACTING CLOUDNESTRA...";
-                const frame = document.getElementById('stream-frame');
-                const cloudBadge = document.getElementById('cloudBadge');
-
-                try {
-                    const cloudUrl = await getCloudNestraUrl(id);
-                    if (cloudUrl) {
-                        frame.src = cloudUrl;
-                        cloudBadge.className = "status-badge badge-primary";
-                        cloudBadge.innerHTML = "🚀 MVHD • BY BONG BEE";
-                    } else {
-                        throw new Error("Cloudnestra not found");
-                    }
-                } catch(e) {
-                    // Fallback to vidsrc.to
-                    frame.src = `https://vidsrc.to/embed/${mediaType}/${id}`;
-                    cloudBadge.className = "status-badge badge-warning";
-                    cloudBadge.innerHTML = "⚠️ FALLBACK PLAYER • STANDARD STREAM";
-                }
-
-                frame.onload = function() {
-                    document.getElementById('loadingOverlay').style.opacity = '0';
-                    setTimeout(() => { document.getElementById('loadingOverlay').style.display = 'none'; }, 500);
-                };
-
-                setTimeout(() => {
-                    const overlay = document.getElementById('loadingOverlay');
-                    if (overlay.style.display !== 'none') {
-                        overlay.style.opacity = '0';
-                        setTimeout(() => overlay.style.display = 'none', 500);
-                    }
-                }, 8000);
-
-            } catch(e) {
-                console.error(e);
-                document.getElementById('loadingText').textContent = "CRITICAL MAINFRAME ERROR";
-                document.getElementById('loadingText').style.color = "#ff003c";
-            }
-        }
-
-        // Streaming effects
-        function createStreamEffect() {
-            const container = document.getElementById('streamEffect');
-            const colors = ['#00ff9d', '#7b61ff', '#ff00e5', '#00ccff'];
-            for (let i = 0; i < 25; i++) {
-                const packet = document.createElement('div');
-                packet.className = 'data-packet';
-                packet.style.left = `${Math.random() * 100}%`;
-                packet.style.animationDelay = `${Math.random() * 3}s`;
-                packet.style.animationDuration = `${Math.random() * 2 + 2}s`;
-                packet.style.background = colors[Math.floor(Math.random() * colors.length)];
-                container.appendChild(packet);
-            }
-        }
-
-        function updateStreamStats() {
-            setInterval(() => {
-                const bitrates = ['8.5 MBPS', '9.2 MBPS', '7.8 MBPS', '8.1 MBPS'];
-                const bufferLevels = ['98%', '95%', '99%', '97%'];
-                document.getElementById('bitrate').textContent = bitrates[Math.floor(Math.random() * bitrates.length)];
-                document.getElementById('bufferHealth').textContent = bufferLevels[Math.floor(Math.random() * bufferLevels.length)];
                 
-                if (Math.random() > 0.9) {
-                    document.getElementById('serverStatus').textContent = 'RECONNECTING';
-                    document.getElementById('serverStatus').style.color = '#fff200';
-                    setTimeout(() => {
-                        document.getElementById('serverStatus').textContent = 'CONNECTED';
-                        document.getElementById('serverStatus').style.color = '#00ff9d';
-                    }, 2000);
-                }
-            }, 3000);
+                return true;
+            } catch(e) {
+                console.error('TMDB Error:', e);
+                document.getElementById('movieTitle').textContent = `Movie ID: ${tmdbId}`;
+                document.getElementById('movieOverview').textContent = 'Movie details unavailable, but stream may still work.';
+                return false;
+            }
         }
-
-        function setupQualitySelector() {
-            const qualityBtns = document.querySelectorAll('.quality-btn');
-            qualityBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    qualityBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    const quality = this.getAttribute('data-quality');
-                    const qualityText = quality === 'auto' ? 'AUTO' : quality + 'P';
-                    document.getElementById('displayQuality').textContent = qualityText;
-                });
+        
+        // Load server
+        function loadServer(serverKey) {
+            currentServer = serverKey;
+            const server = servers[serverKey];
+            
+            if (!server) return;
+            
+            const url = server.getUrl();
+            const iframe = document.getElementById('stream-frame');
+            iframe.src = url;
+            
+            // Update active button
+            document.querySelectorAll('.server-btn').forEach(btn => {
+                if (btn.dataset.server === serverKey) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
             });
         }
-
-        createStreamEffect();
-        updateStreamStats();
-        setupQualitySelector();
+        
+        // Initialize
+        async function init() {
+            updateLoading('FETCHING MOVIE DATA...');
+            await fetchMovieInfo();
+            updateLoading('LOADING STREAM...');
+            loadServer(currentServer);
+            
+            const iframe = document.getElementById('stream-frame');
+            iframe.onload = () => {
+                hideLoading();
+            };
+            
+            setTimeout(() => {
+                hideLoading();
+            }, 5000);
+        }
+        
+        // Server button handlers
+        document.querySelectorAll('.server-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const serverKey = btn.dataset.server;
+                loadServer(serverKey);
+            });
+        });
+        
+        init();
     </script>
 </body>
 </html>
