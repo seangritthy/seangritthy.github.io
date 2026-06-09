@@ -209,8 +209,8 @@
         </div>
 
         <div class="status-badges">
-            <div class="status-badge badge-warning" id="badge-player">
-                ⚠️ EXTRACTING STREAM...
+            <div class="status-badge badge-primary" id="badge-player">
+                🚀 MVHD • CLOUDNESTRA STREAM
             </div>
             <div class="status-badge badge-success">
                 ✅ GUEST PROTOCOL • ACTIVE
@@ -253,6 +253,18 @@
     <script>
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
 
+        // Generate Cloudnestra URL from TMDB ID (Same as your Android extractor returns)
+        function generateCloudnestraUrl(tmdbId, type = 'movie', season = 1, episode = 1) {
+            let vidsrcUrl;
+            if (type === 'tv') {
+                vidsrcUrl = `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}`;
+            } else {
+                vidsrcUrl = `https://vidsrc.to/embed/movie/${tmdbId}`;
+            }
+            const encoded = btoa(vidsrcUrl);
+            return `https://cloudnestra.com/rcp/${encoded}`;
+        }
+
         // Initialize Page
         document.addEventListener('DOMContentLoaded', () => {
             createStreamEffect();
@@ -270,70 +282,54 @@
 
             // Start Data Fetch
             const urlParams = new URLSearchParams(window.location.search);
-            const tmdbId = urlParams.get('tmdb');
-            // Also support direct cloudnestra URL parameter
-            let cloudnestraUrl = urlParams.get('url');
+            let tmdbId = urlParams.get('tmdb');
+            const mediaType = urlParams.get('type') || 'movie';
+            const season = urlParams.get('season') || 1;
+            const episode = urlParams.get('episode') || 1;
+            const directCloudUrl = urlParams.get('url');
 
-            if (cloudnestraUrl) {
+            if (directCloudUrl) {
                 // Direct Cloudnestra URL mode
                 document.getElementById('badge-tmdb').textContent = `☁️ CLOUDNESTRA STREAM`;
                 document.getElementById('m-title').textContent = "Cloudnestra Stream";
                 document.getElementById('c-title').textContent = "CLOUDNESTRA STREAM";
                 document.getElementById('main-content').style.display = 'block';
+                document.getElementById('loadingOverlay').style.display = 'none';
                 
                 const frame = document.getElementById('stream-frame');
-                frame.src = cloudnestraUrl;
+                frame.src = directCloudUrl;
                 
-                const playerBadge = document.getElementById('badge-player');
-                playerBadge.className = "status-badge badge-primary";
-                playerBadge.innerHTML = "🚀 MVHD • CLOUDNESTRA STREAM";
-                
-                frame.onload = function() {
-                    document.getElementById('loadingOverlay').style.opacity = '0';
-                    setTimeout(() => { document.getElementById('loadingOverlay').style.display = 'none'; }, 500);
-                };
-                
-                setTimeout(() => {
-                    const overlay = document.getElementById('loadingOverlay');
-                    if (overlay.style.display !== 'none') {
-                        overlay.style.opacity = '0';
-                        setTimeout(() => { overlay.style.display = 'none'; }, 500);
-                    }
-                }, 5000);
-                
-            } else if (!tmdbId) {
-                document.getElementById('loading-msg').textContent = "ERROR: INVALID TMDB ID";
-                document.getElementById('loading-msg').style.color = "var(--cyber-red)";
-            } else {
+            } else if (tmdbId) {
                 document.getElementById('badge-tmdb').textContent = `🎬 TMDB ID: ${tmdbId}`;
-                fetchMovieAndStream(tmdbId);
+                fetchMovieAndStream(tmdbId, mediaType, season, episode);
+            } else {
+                // Demo mode - show a sample movie
+                tmdbId = '1380291';
+                document.getElementById('badge-tmdb').textContent = `🎬 DEMO: Swapped (${tmdbId})`;
+                fetchMovieAndStream(tmdbId, 'movie', 1, 1);
             }
         });
 
-        // Generate Cloudnestra URL from TMDB ID
-        function generateCloudnestraUrl(tmdbId) {
-            const vidsrcUrl = `https://vidsrc.to/embed/movie/${tmdbId}`;
-            const encoded = btoa(vidsrcUrl);
-            return `https://cloudnestra.com/rcp/${encoded}`;
-        }
-
-        async function fetchMovieAndStream(id) {
+        async function fetchMovieAndStream(id, type, season, episode) {
             try {
                 // 1. Fetch TMDB Data
                 document.getElementById('loading-msg').textContent = "FETCHING TMDB DATABASE...";
-                const tmdbRes = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_API_KEY}&language=en-US`);
+                const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}?api_key=${TMDB_API_KEY}&language=en-US`);
                 const movie = await tmdbRes.json();
 
+                const title = movie.title || movie.name;
+                const year = (movie.release_date || movie.first_air_date || '').substring(0,4);
+                
                 // Populate UI
-                document.title = `MVHD | ${movie.title}`;
-                document.getElementById('page-title').textContent = `MVHD | ${movie.title}`;
-                document.getElementById('m-title').textContent = movie.title;
-                document.getElementById('c-title').textContent = movie.title.toUpperCase();
-                document.getElementById('m-year').textContent = movie.release_date ? `(${movie.release_date.substring(0,4)})` : '';
+                document.title = `MVHD | ${title}`;
+                document.getElementById('page-title').textContent = `MVHD | ${title}`;
+                document.getElementById('m-title').textContent = title;
+                document.getElementById('c-title').textContent = title.toUpperCase();
+                document.getElementById('m-year').textContent = year ? `(${year})` : '';
                 document.getElementById('m-rating').textContent = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
                 document.getElementById('m-votes').textContent = movie.vote_count || 0;
-                document.getElementById('m-runtime').textContent = movie.runtime ? `${movie.runtime} min` : 'N/A';
-                document.getElementById('m-date').textContent = movie.release_date || 'N/A';
+                document.getElementById('m-runtime').textContent = type === 'movie' ? (movie.runtime ? `${movie.runtime} min` : 'N/A') : (movie.episode_run_time?.[0] ? `${movie.episode_run_time[0]} min` : 'N/A');
+                document.getElementById('m-date').textContent = movie.release_date || movie.first_air_date || 'N/A';
                 document.getElementById('m-overview').textContent = movie.overview || 'No description available.';
                 document.getElementById('m-poster').src = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : 'https://via.placeholder.com/300x450/1a1a1a/ffffff?text=MVHD';
                 
@@ -341,7 +337,7 @@
                     document.body.style.backgroundImage = `linear-gradient(rgba(10,10,15,0.9), rgba(10,10,15,0.9)), url('https://image.tmdb.org/t/p/original${movie.backdrop_path}')`;
                 }
 
-                if (movie.original_title && movie.original_title !== movie.title) {
+                if (movie.original_title && movie.original_title !== title && type === 'movie') {
                     document.getElementById('m-original-title').textContent = movie.original_title;
                     document.getElementById('m-original-title-container').style.display = 'block';
                 }
@@ -353,6 +349,7 @@
 
                 if (movie.genres && movie.genres.length > 0) {
                     const genresDiv = document.getElementById('m-genres');
+                    genresDiv.innerHTML = '';
                     movie.genres.forEach(g => {
                         const span = document.createElement('span');
                         span.className = 'genre-tag';
@@ -361,7 +358,7 @@
                     });
                 }
 
-                // Make quality random based on ID
+                // Make quality based on ID
                 const qualities = ['4K HDR', '1080p', '720p', '480p'];
                 const streamQuality = qualities[id % qualities.length];
                 document.getElementById('streamQualityMeta').textContent = streamQuality;
@@ -370,33 +367,32 @@
                 // Show the main UI
                 document.getElementById('main-content').style.display = 'block';
 
-                // 2. Generate and play Cloudnestra URL directly
+                // 2. Generate and play Cloudnestra URL directly (Same as Android extractor returns)
                 document.getElementById('loading-msg').textContent = "GENERATING CLOUDNESTRA STREAM...";
                 const frame = document.getElementById('stream-frame');
-                const playerBadge = document.getElementById('badge-player');
 
-                // Generate Cloudnestra URL from TMDB ID
-                const cloudnestraUrl = generateCloudnestraUrl(id);
+                // Generate Cloudnestra URL (Same as what your Android code returns after extraction)
+                const cloudnestraUrl = generateCloudnestraUrl(id, type, season, episode);
                 frame.src = cloudnestraUrl;
                 
-                // Update to Bong Bee Badge
+                // Update badge
+                const playerBadge = document.getElementById('badge-player');
                 playerBadge.className = "status-badge badge-primary";
                 playerBadge.innerHTML = "🚀 MVHD • CLOUDNESTRA STREAM";
 
-                // Hide loading overlay when iframe finishes loading
+                // Hide loading overlay
                 frame.onload = function() {
                     document.getElementById('loadingOverlay').style.opacity = '0';
                     setTimeout(() => { document.getElementById('loadingOverlay').style.display = 'none'; }, 500);
                 };
 
-                // Fallback to hide overlay after 10 seconds just in case
                 setTimeout(() => {
                     const overlay = document.getElementById('loadingOverlay');
                     if (overlay.style.display !== 'none') {
                         overlay.style.opacity = '0';
                         setTimeout(() => { overlay.style.display = 'none'; }, 500);
                     }
-                }, 10000);
+                }, 5000);
 
             } catch (error) {
                 console.error(error);
