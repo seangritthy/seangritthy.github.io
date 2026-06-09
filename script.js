@@ -21,7 +21,10 @@ async function fetchPopularMovies() {
         if (!res.ok) throw new Error(`HTTP error!`);
         const data = await res.json();
         displayMovies(data.results);
-    } catch (error) { setGridMessage('Network Failure. Retrying...'); }
+    } catch (error) { 
+        setGridMessage('Network Failure. Retrying...'); 
+        setTimeout(fetchPopularMovies, 3000);
+    }
 }
 
 async function searchMovies() {
@@ -32,7 +35,9 @@ async function searchMovies() {
         const res = await fetch(`${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&language=en-US&query=${encodeURIComponent(term)}`);
         const data = await res.json();
         displayMovies(data.results);
-    } catch (error) { setGridMessage('Error locating target.'); }
+    } catch (error) { 
+        setGridMessage('Error locating target.'); 
+    }
 }
 
 function displayMovies(moviesToDisplay) {
