@@ -18,8 +18,9 @@
             background-size: 50px 50px;
         }
         header {
-            padding: 30px 20px; background: rgba(10, 10, 15, 0.95); text-align: center;
+            padding: 30px 20px 20px; background: rgba(10, 10, 15, 0.95); text-align: center;
             border-bottom: 2px solid var(--primary); box-shadow: 0 0 25px rgba(0, 255, 157, 0.3);
+            position: sticky; top: 0; z-index: 1000;
         }
         h1 {
             font-family: 'Orbitron', sans-serif; color: var(--primary); margin-bottom: 20px;
@@ -42,8 +43,13 @@
         .type-btn.active { background: var(--primary); color: #000; border-color: var(--primary); }
         .filter-alert { background: rgba(255,0,229,0.2); border: 1px solid #ff00e5; color: #fff; display: none; }
         
+        /* New Category Sub-Nav */
+        .category-selector { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .cat-btn { padding: 6px 15px; background: transparent; border: 1px solid var(--cyber-blue); color: var(--cyber-blue); cursor: pointer; font-family: 'Share Tech Mono', monospace; font-size: 0.85rem; transition: all 0.3s; border-radius: 4px;}
+        .cat-btn.active, .cat-btn:hover { background: var(--cyber-blue); color: #000; box-shadow: 0 0 10px var(--cyber-blue); }
+
         .movies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 35px; padding: 40px 20px; max-width: 1400px; margin: 0 auto; }
-        .movie-card { background: var(--card-bg); border: 1px solid var(--secondary); overflow: hidden; cursor: pointer; transition: all 0.3s ease; position: relative; }
+        .movie-card { background: var(--card-bg); border: 1px solid var(--secondary); overflow: hidden; cursor: pointer; transition: all 0.3s ease; position: relative; border-radius: 5px; }
         .movie-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--cyber-blue), var(--primary), #ff00e5); opacity: 0; transition: 0.3s; z-index: 2; }
         .movie-card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 0 25px rgba(0, 255, 157, 0.4); }
         .movie-card:hover::before { opacity: 1; }
@@ -52,9 +58,18 @@
         .movie-title { font-family: 'Orbitron', sans-serif; font-size: 1.1rem; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--primary); }
         .movie-year, .movie-rating { font-family: 'Share Tech Mono', monospace; color: var(--cyber-blue); font-size: 0.9rem; margin-bottom: 5px; }
         .movie-rating { color: var(--cyber-yellow); }
+        
         .loading { text-align: center; padding: 60px; color: var(--primary); font-family: 'Orbitron', sans-serif; grid-column: 1 / -1; font-size: 1.2rem; }
         .spinner { width: 50px; height: 50px; border: 3px solid rgba(0, 255, 157, 0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* New Pagination Styles */
+        .pagination { display: none; justify-content: center; align-items: center; gap: 20px; padding: 20px; margin-bottom: 40px; }
+        .page-btn { padding: 10px 20px; background: rgba(0, 255, 157, 0.1); border: 1px solid var(--primary); color: var(--primary); cursor: pointer; font-family: 'Orbitron', sans-serif; font-weight: bold; transition: all 0.3s; border-radius: 4px;}
+        .page-btn:hover:not(:disabled) { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
+        .page-btn:disabled { border-color: #555; color: #555; cursor: not-allowed; background: transparent; box-shadow: none; }
+        .page-info { font-family: 'Share Tech Mono', monospace; color: var(--cyber-yellow); font-size: 1.2rem; letter-spacing: 2px;}
+
         @media (max-width: 768px) { h1 { font-size: 2rem; } .movies-grid { gap: 20px; padding: 20px 15px; } .movie-poster { height: 280px; } .search-container { flex-direction: column; } #searchBtn { width: 100%; } }
     </style>
 </head>
@@ -62,13 +77,20 @@
     <header>
         <h1>MVHD CYBERCINEMA</h1>
         <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Search for a movie...">
+            <input type="text" id="searchInput" placeholder="Search Database...">
             <button id="searchBtn">🔍 SEARCH</button>
         </div>
+        
         <div class="type-selector">
             <button id="movieBtn" class="type-btn active">🎥 MOVIES</button>
             <button id="tvBtn" class="type-btn">📺 TV SHOWS</button>
             <button id="resetFilterBtn" class="type-btn filter-alert">✖ CLEAR ACTIVE FILTER</button>
+        </div>
+
+        <div class="category-selector" id="categorySelector">
+            <button class="cat-btn active" data-cat="popular">🔥 POPULAR</button>
+            <button class="cat-btn" data-cat="trending">📈 TRENDING (WEEK)</button>
+            <button class="cat-btn" data-cat="top_rated">⭐ TOP RATED</button>
         </div>
     </header>
 
@@ -76,12 +98,18 @@
         <div id="moviesGrid" class="movies-grid">
             <div class="loading"><div class="spinner"></div><div>INITIALIZING SYSTEM...</div></div>
         </div>
+
+        <div class="pagination" id="pagination">
+            <button id="prevBtn" class="page-btn" disabled>&#8592; PREV</button>
+            <span id="pageInfo" class="page-info">PAGE 1</span>
+            <button id="nextBtn" class="page-btn">NEXT &#8594;</button>
+        </div>
     </main>
 
     <script>
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         
-        // Read URL Parameters for sorting
+        // Read URL Parameters
         const urlParams = new URLSearchParams(window.location.search);
         let currentType = urlParams.get('type') || 'movie';
         const targetGenreId = urlParams.get('genre');
@@ -89,74 +117,95 @@
         const targetActorId = urlParams.get('actor');
         const targetActorName = urlParams.get('actorName');
         const targetSearch = urlParams.get('search');
-        
-        // New parameters for region and language
         const targetCountryId = urlParams.get('country');
         const targetCountryName = urlParams.get('countryName');
         const targetLangId = urlParams.get('lang');
         const targetLangName = urlParams.get('langName');
 
+        // State Variables
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentCategory = 'popular';
+
+        // DOM Elements
         const moviesGrid = document.getElementById('moviesGrid');
         const searchInput = document.getElementById('searchInput');
         const movieBtn = document.getElementById('movieBtn');
         const tvBtn = document.getElementById('tvBtn');
         const resetBtn = document.getElementById('resetFilterBtn');
+        const categorySelector = document.getElementById('categorySelector');
+        
+        // Pagination Elements
+        const paginationWrap = document.getElementById('pagination');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const pageInfo = document.getElementById('pageInfo');
 
+        // Initialize UI State
         if (currentType === 'tv') {
             tvBtn.classList.add('active');
             movieBtn.classList.remove('active');
         }
 
-        function setGridMessage(message, showSpinner = false) {
-            moviesGrid.innerHTML = `<div class="loading">${showSpinner ? '<div class="spinner"></div>' : ''}<div>${message}</div></div>`;
+        // Determine if we are in "Filter Mode" (came from play.html tags)
+        const isFilterActive = targetGenreId || targetActorId || targetSearch || targetCountryId || targetLangId;
+        if (isFilterActive) {
+            resetBtn.style.display = 'block';
+            categorySelector.style.display = 'none'; // Hide categories if filtering by specific actor/genre
         }
 
-        async function initDashboard() {
-            setGridMessage('FETCHING DATABASE...', true);
+        function setGridMessage(message, showSpinner = false) {
+            moviesGrid.innerHTML = `<div class="loading">${showSpinner ? '<div class="spinner"></div>' : ''}<div>${message}</div></div>`;
+            paginationWrap.style.display = 'none';
+        }
+
+        async function fetchDashboardData() {
+            if(currentPage === 1) setGridMessage('FETCHING DATABASE...', true);
             let url;
             let displayContext = "";
 
             try {
+                // Route TMDB API based on active filters or selected category
                 if (targetActorId) {
                     displayContext = `SCANNING FILES FEATURING: ${targetActorName.toUpperCase()}`;
-                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_cast=${targetActorId}&sort_by=popularity.desc`;
-                    resetBtn.style.display = 'block';
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_cast=${targetActorId}&sort_by=popularity.desc&page=${currentPage}`;
                 } else if (targetGenreId) {
                     displayContext = `FILTERING BY GENRE: ${targetGenreName.toUpperCase()}`;
-                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_genres=${targetGenreId}&sort_by=popularity.desc`;
-                    resetBtn.style.display = 'block';
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_genres=${targetGenreId}&sort_by=popularity.desc&page=${currentPage}`;
                 } else if (targetCountryId) {
                     displayContext = `FILTERING REGION: ${targetCountryName.toUpperCase()}`;
-                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_origin_country=${targetCountryId}&sort_by=popularity.desc`;
-                    resetBtn.style.display = 'block';
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_origin_country=${targetCountryId}&sort_by=popularity.desc&page=${currentPage}`;
                 } else if (targetLangId) {
                     displayContext = `FILTERING LANGUAGE: ${targetLangName.toUpperCase()}`;
-                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_original_language=${targetLangId}&sort_by=popularity.desc`;
-                    resetBtn.style.display = 'block';
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_original_language=${targetLangId}&sort_by=popularity.desc&page=${currentPage}`;
                 } else if (targetSearch) {
                     displayContext = `SCANNING FOR "${targetSearch.toUpperCase()}"...`;
-                    url = `https://api.themoviedb.org/3/search/${currentType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(targetSearch)}`;
+                    url = `https://api.themoviedb.org/3/search/${currentType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(targetSearch)}&page=${currentPage}`;
                     searchInput.value = targetSearch;
                 } else {
-                    url = `https://api.themoviedb.org/3/${currentType}/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`;
+                    // Category Modes (Popular, Trending, Top Rated)
+                    if (currentCategory === 'trending') {
+                        url = `https://api.themoviedb.org/3/trending/${currentType}/week?api_key=${TMDB_API_KEY}&page=${currentPage}`;
+                    } else if (currentCategory === 'top_rated') {
+                        url = `https://api.themoviedb.org/3/${currentType}/top_rated?api_key=${TMDB_API_KEY}&language=en-US&page=${currentPage}`;
+                    } else {
+                        url = `https://api.themoviedb.org/3/${currentType}/popular?api_key=${TMDB_API_KEY}&language=en-US&page=${currentPage}`;
+                    }
                 }
 
-                if (displayContext) setGridMessage(displayContext, true);
+                if (displayContext && currentPage === 1) setGridMessage(displayContext, true);
 
                 const res = await fetch(url);
                 const data = await res.json();
+                
+                totalPages = data.total_pages || 1;
+                // Hardcap at 500 because TMDB API restricts pages over 500
+                if(totalPages > 500) totalPages = 500; 
+
                 displayItems(data.results);
+                updatePaginationUI();
             } catch (error) {
                 setGridMessage('⚠️ NETWORK ERROR • PLEASE REFRESH');
-            }
-        }
-
-        function searchContent() {
-            const term = searchInput.value.trim();
-            if (term) {
-                window.location.href = `index.html?search=${encodeURIComponent(term)}&type=${currentType}`;
-            } else {
-                window.location.href = `index.html?type=${currentType}`;
             }
         }
 
@@ -168,7 +217,7 @@
             }
             const fragment = document.createDocumentFragment();
             items.forEach(item => {
-                if (!item.poster_path) return;
+                if (!item.poster_path) return; // Skip items without images
                 const card = document.createElement('div');
                 card.className = 'movie-card';
                 const title = item.title || item.name;
@@ -191,12 +240,26 @@
                 fragment.appendChild(card);
             });
             moviesGrid.appendChild(fragment);
+            paginationWrap.style.display = 'flex';
         }
 
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function updatePaginationUI() {
+            pageInfo.innerText = `PAGE ${currentPage} OF ${totalPages}`;
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = currentPage >= totalPages;
+        }
+
+        // Logic Events
+        function searchContent() {
+            const term = searchInput.value.trim();
+            if (term) window.location.href = `index.html?search=${encodeURIComponent(term)}&type=${currentType}`;
+            else window.location.href = `index.html?type=${currentType}`;
         }
 
         movieBtn.addEventListener('click', () => { window.location.href = 'index.html?type=movie'; });
@@ -206,7 +269,36 @@
         document.getElementById('searchBtn').addEventListener('click', searchContent);
         searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchContent(); });
 
-        initDashboard();
+        // Category Sub-Navigation Logic
+        document.querySelectorAll('.cat-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentCategory = e.target.dataset.cat;
+                currentPage = 1;
+                fetchDashboardData();
+            });
+        });
+
+        // Pagination Events
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                fetchDashboardData();
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                fetchDashboardData();
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            }
+        });
+
+        // Run
+        fetchDashboardData();
     </script>
 </body>
 </html>
