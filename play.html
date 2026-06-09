@@ -202,7 +202,6 @@
     </div>
 
     <script>
-        // Automatic Browser Language Detection on First Visit
         if (!localStorage.getItem('uiLang')) {
             const browserLang = navigator.language || navigator.userLanguage;
             if (browserLang.toLowerCase().includes('km')) localStorage.setItem('uiLang', 'km');
@@ -282,7 +281,6 @@
             }
         };
 
-        // Origin Guard Anti-Popup
         (function applyOriginGuard() {
             window.open = function() { console.warn("🛡️ Origin Guard: Blocked popup"); return { focus: function(){}, close: function(){} }; };
             window.onbeforeunload = function(e) { if (document.activeElement && document.activeElement.tagName === 'IFRAME') return "Origin Guard block."; };
@@ -296,7 +294,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const tmdbId = urlParams.get('tmdb');
         const mediaType = urlParams.get('type') || 'movie';
-        let currentMovieTitle = "Unknown"; // For AI Speech Context
+        let currentMovieTitle = "Unknown"; 
 
         const uiLangSelect = document.getElementById('uiLangSelect');
         const aiSpeechBtn = document.getElementById('aiSpeechBtn');
@@ -306,7 +304,7 @@
             return translations[localStorage.getItem('uiLang') || 'en'];
         }
 
-        // DYNAMIC INSTANT AUTO-TRANSLATE (UI Elements)
+        // AUTO TRANSLATE UI ELEMENTS
         function updateUI() {
             const lang = localStorage.getItem('uiLang') || 'en';
             const t = translations[lang];
@@ -345,7 +343,7 @@
             if (overlay) { overlay.style.opacity = '0'; setTimeout(() => overlay.style.display = 'none', 500); }
         }
 
-        // DYNAMIC INSTANT AUTO-TRANSLATE (TMDB DATA)
+        // SMART TRANSLATION TMDB FALLBACK
         async function syncTmdbDetails() {
             if (!tmdbId) return;
             const t = getT();
@@ -353,8 +351,19 @@
             const tmdbLang = uiLangCode === 'km' ? 'km-KH' : (uiLangCode === 'zh' ? 'zh-CN' : 'en-US');
 
             try {
-                const res = await fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}&language=${tmdbLang}`);
-                const data = await res.json();
+                let res = await fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}&language=${tmdbLang}`);
+                let data = await res.json();
+
+                // FALLBACK FEATURE: If TMDB has no Khmer description, quietly fetch the English one!
+                if (!data.overview && tmdbLang !== 'en-US') {
+                    const fallbackRes = await fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}&language=en-US`);
+                    const fallbackData = await fallbackRes.json();
+                    data.overview = fallbackData.overview;
+                    if (!data.title && !data.name) {
+                        data.title = fallbackData.title;
+                        data.name = fallbackData.name;
+                    }
+                }
 
                 currentMovieTitle = data.title || data.name || "Unknown";
                 const year = (data.release_date || data.first_air_date || 'N/A').substring(0, 4);
@@ -403,7 +412,6 @@
             } catch (e) { console.warn("TMDB sync failed."); }
         }
 
-        // --- AI WEB SPEECH API INTEGRATION ---
         aiSpeechBtn.addEventListener('click', () => {
             if (!('speechSynthesis' in window)) return alert("Your browser does not support AI Speech.");
             
@@ -473,10 +481,10 @@
             });
         }
 
-        // LANGUAGE CHANGE EVENT LISTENER
+        // AUTO TRANSLATE WHEN DROPDOWN CHANGES
         uiLangSelect.addEventListener('change', (e) => {
             localStorage.setItem('uiLang', e.target.value);
-            window.speechSynthesis.cancel(); // Stop audio if language changes
+            window.speechSynthesis.cancel(); 
             isSpeaking = false;
             aiSpeechBtn.classList.remove('playing');
             
