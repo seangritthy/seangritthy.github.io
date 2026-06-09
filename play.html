@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MVHD CyberCinema | Loading Stream...</title>
+    <title>MVHD CyberCinema | Loading...</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
     :root {
@@ -322,11 +322,12 @@
         z-index: 2;
     }
 
-    #stream-frame {
+    #stream-frame, video {
         width: 100%;
         height: 650px;
         border: none;
         display: block;
+        background: #000;
     }
 
     /* Status badges */
@@ -475,6 +476,12 @@
         color: var(--primary);
         margin-bottom: 30px;
         text-shadow: 0 0 20px rgba(0, 255, 157, 0.7);
+        animation: loadingText 2s infinite;
+    }
+
+    @keyframes loadingText {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
     }
 
     .loading-bar {
@@ -505,13 +512,13 @@
 
     /* Responsive adjustments */
     @media (max-width: 1024px) {
-        #stream-frame { height: 500px; }
+        #stream-frame, video { height: 500px; }
         .header-content { flex-direction: column; text-align: center; }
         .movie-info-panel { flex-direction: column; }
         .movie-poster { max-width: 200px; margin: 0 auto; }
     }
     @media (max-width: 768px) {
-        #stream-frame { height: 400px; }
+        #stream-frame, video { height: 400px; }
         .movie-title { font-size: 1.8rem; }
     }
     </style>
@@ -524,7 +531,7 @@
 
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-content">
-            <div class="loading-text" id="loadingText">DECRYPTING CYBERSTREAM CONFIGURATION...</div>
+            <div class="loading-text" id="loadingText">SCANNING CONFIGURATION CORES...</div>
             <div class="loading-bar"></div>
         </div>
     </div>
@@ -533,7 +540,7 @@
         <div class="header-content">
             <div class="site-title">MVHD CYBERCINEMA</div>
             <div class="user-info">
-                <div class="user-badge" id="userBadge">👤 GUEST • ACCESS PERMITTED</div>
+                <div class="user-badge">👤 ANONYMOUS • GUEST ACCESS</div>
                 <nav class="nav-links">
                     <a href="index.html" class="nav-link">HOME</a>
                 </nav>
@@ -542,26 +549,24 @@
     </header>
 
     <div class="main-container">
-        <div class="movie-info-panel" id="moviePanel">
+        <div class="movie-info-panel">
             <div class="movie-poster" id="moviePoster">
                 </div>
             <div class="movie-details">
                 <h1 class="movie-title" id="movieTitle">CYBERPUNK DATA STREAM</h1>
-                <div class="tagline" id="movieTagline">Experience Cyberpunk Streaming</div>
-                
+                <div class="tagline" id="movieTagline"></div>
                 <div class="movie-meta">
                     <div class="meta-item"><span style="color:var(--cyber-yellow)">⭐</span> RATING: <span id="ratingVal">N/A</span></div>
                     <div class="meta-item"><span style="color:var(--primary)">⏱️</span> RUNTIME: <span id="runtimeVal">N/A</span></div>
                     <div class="meta-item"><span style="color:var(--cyber-blue)">📅</span> RELEASE: <span id="releaseVal">N/A</span></div>
                     <div class="meta-item"><span style="color:var(--web3-purple)">🎯</span> QUALITY: <span id="qualityVal">1080p</span></div>
                 </div>
-                
-                <div class="overview" id="movieOverview">Scanning mainframes for cinematic database files...</div>
+                <div class="overview" id="movieOverview">Synchronizing with main systems database nodes...</div>
                 <div class="genres" id="movieGenres"></div>
             </div>
         </div>
 
-        <div class="player-container" id="playerWrapper">
+        <div class="player-container" id="playerContainer">
             <iframe 
                 id="stream-frame" 
                 src="" 
@@ -571,13 +576,13 @@
             </iframe>
         </div>
 
-        <div class="status-badges" id="badgeContainer">
-            <div class="status-badge badge-primary" id="playerStatusBadge">⚡ EXTRACTING CLOUD ORCHESTRA SOURCE...</div>
-            <div class="status-badge badge-success" id="tmdbBadge">🎬 TMDB CONTEXT: RESOLVING</div>
+        <div class="status-badges">
+            <div class="status-badge badge-primary" id="extractionBadge">🚀 MVHD • DECRYPTING TARGET STREAM URL</div>
+            <div class="status-badge badge-success" id="tmdbBadge">🎬 TMDB NODE ID: RESOLVING</div>
         </div>
 
         <div class="control-panel">
-            <h2 class="control-title">STREAM CONTROL PANEL</h2>
+            <h2 class="control-title" id="controlPanelTitle">STREAM CONTROL PANEL</h2>
             <div class="control-grid">
                 <div class="control-item">
                     <div class="control-label">SERVER STATUS</div>
@@ -611,13 +616,22 @@
         const urlParams = new URLSearchParams(window.location.search);
         const tmdbId = urlParams.get('tmdb');
         const mediaType = urlParams.get('type') || 'movie';
-        
+        const passedTitle = urlParams.get('title') || 'Movie';
+
+        function dismissOverlay() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.style.display = 'none', 500);
+            }
+        }
+
         // Port of Android package com.bongbee.tdmb.util.UrlDecoder
         function decodeCloudnestraUrl(rawUrl) {
             try {
                 if (!rawUrl.includes('/rcp/')) return null;
                 const encoded = rawUrl.split('/rcp/')[1];
-                const decoded = atob(encoded); // Native Base64 Decode
+                const decoded = atob(encoded);
 
                 const patterns = [
                     /(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i,
@@ -632,25 +646,26 @@
                 if (decoded.startsWith('http')) return decoded;
                 return null;
             } catch (e) {
-                console.error("UrlDecoder portfolio failed:", e);
+                console.error("Decoder runtime crash:", e);
                 return null;
             }
         }
 
-        // Fetch meta configuration details from TMDB to build dashboard items dynamically
-        async function loadTmdbMeta() {
+        // Populates UI text values using metadata dynamically fetched from TMDB
+        async function syncTmdbDetails() {
             if (!tmdbId) return;
             document.getElementById('tmdbBadge').innerText = `🎬 TMDB ID: ${tmdbId}`;
             try {
                 const res = await fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}&language=en-US`);
-                if(!res.ok) throw new Error();
+                if (!res.ok) throw new Error();
                 const data = await res.json();
 
-                const title = data.title || data.name || 'Unknown Title';
+                const title = data.title || data.name || passedTitle;
                 const year = (data.release_date || data.first_air_date || 'N/A').substring(0, 4);
-                
+
                 document.title = `MVHD | ${title} (${year})`;
-                document.getElementById('loadingText').innerText = `LOADING ${title.toUpperCase()}`;
+                document.getElementById('loadingText').innerText = `LOADING ${title.toUpperCase()}...`;
+                document.getElementById('controlPanelTitle').innerText = `STREAM CONTROL PANEL • ${title.toUpperCase()}`;
                 document.getElementById('movieTitle').innerHTML = `${title} <span style="color:var(--cyber-yellow); font-size:1.5rem;">(${year})</span>`;
                 document.getElementById('movieTagline').innerText = data.tagline ? `"${data.tagline}"` : '';
                 document.getElementById('ratingVal').innerText = data.vote_average ? `${data.vote_average.toFixed(1)}/10` : 'N/A';
@@ -658,28 +673,29 @@
                 document.getElementById('releaseVal').innerText = data.release_date || data.first_air_date || 'N/A';
                 document.getElementById('movieOverview').innerText = data.overview || 'No description available.';
 
-                if(data.poster_path) {
-                    document.getElementById('moviePoster').innerHTML = `<img src="https://image.tmdb.org/t/p/w500${data.poster_path}" alt="Poster">`;
+                if (data.poster_path) {
+                    document.getElementById('moviePoster').innerHTML = `<img src="https://image.tmdb.org/t/p/w500${data.poster_path}" alt="Poster" onerror="this.src='https://via.placeholder.com/300x450/1a1a1a/ffffff?text=MVHD'">`;
                 }
-                if(data.genres) {
+                if (data.genres) {
                     document.getElementById('movieGenres').innerHTML = data.genres.map(g => `<span class="genre-tag">${g.name}</span>`).join('');
                 }
-                
-                // Set backdrop environment accent background
-                if(data.backdrop_path) {
+                if (data.backdrop_path) {
                     document.body.style.backgroundImage = `linear-gradient(rgba(10,10,15,0.9), rgba(10,10,15,0.9)), url('https://image.tmdb.org/t/p/w1280${data.backdrop_path}')`;
                     document.body.style.backgroundSize = 'cover';
                     document.body.style.backgroundAttachment = 'fixed';
+                    document.body.style.backgroundPosition = 'center';
                 }
-            } catch(e) {
-                console.warn("Meta processing failed, keeping fallbacks.");
+            } catch (e) {
+                console.warn("Meta setup failed, falling back to basic values.");
+                document.title = `MVHD | ${passedTitle}`;
+                document.getElementById('movieTitle').innerText = passedTitle;
             }
         }
 
-        // Core Scraper extraction architecture 
-        async function parseAndLoadStream() {
+        // Web Client Extraction Mechanism 
+        async function runClientExtractor() {
             if (!tmdbId) {
-                document.getElementById('loadingText').innerHTML = 'ERROR: MISSING TMDB PARAMS';
+                document.getElementById('loadingText').innerHTML = 'ERROR: DETECTING INVALID ID CONTEXT';
                 return;
             }
 
@@ -688,70 +704,61 @@
                 : `https://vidsrc.to/embed/movie/${tmdbId}`;
 
             try {
-                // Read embed file structure across domains via open client gateway proxy
-                const gatewayUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetEmbed)}`;
-                const response = await fetch(gatewayUrl);
+                // Query embed contents cross-origin using an open proxy gate
+                const proxyGate = `https://api.allorigins.win/get?url=${encodeURIComponent(targetEmbed)}`;
+                const response = await fetch(proxyGate);
                 const data = await response.json();
                 
                 if (data && data.contents) {
-                    // Match token configurations precisely corresponding to your requested URL patterns
-                    const tokenRegex = /(https?:\/\/[^\s"'`]+\/rcp\/[^\s"'`>]+)/i;
-                    const match = data.contents.match(tokenRegex);
+                    // Match the cloudorchestranova rcp link pattern hidden inside the code
+                    const match = data.contents.match(/(https?:\/\/[^\s"'`]+\/rcp\/[^\s"'`>]+)/i);
                     
                     if (match && match[0]) {
-                        // Pass captured token directly to the port of your Android extraction routine
-                        const targetDecryptedLink = decodeCloudnestraUrl(match[0]);
+                        // Pass token URL string directly to your JavaScript port decoding function
+                        const directSourceUrl = decodeCloudnestraUrl(match[0]);
                         
-                        if (targetDecryptedLink) {
-                            // Inject high-end direct player layout replacing old iframe sandbox restrictions
-                            const wrapper = document.getElementById('playerWrapper');
-                            wrapper.innerHTML = `<video id="videoPlayer" controls autoplay playsinline style="width:100%; height:650px; background:#000; border:none; display:block;"></video>`;
+                        if (directSourceUrl) {
+                            // Inject HTML5 video player instead of standard frame window
+                            const container = document.getElementById('playerContainer');
+                            container.innerHTML = `<video id="videoPlayer" controls autoplay playsinline></video>`;
                             const video = document.getElementById('videoPlayer');
 
-                            if (targetDecryptedLink.includes('.m3u8') && Hls.isSupported()) {
+                            if (directSourceUrl.includes('.m3u8') && Hls.isSupported()) {
                                 const hls = new Hls();
-                                hls.loadSource(targetDecryptedLink);
+                                hls.loadSource(directSourceUrl);
                                 hls.attachMedia(video);
                                 hls.on(Hls.Events.MANIFEST_PARSED, () => {
                                     video.play();
                                     dismissOverlay();
                                 });
                             } else {
-                                video.src = targetDecryptedLink;
+                                video.src = directSourceUrl;
                                 video.play();
                                 dismissOverlay();
                             }
                             
-                            document.getElementById('playerStatusBadge').className = "status-badge badge-primary";
-                            document.getElementById('playerStatusBadge').innerText = "🚀 MVHD • DIRECT CYBERSTREAM INJECTED";
+                            document.getElementById('extractionBadge').className = "status-badge badge-primary";
+                            document.getElementById('extractionBadge').innerText = "🚀 MVHD • DIRECT CYBERSTREAM INJECTED";
                             return;
                         }
                     }
                 }
-                throw new Error("Target rcp path missing.");
+                throw new Error("rcp token missing.");
             } catch (err) {
-                console.warn("Direct stream extraction bypassed, falling back to secure player panel embed:", err);
+                console.warn("Extraction link unavailable, mounting target embed source:", err);
                 
-                // Fallback setup down to frame container layout 
                 const frame = document.getElementById('stream-frame');
-                frame.src = targetEmbed;
-                frame.onload = dismissOverlay;
-                
-                document.getElementById('playerStatusBadge').className = "status-badge badge-warning";
-                document.getElementById('playerStatusBadge').innerText = "⚠️ FALLBACK EMBED PLAYER RUNNING";
+                if (frame) {
+                    frame.src = targetEmbed;
+                    frame.onload = dismissOverlay;
+                }
+                document.getElementById('extractionBadge').className = "status-badge badge-warning";
+                document.getElementById('extractionBadge').innerText = "⚠️ FALLBACK EMBED PLAYER RUNNING";
             }
         }
 
-        function dismissOverlay() {
-            const overlay = document.getElementById('loadingOverlay');
-            if(overlay) {
-                overlay.style.opacity = '0';
-                setTimeout(() => overlay.style.display = 'none', 500);
-            }
-        }
-
-        // Cyberpunk style layout loops 
-        function renderCyberBackground() {
+        // Cyberpunk animation loop routines
+        function generateDataParticles() {
             const container = document.getElementById('streamEffect');
             const colors = ['#00ff9d', '#7b61ff', '#ff00e5', '#00ccff'];
             for (let i = 0; i < 25; i++) {
@@ -765,31 +772,31 @@
             }
         }
 
-        function handleDashboardToggles() {
+        function handleDashboardLoops() {
             setInterval(() => {
                 const bitrates = ['8.5 MBPS', '9.2 MBPS', '7.8 MBPS', '8.1 MBPS'];
-                const buffers = ['98%', '95%', '99%', '97%'];
+                const bufferLevels = ['98%', '95%', '99%', '97%'];
                 document.getElementById('bitrate').innerText = bitrates[Math.floor(Math.random() * bitrates.length)];
-                document.getElementById('bufferHealth').innerText = buffers[Math.floor(Math.random() * buffers.length)];
+                document.getElementById('bufferHealth').innerText = bufferLevels[Math.floor(Math.random() * bufferLevels.length)];
             }, 3000);
 
             document.querySelectorAll('.quality-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
-                    const selected = this.getAttribute('data-quality');
-                    document.getElementById('streamQuality').innerText = selected === 'auto' ? 'AUTO' : selected + 'P';
+                    const value = this.getAttribute('data-quality');
+                    document.getElementById('streamQuality').innerText = value === 'auto' ? 'AUTO' : value + 'P';
                 });
             });
         }
 
-        // Initialization
+        // Setup Execution
         document.addEventListener('DOMContentLoaded', () => {
-            loadTmdbMeta();
-            parseAndLoadStream();
-            renderCyberBackground();
-            handleDashboardToggles();
-            setTimeout(dismissOverlay, 6000); // Absolute safety timeout fallback
+            syncTmdbDetails();
+            runClientExtractor();
+            generateDataParticles();
+            handleDashboardLoops();
+            setTimeout(dismissOverlay, 5000); // Overlay fallback safety net
         });
     </script>
 </body>
