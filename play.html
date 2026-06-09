@@ -265,16 +265,19 @@
             window.location.href = 'index.html';
         }
 
-        // Decode Cloudnestra URL
+        // Decode Cloudnestra URL to get vidsrc URL
         function decodeCloudnestraUrl(cloudUrl) {
             try {
+                // Extract base64 part after /rcp/
                 const match = cloudUrl.match(/\/rcp\/([A-Za-z0-9+\/=]+)/);
                 if (!match) throw new Error('Invalid Cloudnestra URL format');
                 
                 let encoded = match[1];
+                // Fix URL-safe base64
                 encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
                 while (encoded.length % 4) encoded += '=';
                 
+                // Decode base64
                 const decoded = atob(encoded);
                 console.log('Decoded vidsrc URL:', decoded);
                 return decoded;
@@ -284,160 +287,73 @@
             }
         }
 
-        // Fetch stream URL from vidsrc page
-        async function fetchStreamFromVidSrc(vidsrcUrl) {
-            updateLoading('FETCHING STREAM...', 'Connecting to vidsrc.to');
+        // Direct fallback: Play vidsrc URL in iframe
+        function playVidSrcIframe(vidsrcUrl) {
+            updateStatus('FALLBACK MODE', 'warning');
+            updateLoading('FALLBACK MODE...', 'Loading vidsrc.to player');
             
-            const proxies = [
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(vidsrcUrl)}`,
-                `https://corsproxy.io/?${encodeURIComponent(vidsrcUrl)}`
-            ];
-            
-            for (const proxy of proxies) {
-                try {
-                    updateLoading('FETCHING STREAM...', `Trying proxy...`);
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000);
-                    const response = await fetch(proxy, { signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    
-                    if (response.ok) {
-                        const html = await response.text();
-                        updateLoading('PARSING RESPONSE...', 'Looking for stream URL');
-                        
-                        // Look for m3u8 URL
-                        const patterns = [
-                            /(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i,
-                            /(https?:\/\/[^\s"']+\/master[^\s"']*\.m3u8)/i,
-                            /(https?:\/\/[^\s"']+\/playlist[^\s"']*\.m3u8)/i,
-                            /(https?:\/\/[^\s"']+\/index[^\s"']*\.m3u8)/i
-                        ];
-                        
-                        for (const pattern of patterns) {
-                            const match = html.match(pattern);
-                            if (match) {
-                                return match[1];
-                            }
-                        }
-                        
-                        // Look for Cloudnestra redirect
-                        const cloudMatch = html.match(/https?:\/\/[^\s"']*cloudnestra[^\s"']*\/rcp\/[^\s"']*/i);
-                        if (cloudMatch) {
-                            updateLoading('FOLLOWING REDIRECT...', 'Decoding nested Cloudnestra');
-                            return await fetchStreamFromCloudnestra(cloudMatch[0]);
-                        }
-                    }
-                } catch(e) {
-                    console.log('Proxy failed:', e.message);
-                }
-            }
-            return null;
+            video.style.display = 'none';
+            const iframe = document.createElement('iframe');
+            iframe.src = vidsrcUrl;
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
+            document.getElementById('container').appendChild(iframe);
+            hideLoading();
+            updateStatus('PLAYING (FALLBACK)', 'warning');
         }
 
-        // Direct Cloudnestra fetch
-        async function fetchStreamFromCloudnestra(cloudUrl) {
-            const vidsrcUrl = decodeCloudnestraUrl(cloudUrl);
-            if (vidsrcUrl) {
-                return await fetchStreamFromVidSrc(vidsrcUrl);
-            }
-            return null;
-        }
-
-        // Play the stream
-        function playStream(streamUrl) {
-            updateStatus('STREAM FOUND', 'success');
-            updateLoading('PLAYING STREAM...', 'Starting video player');
-            
-            if (streamUrl.includes('.m3u8')) {
-                if (Hls.isSupported()) {
-                    if (video.hls) video.hls.destroy();
-                    const hls = new Hls({
-                        debug: false,
-                        enableWorker: true,
-                        manifestLoadingTimeOut: 15000,
-                        manifestLoadingMaxRetry: 3
-                    });
-                    hls.loadSource(streamUrl);
-                    hls.attachMedia(video);
-                    video.hls = hls;
-                    
-                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                        hideLoading();
-                        updateStatus('PLAYING', 'success');
-                        video.play().catch(e => updateStatus('CLICK PLAY TO START', 'warning'));
-                    });
-                    
-                    hls.on(Hls.Events.ERROR, (event, data) => {
-                        if (data.fatal) {
-                            showError('HLS Error: ' + data.type);
-                        }
-                    });
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = streamUrl;
-                    hideLoading();
-                    updateStatus('PLAYING', 'success');
-                    video.play();
-                } else {
-                    showError('HLS not supported in this browser');
-                }
-            } else {
-                video.src = streamUrl;
-                hideLoading();
-                updateStatus('PLAYING', 'success');
-                video.play();
-            }
-        }
-
-        // Main function
+        // Main function - DECODE ONLY, don't open Cloudnestra URL directly
         async function main() {
+            // If no URL in params, try to generate from TMDB ID
             if (!cloudnestraUrl) {
-                // Try to generate from TMDB ID if available
                 if (tmdbId) {
                     const mediaTypeParam = mediaType || 'movie';
                     const vidsrcUrl = `https://vidsrc.to/embed/${mediaTypeParam}/${tmdbId}`;
-                    cloudnestraUrl = `https://cloudnestra.com/rcp/${btoa(vidsrcUrl)}`;
-                    updateLoading('GENERATED CLOUDNESTRA URL...', 'Using TMDB ID');
+                    // Don't open Cloudnestra URL - use vidsrc directly
+                    playVidSrcIframe(vidsrcUrl);
+                    return;
                 } else {
-                    cloudnestraUrl = prompt('Enter Cloudnestra URL:', 'https://cloudnestra.com/rcp/');
-                    if (!cloudnestraUrl) {
+                    // Ask user for input
+                    const userInput = prompt('Enter TMDB ID or vidsrc URL:', tmdbId || '');
+                    if (userInput) {
+                        if (userInput.match(/^\d+$/)) {
+                            // It's a TMDB ID
+                            const vidsrcUrl = `https://vidsrc.to/embed/movie/${userInput}`;
+                            playVidSrcIframe(vidsrcUrl);
+                        } else if (userInput.includes('vidsrc.to')) {
+                            // It's a vidsrc URL
+                            playVidSrcIframe(userInput);
+                        } else if (userInput.includes('cloudnestra')) {
+                            // It's a Cloudnestra URL - decode it
+                            const vidsrcUrl = decodeCloudnestraUrl(userInput);
+                            if (vidsrcUrl) {
+                                playVidSrcIframe(vidsrcUrl);
+                            } else {
+                                showError('Invalid Cloudnestra URL');
+                            }
+                        } else {
+                            showError('Please enter a valid TMDB ID or URL');
+                        }
+                    } else {
                         goBack();
-                        return;
                     }
+                    return;
                 }
             }
             
+            // We have a Cloudnestra URL - decode it and play the vidsrc URL
+            updateLoading('DECODING CLOUDNESTRA...', 'Extracting vidsrc URL');
+            
             try {
-                updateLoading('DECODING CLOUDNESTRA...', 'Extracting vidsrc URL');
                 const vidsrcUrl = decodeCloudnestraUrl(cloudnestraUrl);
                 
-                if (!vidsrcUrl) {
-                    showError('Failed to decode Cloudnestra URL');
-                    return;
-                }
-                
-                updateLoading('FETCHING STREAM...', vidsrcUrl.substring(0, 60) + '...');
-                let streamUrl = await fetchStreamFromVidSrc(vidsrcUrl);
-                
-                if (!streamUrl) {
-                    // Fallback: Try direct Cloudnestra fetch
-                    streamUrl = await fetchStreamFromCloudnestra(cloudnestraUrl);
-                }
-                
-                if (streamUrl) {
-                    playStream(streamUrl);
+                if (vidsrcUrl) {
+                    // Play the decoded vidsrc URL directly (NOT the Cloudnestra URL!)
+                    playVidSrcIframe(vidsrcUrl);
                 } else {
-                    // Ultimate fallback: Use iframe
-                    updateStatus('USING FALLBACK', 'warning');
-                    updateLoading('FALLBACK MODE...', 'Using vidsrc.to iframe');
-                    
-                    video.style.display = 'none';
-                    const iframe = document.createElement('iframe');
-                    iframe.src = vidsrcUrl;
-                    document.getElementById('container').appendChild(iframe);
-                    hideLoading();
-                    updateStatus('FALLBACK PLAYER ACTIVE', 'warning');
+                    showError('Failed to decode Cloudnestra URL');
                 }
-                
             } catch(e) {
                 showError(e.message);
             }
