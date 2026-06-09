@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title id="page-title">MVHD | CyberCinema</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         :root {
             --primary: #00ff9d;
@@ -18,7 +17,6 @@
             --cyber-red: #ff003c;
             --cyber-blue: #00ccff;
             --cyber-yellow: #fff200;
-            --player-bg: #000000;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -80,7 +78,7 @@
         .overview { margin: 20px 0; line-height: 1.6; color: rgba(255, 255, 255, 0.9); }
 
         .player-container {
-            background: var(--player-bg); border: 3px solid var(--primary); border-radius: 10px; overflow: hidden;
+            background: #000; border: 3px solid var(--primary); border-radius: 10px; overflow: hidden;
             box-shadow: 0 0 50px rgba(0, 255, 157, 0.3); margin-bottom: 30px; position: relative;
         }
         
@@ -90,36 +88,32 @@
             animation: rainbow 3s linear infinite; z-index: 2;
         }
         
-        #direct-player { width: 100%; height: 650px; outline: none; background: #000; display: none; }
-        #fallback-frame { width: 100%; height: 650px; border: none; display: none; }
+        iframe { width: 100%; height: 650px; border: none; display: block; }
 
-        .extraction-status {
+        .server-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
             margin: 20px 0;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 8px;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 12px;
-            display: none;
-            max-height: 200px;
-            overflow-y: auto;
+            justify-content: center;
         }
         
-        .extraction-status.active {
-            display: block;
-        }
-        
-        .status-log {
-            color: var(--cyber-blue);
-            margin: 5px 0;
-        }
-        
-        .status-log.error {
-            color: var(--cyber-red);
-        }
-        
-        .status-log.success {
+        .server-btn {
+            padding: 12px 24px;
+            background: rgba(19, 19, 31, 0.9);
+            border: 1px solid var(--primary);
             color: var(--primary);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 8px;
+        }
+        
+        .server-btn:hover, .server-btn.active {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 20px var(--primary);
         }
 
         .loading-overlay {
@@ -150,7 +144,7 @@
         
         .back-button:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary); }
         
-        @media (max-width: 768px) { #direct-player, #fallback-frame { height: 400px; } .movie-title { font-size: 1.5rem; } }
+        @media (max-width: 768px) { iframe { height: 400px; } .movie-title { font-size: 1.5rem; } }
     </style>
 </head>
 <body>
@@ -161,14 +155,14 @@
         <div class="loading-content">
             <div class="loading-text" id="loading-msg">INITIALIZING MAINFRAME...</div>
             <div class="loading-bar"></div>
-            <div class="loading-step" id="loadingStep">Starting extraction process...</div>
+            <div class="loading-step" id="loadingStep">Loading movie data...</div>
         </div>
     </div>
 
     <header class="cyber-header">
         <div class="header-content">
             <a href="index.html" class="site-title">MVHD CYBERCINEMA</a>
-            <div class="user-badge" id="statusBadge">🎬 VIDSRC EXTRACTOR V6</div>
+            <div class="user-badge" id="statusBadge">🎬 MULTI-SOURCE PLAYER</div>
         </div>
     </header>
 
@@ -188,13 +182,17 @@
             </div>
         </div>
 
-        <div class="player-container">
-            <video id="direct-player" controls preload="auto" playsinline></video>
-            <iframe id="fallback-frame" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+        <div class="server-selector" id="serverSelector">
+            <button class="server-btn active" data-server="vidsrc">🎬 VidSrc.to</button>
+            <button class="server-btn" data-server="vidsrc2">🎬 VidSrc.xyz</button>
+            <button class="server-btn" data-server="vidsrc3">🎬 VidSrc.net</button>
+            <button class="server-btn" data-server="embed2">📺 2Embed</button>
+            <button class="server-btn" data-server="autoembed">🔄 AutoEmbed</button>
+            <button class="server-btn" data-server="multiembed">📺 MultiEmbed</button>
         </div>
-        
-        <div class="extraction-status" id="extractionStatus">
-            <div class="status-log" id="statusLog"></div>
+
+        <div class="player-container">
+            <iframe id="playerFrame" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
         </div>
     </div>
 
@@ -202,24 +200,35 @@
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         
         let currentMovieId = null;
-        let extractionComplete = false;
+        let currentType = 'movie';
         
-        function addLog(message, type = 'info') {
-            const logDiv = document.getElementById('statusLog');
-            const logEntry = document.createElement('div');
-            logEntry.className = `status-log ${type}`;
-            logEntry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
-            logDiv.appendChild(logEntry);
-            console.log(message);
-            document.getElementById('extractionStatus').classList.add('active');
-            logDiv.scrollTop = logDiv.scrollHeight;
-        }
-        
-        function updateLoading(msg, step) {
-            document.getElementById('loading-msg').textContent = msg;
-            if (step) document.getElementById('loadingStep').textContent = step;
-            addLog(msg, 'info');
-        }
+        // Server configurations - multiple sources for redundancy
+        const servers = {
+            vidsrc: {
+                name: 'VidSrc.to',
+                getUrl: (id, type) => `https://vidsrc.to/embed/${type}/${id}`
+            },
+            vidsrc2: {
+                name: 'VidSrc.xyz',
+                getUrl: (id, type) => `https://vidsrc.xyz/embed/${type}/${id}`
+            },
+            vidsrc3: {
+                name: 'VidSrc.net',
+                getUrl: (id, type) => `https://vidsrc.net/embed/${type}/${id}`
+            },
+            embed2: {
+                name: '2Embed',
+                getUrl: (id, type) => `https://www.2embed.cc/embed/${id}`
+            },
+            autoembed: {
+                name: 'AutoEmbed',
+                getUrl: (id, type) => `https://autoembed.to/${type}/tmdb/${id}`
+            },
+            multiembed: {
+                name: 'MultiEmbed',
+                getUrl: (id, type) => `https://multiembed.mov/video/${id}`
+            }
+        };
         
         function hideLoading() {
             document.getElementById('loadingOverlay').style.opacity = '0';
@@ -228,178 +237,24 @@
             }, 500);
         }
         
-        // Decode Cloudnestra base64 URL (from your Android code)
-        function decodeCloudnestraUrl(cloudnestraUrl) {
+        function updateLoading(msg, step) {
+            document.getElementById('loading-msg').textContent = msg;
+            if (step) document.getElementById('loadingStep').textContent = step;
+        }
+
+        async function loadMovie(id, type) {
             try {
-                addLog(`Decoding Cloudnestra URL...`);
-                const match = cloudnestraUrl.match(/\/rcp\/([^?&"'>]+)/);
-                if (!match) {
-                    addLog(`No /rcp/ pattern found`, 'error');
-                    return null;
-                }
-                
-                let encoded = match[1];
-                // Fix URL-safe base64
-                encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
-                while (encoded.length % 4) encoded += '=';
-                
-                const decoded = atob(encoded);
-                addLog(`Decoded content length: ${decoded.length} chars`);
-                
-                // Find video URL patterns (same as Android)
-                const patterns = [
-                    /(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i,
-                    /(https?:\/\/[^\s"']+\.mp4[^\s"']*)/i,
-                    /(https?:\/\/[^\s"']+\/master[^\s"']*\.m3u8)/i,
-                    /(https?:\/\/[^\s"']+\/playlist[^\s"']*\.m3u8)/i,
-                    /(https?:\/\/[^\s"']+\/index[^\s"']*\.m3u8)/i,
-                    /(https?:\/\/[^\s"']+\/manifest[^\s"']*)/i
-                ];
-                
-                for (const pattern of patterns) {
-                    const videoMatch = decoded.match(pattern);
-                    if (videoMatch) {
-                        addLog(`Found video URL: ${videoMatch[1].substring(0, 80)}...`, 'success');
-                        return videoMatch[1];
-                    }
-                }
-                
-                // Check if decoded string itself is a URL
-                if (decoded.startsWith('http')) {
-                    addLog(`Decoded string is a URL directly`, 'success');
-                    return decoded;
-                }
-                
-                addLog(`No video URL pattern found`, 'error');
-                return null;
-            } catch(e) {
-                addLog(`Decode error: ${e.message}`, 'error');
-                return null;
-            }
-        }
-
-        // Fetch page source using CORS proxy (bypasses Cloudflare)
-        async function fetchPageSource(url) {
-            const proxies = [
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-                `https://corsproxy.io/?${encodeURIComponent(url)}`,
-                `https://cors-anywhere.herokuapp.com/${url}`
-            ];
-            
-            for (const proxy of proxies) {
-                try {
-                    addLog(`Trying proxy: ${proxy.substring(0, 60)}...`);
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000);
-                    const response = await fetch(proxy, { signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    
-                    if (response.ok) {
-                        const text = await response.text();
-                        addLog(`Proxy successful, got ${text.length} bytes`);
-                        return text;
-                    }
-                } catch(e) {
-                    addLog(`Proxy failed: ${e.message}`, 'error');
-                }
-            }
-            return null;
-        }
-
-        // Main extraction function - mimics your Android VidSrcExtractor
-        async function extractVideoUrl(embedUrl) {
-            addLog(`Starting extraction for: ${embedUrl}`);
-            updateLoading("EXTRACTING VIDSRC...", "Loading embed page");
-            
-            // Fetch the embed page HTML
-            const html = await fetchPageSource(embedUrl);
-            if (!html) {
-                addLog(`Failed to fetch page source`, 'error');
-                return null;
-            }
-            
-            // 1. Look for Cloudnestra RCP URL (like your shouldInterceptRequest)
-            addLog(`Searching for Cloudnestra RCP URL...`);
-            const cloudnestraPatterns = [
-                /https?:\/\/[^\s"']*cloudnestra[^\s"']*\/rcp\/[^\s"']+/gi,
-                /["']([^"']*\/rcp\/[^"']+)["']/gi,
-                /(?:src|href)=["']([^"']*cloudnestra[^"']*\/rcp\/[^"']*)["']/gi,
-                /url:\s*["']([^"']*cloudnestra[^"']*\/rcp\/[^"']*)["']/gi,
-                /file:\s*["']([^"']*cloudnestra[^"']*\/rcp\/[^"']*)["']/gi
-            ];
-            
-            for (const pattern of cloudnestraPatterns) {
-                const matches = html.matchAll(pattern);
-                for (const match of matches) {
-                    let cloudUrl = match[1] || match[0];
-                    if (!cloudUrl.startsWith('http')) {
-                        cloudUrl = 'https:' + cloudUrl;
-                    }
-                    addLog(`Found Cloudnestra URL: ${cloudUrl.substring(0, 80)}...`, 'success');
-                    const videoUrl = decodeCloudnestraUrl(cloudUrl);
-                    if (videoUrl) {
-                        return videoUrl;
-                    }
-                }
-            }
-            
-            // 2. Look for direct video URLs (m3u8, mp4, playlist, manifest)
-            addLog(`Searching for direct video URLs...`);
-            const videoPatterns = [
-                /https?:\/\/[^\s"']+\.m3u8[^\s"']*/gi,
-                /https?:\/\/[^\s"']+\.mp4[^\s"']*/gi,
-                /https?:\/\/[^\s"']+\/playlist[^\s"']*\.m3u8/gi,
-                /https?:\/\/[^\s"']+\/master[^\s"']*\.m3u8/gi,
-                /https?:\/\/[^\s"']+\/index[^\s"']*\.m3u8/gi,
-                /https?:\/\/[^\s"']+\/manifest[^\s"']*/gi
-            ];
-            
-            for (const pattern of videoPatterns) {
-                const matches = html.match(pattern);
-                if (matches && matches.length > 0) {
-                    const videoUrl = matches[0];
-                    // Filter out ads and telemetry (like your Android code)
-                    if (!videoUrl.toLowerCase().includes('ads') && 
-                        !videoUrl.toLowerCase().includes('telemetry') &&
-                        !videoUrl.toLowerCase().includes('segment') &&
-                        !videoUrl.toLowerCase().includes('.ts')) {
-                        addLog(`Found video URL: ${videoUrl.substring(0, 80)}...`, 'success');
-                        return videoUrl;
-                    }
-                }
-            }
-            
-            // 3. Look for iframe sources that might contain the player
-            addLog(`Searching for iframe sources...`);
-            const iframePattern = /<iframe[^>]+src=["']([^"']+)["'][^>]*>/gi;
-            const iframeMatches = html.matchAll(iframePattern);
-            for (const match of iframeMatches) {
-                const iframeUrl = match[1];
-                if (iframeUrl && (iframeUrl.includes('cloudnestra') || iframeUrl.includes('vidplay') || iframeUrl.includes('filemoon'))) {
-                    addLog(`Found iframe: ${iframeUrl.substring(0, 80)}...`);
-                    // Recursively extract from iframe
-                    const videoUrl = await extractVideoUrl(iframeUrl);
-                    if (videoUrl) return videoUrl;
-                }
-            }
-            
-            addLog(`No video URL found in page`, 'error');
-            return null;
-        }
-
-        async function loadMovie(id) {
-            try {
-                updateLoading("FETCHING MOVIE DATA...", "Loading from TMDB database");
-                const tmdbRes = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_API_KEY}&language=en-US`);
+                updateLoading("FETCHING MOVIE DATA...", "Loading from TMDB");
+                const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${id}?api_key=${TMDB_API_KEY}&language=en-US`);
                 const movie = await tmdbRes.json();
 
-                document.title = `MVHD | ${movie.title}`;
-                document.getElementById('m-title').textContent = movie.title;
+                document.title = `MVHD | ${movie.title || movie.name}`;
+                document.getElementById('m-title').textContent = movie.title || movie.name;
                 
-                const year = (movie.release_date || '').substring(0,4);
+                const year = (movie.release_date || movie.first_air_date || '').substring(0,4);
                 document.getElementById('m-year').textContent = year ? `(${year})` : '';
                 document.getElementById('m-rating').textContent = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
-                document.getElementById('m-runtime').textContent = movie.runtime ? `${movie.runtime} min` : 'N/A';
+                document.getElementById('m-runtime').textContent = movie.runtime ? `${movie.runtime} min` : (movie.episode_run_time?.[0] ? `${movie.episode_run_time[0]} min` : 'N/A');
                 document.getElementById('m-overview').textContent = movie.overview || 'No description available.';
                 document.getElementById('m-poster').src = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : 'https://via.placeholder.com/300x450/1a1a1a/ffffff?text=MVHD';
                 
@@ -410,78 +265,59 @@
                 }
 
                 document.getElementById('main-content').style.display = 'block';
-                document.getElementById('statusBadge').innerHTML = `🎬 ${movie.title}`;
+                document.getElementById('statusBadge').innerHTML = `🎬 ${movie.title || movie.name}`;
                 
-                const videoPlayer = document.getElementById('direct-player');
-                const fallbackFrame = document.getElementById('fallback-frame');
-                
-                // Build the embed URL (same as your Android code)
-                const embedUrl = `https://vidsrc.to/embed/movie/${id}`;
-                
-                // Extract video URL using the same logic as your Android extractor
-                updateLoading("EXTRACTING VIDEO URL...", "Using VidSrcExtractor logic");
-                const videoUrl = await extractVideoUrl(embedUrl);
-                
-                if (videoUrl && (videoUrl.includes('.m3u8') || videoUrl.includes('/playlist') || videoUrl.includes('/manifest'))) {
-                    addLog(`SUCCESS! Playing extracted stream`, 'success');
-                    videoPlayer.style.display = 'block';
-                    fallbackFrame.style.display = 'none';
-                    document.getElementById('statusBadge').innerHTML = `☁️ EXTRACTED • ${movie.title}`;
-                    
-                    if (Hls.isSupported()) {
-                        const hls = new Hls({
-                            debug: false,
-                            enableWorker: true,
-                            manifestLoadingTimeOut: 15000,
-                            manifestLoadingMaxRetry: 3
-                        });
-                        hls.loadSource(videoUrl);
-                        hls.attachMedia(videoPlayer);
-                        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                            addLog(`HLS manifest loaded, playing`, 'success');
-                            videoPlayer.play().catch(e => addLog(`Autoplay blocked: ${e.message}`, 'error'));
-                        });
-                        hls.on(Hls.Events.ERROR, (event, data) => {
-                            addLog(`HLS Error: ${data.type} - ${data.details}`, 'error');
-                        });
-                    } else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
-                        videoPlayer.src = videoUrl;
-                    }
-                    hideLoading();
-                } else if (videoUrl && videoUrl.includes('.mp4')) {
-                    addLog(`SUCCESS! Playing MP4 stream`, 'success');
-                    videoPlayer.style.display = 'block';
-                    fallbackFrame.style.display = 'none';
-                    videoPlayer.src = videoUrl;
-                    document.getElementById('statusBadge').innerHTML = `🎬 MP4 • ${movie.title}`;
-                    hideLoading();
-                } else {
-                    // Fallback to vidsrc.to iframe (same as your Android fallback)
-                    addLog(`Extraction failed, using vidsrc.to iframe fallback`, 'error');
-                    videoPlayer.style.display = 'none';
-                    fallbackFrame.style.display = 'block';
-                    fallbackFrame.src = `https://vidsrc.to/embed/movie/${id}`;
-                    document.getElementById('statusBadge').innerHTML = `⚠️ FALLBACK • ${movie.title}`;
-                    hideLoading();
-                }
+                // Load default server
+                loadServer('vidsrc', id, type);
+                hideLoading();
                 
             } catch (error) {
                 console.error(error);
-                addLog(`Critical error: ${error.message}`, 'error');
-                updateLoading("ERROR", "Failed to load movie");
-                document.getElementById('fallback-frame').style.display = 'block';
-                document.getElementById('fallback-frame').src = `https://vidsrc.to/embed/movie/${id}`;
-                hideLoading();
+                document.getElementById('loading-msg').textContent = 'ERROR LOADING MOVIE';
+                document.getElementById('loadingStep').textContent = error.message;
+                setTimeout(() => { window.location.href = 'index.html'; }, 3000);
             }
         }
+        
+        function loadServer(serverKey, id, type) {
+            const server = servers[serverKey];
+            if (!server) return;
+            
+            const frame = document.getElementById('playerFrame');
+            const url = server.getUrl(id, type);
+            frame.src = url;
+            
+            document.getElementById('statusBadge').innerHTML = `🎬 ${server.name} • ${id}`;
+            
+            // Highlight active button
+            document.querySelectorAll('.server-btn').forEach(btn => {
+                if (btn.dataset.server === serverKey) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Server button handlers
+        document.querySelectorAll('.server-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const serverKey = btn.dataset.server;
+                if (currentMovieId) {
+                    loadServer(serverKey, currentMovieId, currentType);
+                }
+            });
+        });
 
         // Get TMDB ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const tmdbId = urlParams.get('tmdb');
+        const mediaType = urlParams.get('type') || 'movie';
         
         if (tmdbId) {
             currentMovieId = tmdbId;
-            loadMovie(tmdbId);
+            currentType = mediaType;
+            loadMovie(tmdbId, mediaType);
         } else {
             window.location.href = 'index.html';
         }
