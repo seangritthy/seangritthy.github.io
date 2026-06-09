@@ -225,29 +225,30 @@
     <script>
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         
-        // WORKING DOMAIN - ONLY use cloudorchestranova.com
-        const WORKING_DOMAIN = 'https://cloudorchestranova.com';
+        // Get TMDB ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        let tmdbId = urlParams.get('tmdb');
+        const mediaType = urlParams.get('type') || 'movie';
         
-        // Generate Cloud URL from TMDB ID (using working domain)
-        function generateCloudUrl(tmdbId, type = 'movie') {
-            const vidsrcUrl = `https://vidsrc.to/embed/${type}/${tmdbId}`;
+        // Default to a working movie if no ID provided
+        if (!tmdbId) {
+            tmdbId = '1380291'; // Swapped (2026)
+        }
+        
+        console.log('Loading TMDB ID:', tmdbId);
+        
+        // Generate CloudOrchestraNova URL from TMDB ID
+        function generateCloudUrl(id, type) {
+            const vidsrcUrl = `https://vidsrc.to/embed/${type}/${id}`;
             const encoded = btoa(vidsrcUrl);
-            return `${WORKING_DOMAIN}/rcp/${encoded}`;
+            return `https://cloudorchestranova.com/rcp/${encoded}`;
         }
-
-        // Fix any cloudnestra.com URL to cloudorchestranova.com
-        function fixCloudUrl(url) {
-            if (url.includes('cloudnestra.com')) {
-                return url.replace('cloudnestra.com', 'cloudorchestranova.com');
-            }
-            return url;
-        }
-
+        
         function updateLoading(msg, step) {
             document.getElementById('loadingText').textContent = msg;
             if (step) document.getElementById('loadingStep').textContent = step;
         }
-
+        
         function hideLoading() {
             const overlay = document.getElementById('loadingOverlay');
             overlay.style.opacity = '0';
@@ -256,53 +257,39 @@
                 document.getElementById('mainContent').style.display = 'block';
             }, 500);
         }
-
-        async function loadMovieInfo(tmdbId, type = 'movie') {
+        
+        async function loadMovie() {
             try {
-                const tmdbRes = await fetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${TMDB_API_KEY}&language=en-US`);
-                if (!tmdbRes.ok) return false;
-                const movie = await tmdbRes.json();
+                // Step 1: Fetch movie info from TMDB
+                updateLoading('FETCHING MOVIE DATA...', `TMDB ID: ${tmdbId}`);
+                const tmdbRes = await fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}&language=en-US`);
                 
-                const title = movie.title || movie.name;
-                const year = (movie.release_date || movie.first_air_date || '').substring(0,4);
-                
-                document.title = `MVHD | ${title}`;
-                document.getElementById('movieTitle').textContent = title;
-                document.getElementById('movieYear').textContent = year ? `(${year})` : '';
-                document.getElementById('movieRating').textContent = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
-                document.getElementById('movieRuntime').textContent = movie.runtime ? `${movie.runtime} min` : (movie.episode_run_time?.[0] ? `${movie.episode_run_time[0]} min` : 'N/A');
-                document.getElementById('movieOverview').textContent = movie.overview || 'No description available.';
-                document.getElementById('moviePoster').src = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : 'https://via.placeholder.com/300x450/1a1a1a/ffffff?text=MVHD';
-                
-                if (movie.backdrop_path) {
-                    document.body.style.backgroundImage = `linear-gradient(rgba(10,10,15,0.9), rgba(10,10,15,0.9)), url('https://image.tmdb.org/t/p/original${movie.backdrop_path}')`;
-                    document.body.style.backgroundSize = 'cover';
+                if (tmdbRes.ok) {
+                    const movie = await tmdbRes.json();
+                    const title = movie.title || movie.name;
+                    const year = (movie.release_date || movie.first_air_date || '').substring(0,4);
+                    
+                    document.title = `MVHD | ${title}`;
+                    document.getElementById('movieTitle').textContent = title;
+                    document.getElementById('movieYear').textContent = year ? `(${year})` : '';
+                    document.getElementById('movieRating').textContent = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
+                    document.getElementById('movieRuntime').textContent = movie.runtime ? `${movie.runtime} min` : 'N/A';
+                    document.getElementById('movieOverview').textContent = movie.overview || 'No description available.';
+                    document.getElementById('moviePoster').src = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : 'https://via.placeholder.com/300x450/1a1a1a/ffffff?text=MVHD';
+                    
+                    if (movie.backdrop_path) {
+                        document.body.style.backgroundImage = `linear-gradient(rgba(10,10,15,0.9), rgba(10,10,15,0.9)), url('https://image.tmdb.org/t/p/original${movie.backdrop_path}')`;
+                        document.body.style.backgroundSize = 'cover';
+                    }
+                } else {
+                    document.getElementById('movieTitle').textContent = `Movie ID: ${tmdbId}`;
+                    document.getElementById('movieOverview').textContent = 'Movie info could not be loaded, but stream may still work.';
                 }
-                return true;
-            } catch(e) {
-                console.error('TMDB error:', e);
-                return false;
-            }
-        }
-
-        async function init() {
-            const urlParams = new URLSearchParams(window.location.search);
-            let tmdbId = urlParams.get('tmdb');
-            let cloudUrl = urlParams.get('url');
-            const mediaType = urlParams.get('type') || 'movie';
-            const titleParam = urlParams.get('title');
-            const idParam = urlParams.get('id');
-            
-            // Use id parameter as fallback for tmdb
-            if (!tmdbId && idParam) {
-                tmdbId = idParam;
-            }
-            
-            // Case 1: Direct Cloud URL provided
-            if (cloudUrl) {
-                updateLoading('LOADING STREAM...', 'Connecting to server');
-                cloudUrl = decodeURIComponent(cloudUrl);
-                cloudUrl = fixCloudUrl(cloudUrl);
+                
+                // Step 2: Generate and load CloudOrchestraNova URL
+                updateLoading('GENERATING STREAM...', 'Creating secure link');
+                const cloudUrl = generateCloudUrl(tmdbId, mediaType);
+                console.log('CloudOrchestraNova URL:', cloudUrl);
                 
                 const iframe = document.getElementById('playerFrame');
                 iframe.src = cloudUrl;
@@ -310,52 +297,21 @@
                 document.getElementById('statusBadge').innerHTML = '☁️ CLOUDORCHESTRANOVA • STREAMING';
                 document.getElementById('statusBadge').style.borderColor = '#00ff9d';
                 
-                // Try to get movie info if we have ID
-                if (tmdbId) {
-                    await loadMovieInfo(tmdbId, mediaType);
-                } else if (titleParam) {
-                    document.getElementById('movieTitle').textContent = decodeURIComponent(titleParam);
-                }
-                
+                // Hide loading after iframe loads or timeout
                 iframe.onload = () => hideLoading();
+                setTimeout(() => hideLoading(), 5000);
+                
+            } catch(e) {
+                console.error('Error:', e);
+                updateLoading('ERROR', e.message);
+                document.getElementById('statusBadge').innerHTML = '⚠️ ERROR LOADING STREAM';
+                document.getElementById('statusBadge').style.borderColor = '#ff003c';
                 setTimeout(() => hideLoading(), 3000);
-                return;
             }
-            
-            // Case 2: TMDB ID provided - THIS IS THE PREFERRED METHOD
-            if (tmdbId) {
-                updateLoading('LOADING MOVIE...', `TMDB ID: ${tmdbId}`);
-                
-                // Load movie info
-                await loadMovieInfo(tmdbId, mediaType);
-                
-                // Generate Cloud URL using WORKING DOMAIN
-                updateLoading('GENERATING STREAM...', 'Creating secure link');
-                const generatedUrl = generateCloudUrl(tmdbId, mediaType);
-                console.log('Generated URL:', generatedUrl);
-                
-                const iframe = document.getElementById('playerFrame');
-                iframe.src = generatedUrl;
-                
-                document.getElementById('statusBadge').innerHTML = '☁️ CLOUDORCHESTRANOVA • STREAMING';
-                document.getElementById('statusBadge').style.borderColor = '#00ff9d';
-                
-                iframe.onload = () => hideLoading();
-                setTimeout(() => hideLoading(), 3000);
-                return;
-            }
-            
-            // Case 3: No parameters - show demo
-            updateLoading('DEMO MODE', 'Loading sample movie');
-            const demoId = '1380291';
-            await loadMovieInfo(demoId, 'movie');
-            const demoUrl = generateCloudUrl(demoId, 'movie');
-            document.getElementById('playerFrame').src = demoUrl;
-            document.getElementById('statusBadge').innerHTML = '☁️ DEMO • CLOUDORCHESTRANOVA';
-            setTimeout(() => hideLoading(), 2000);
         }
-
-        init();
+        
+        // Start loading
+        loadMovie();
     </script>
 </body>
 </html>
