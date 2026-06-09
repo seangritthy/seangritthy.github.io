@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MVHD CyberCinema</title>
-    <!-- ADDED: Noto Sans SC for premium Chinese text rendering -->
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Exo+2:wght@300;400;600&family=Noto+Sans+SC:wght@400;500;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -15,16 +14,24 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            /* Font stack prioritized for English -> Chinese -> Khmer */
             font-family: 'Exo 2', 'Noto Sans SC', 'Battambang', sans-serif; 
             background: var(--dark-bg); color: white; min-height: 100vh;
             background-image: linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(123, 97, 255, 0.03) 1px, transparent 1px);
             background-size: 50px 50px;
         }
+        
+        /* NEW: Added smooth transition for sliding up/down */
         header {
             padding: 40px 20px 20px; background: rgba(10, 10, 15, 0.95); text-align: center;
             border-bottom: 2px solid var(--primary); box-shadow: 0 0 25px rgba(0, 255, 157, 0.3);
             position: sticky; top: 0; z-index: 1000;
+            transition: transform 0.4s cubic-bezier(0.3, 1, 0.2, 1);
+            will-change: transform;
+        }
+        
+        /* This class will be added by Javascript when scrolling down */
+        .header-hidden {
+            transform: translateY(-100%);
         }
         
         .ui-lang-wrapper { position: absolute; top: 15px; right: 20px; }
@@ -93,11 +100,15 @@
             .movie-poster { height: 280px; } 
             .search-container { flex-direction: column; } 
             #searchBtn { width: 100%; } 
+            
+            /* Add bottom padding on mobile so header can drop fully out of frame cleanly */
+            header { padding-bottom: 15px; }
         }
     </style>
 </head>
 <body>
-    <header>
+    <!-- ID added to header for Javascript targeting -->
+    <header id="mainHeader">
         <div class="ui-lang-wrapper">
             <select id="uiLangSelect" class="ui-lang-select">
                 <option value="en">🇬🇧 English</option>
@@ -147,6 +158,23 @@
     </main>
 
     <script>
+        // --- NEW: HEADER HIDE ON SCROLL LOGIC ---
+        let lastScrollY = window.scrollY;
+        const mainHeader = document.getElementById('mainHeader');
+        
+        window.addEventListener('scroll', () => {
+            // Only hide header if scrolled past its own height (so it doesn't glitch at the top)
+            if (window.scrollY > lastScrollY && window.scrollY > mainHeader.offsetHeight) {
+                // Scrolling DOWN - Hide Header
+                mainHeader.classList.add('header-hidden');
+            } else {
+                // Scrolling UP - Show Header
+                mainHeader.classList.remove('header-hidden');
+            }
+            lastScrollY = window.scrollY;
+        });
+
+        // Automatic Browser Language Detection on First Visit
         if (!localStorage.getItem('uiLang')) {
             const browserLang = navigator.language || navigator.userLanguage;
             if (browserLang.toLowerCase().includes('km')) localStorage.setItem('uiLang', 'km');
