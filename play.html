@@ -38,7 +38,7 @@
     .movie-info-panel::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--cyber-red), var(--primary), var(--cyber-blue)); }
     .movie-poster { flex: 0 0 220px; }
     .movie-poster img { width: 100%; border: 2px solid var(--primary); box-shadow: 0 0 20px rgba(0, 255, 157, 0.3); border-radius: 5px; }
-    .movie-details { flex: 1; min-width: 300px; }
+    .movie-details { flex: 1; min-width: 300px; position: relative; }
     .movie-title { font-family: 'Orbitron', 'Battambang', sans-serif; font-size: 2.2rem; color: var(--primary); margin-bottom: 15px; text-shadow: 0 0 15px rgba(0, 255, 157, 0.7); line-height: 1.2; }
     
     .movie-meta { display: flex; flex-wrap: wrap; gap: 15px 25px; margin-bottom: 20px; font-family: 'Share Tech Mono', 'Battambang', monospace; color: var(--cyber-blue); background: rgba(0,0,0,0.4); padding: 15px; border-radius: 5px; border: 1px solid rgba(0, 204, 255, 0.2); }
@@ -46,7 +46,13 @@
     .meta-link { color: var(--cyber-yellow); text-decoration: none; border-bottom: 1px dashed transparent; transition: all 0.3s ease; }
     .meta-link:hover { color: #fff; border-color: #fff; text-shadow: 0 0 10px var(--cyber-yellow); }
     
-    .overview { margin: 20px 0; line-height: 1.7; color: rgba(255, 255, 255, 0.9); font-size: 1.05rem; }
+    /* AI AUDIO BUTTON */
+    .ai-audio-btn { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(0, 204, 255, 0.1); border: 1px solid var(--cyber-blue); color: var(--cyber-blue); font-family: 'Share Tech Mono', 'Battambang', monospace; font-size: 0.85rem; cursor: pointer; border-radius: 4px; transition: all 0.3s ease; margin-bottom: 10px; }
+    .ai-audio-btn:hover { background: var(--cyber-blue); color: #000; box-shadow: 0 0 15px rgba(0, 204, 255, 0.6); }
+    .ai-audio-btn.playing { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 0 15px var(--accent); animation: pulseAudio 1.5s infinite; }
+    @keyframes pulseAudio { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+    .overview { margin: 10px 0 20px; line-height: 1.7; color: rgba(255, 255, 255, 0.9); font-size: 1.05rem; }
     
     .tags-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
     .section-label { width: 100%; color: var(--primary); font-family: 'Orbitron', 'Battambang', sans-serif; font-size: 1rem; margin-top: 25px; margin-bottom: 10px; letter-spacing: 2px; border-bottom: 1px solid rgba(0, 255, 157, 0.2); padding-bottom: 5px; }
@@ -68,7 +74,6 @@
     .player-container::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, var(--cyber-red), var(--cyber-yellow), var(--primary), var(--cyber-blue), var(--accent)); z-index: 2; }
     #stream-frame { width: 100%; height: 650px; border: none; display: block; background: #000; }
 
-    /* CC Helper Notice */
     .cc-notice { background: rgba(0, 204, 255, 0.1); border: 1px solid var(--cyber-blue); color: var(--cyber-blue); padding: 15px; border-radius: 5px; font-family: 'Share Tech Mono', 'Battambang', monospace; text-align: center; margin-bottom: 30px; font-size: 0.95rem; }
     .cc-notice b { color: #fff; }
 
@@ -103,7 +108,6 @@
     <div class="cyber-grid"></div>
     <div class="scanlines"></div>
 
-    <!-- Loading overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div style="text-align:center;">
             <div class="loading-text" id="loadingShield">ACTIVATING VSEMBED SHIELD...</div>
@@ -111,7 +115,6 @@
         </div>
     </div>
 
-    <!-- Header -->
     <header class="cyber-header">
         <div class="ui-lang-wrapper">
             <select id="uiLangSelect" class="ui-lang-select">
@@ -141,6 +144,9 @@
                     <div class="meta-item">🗣️ <span id="langVal">N/A</span></div>
                 </div>
                 
+                <!-- NEW: AI AUDIO BUTTON -->
+                <button class="ai-audio-btn" id="aiSpeechBtn">🔊 AI SYSTEM AUDIO</button>
+
                 <div class="overview" id="movieOverview">Loading encrypted data...</div>
                 
                 <div class="section-label" id="catLabel">CATEGORIES</div>
@@ -218,7 +224,9 @@
                 auto: "AUTO (RECOMMENDED)",
                 unknownRole: "Unknown Role",
                 na: "N/A",
-                ccNotice: "💡 <b>SUBTITLES (CC):</b> Click the 'CC' icon inside the video player to enable Khmer, English, or Chinese subtitles."
+                ccNotice: "💡 <b>SUBTITLES (CC):</b> Click the 'CC' icon inside the video player to enable Khmer, English, or Chinese subtitles.",
+                aiReadBtn: "🔊 READ DESCRIPTION",
+                aiStopBtn: "⏹️ STOP AUDIO"
             },
             km: {
                 returnBtn: "← ត្រឡប់ទៅទំព័រដើម",
@@ -239,7 +247,9 @@
                 auto: "ស្វ័យប្រវត្តិ",
                 unknownRole: "មិនស្គាល់តួអង្គ",
                 na: "មិនមាន",
-                ccNotice: "💡 <b>ចំណងជើងរង (CC):</b> ចុចលើរូបតំណាង 'CC' នៅក្នុងផ្ទាំងវីដេអូដើម្បីជ្រើសរើសចំណងជើងរងជាភាសាខ្មែរ អង់គ្លេស ឬចិន។"
+                ccNotice: "💡 <b>ចំណងជើងរង (CC):</b> ចុចលើរូបតំណាង 'CC' នៅក្នុងផ្ទាំងវីដេអូដើម្បីជ្រើសរើសចំណងជើងរងជាភាសាខ្មែរ អង់គ្លេស ឬចិន។",
+                aiReadBtn: "🔊 អានការពិពណ៌នា",
+                aiStopBtn: "⏹️ បញ្ឈប់សំឡេង"
             },
             zh: {
                 returnBtn: "← 返回主页",
@@ -260,7 +270,9 @@
                 auto: "自动 (推荐)",
                 unknownRole: "未知角色",
                 na: "无",
-                ccNotice: "💡 <b>字幕 (CC):</b> 点击视频播放器内的 'CC' 图标以启用高棉语、英语或中文字幕。"
+                ccNotice: "💡 <b>字幕 (CC):</b> 点击视频播放器内的 'CC' 图标以启用高棉语、英语或中文字幕。",
+                aiReadBtn: "🔊 语音朗读简介",
+                aiStopBtn: "⏹️ 停止语音"
             }
         };
 
@@ -269,7 +281,7 @@
             window.open = function() { console.warn("🛡️ Origin Guard: Blocked popup"); return { focus: function(){}, close: function(){} }; };
             window.onbeforeunload = function(e) { if (document.activeElement && document.activeElement.tagName === 'IFRAME') return "Origin Guard block."; };
             document.addEventListener('click', function(e) {
-                if (e.target.closest('.genre-tag') || e.target.closest('.cast-card') || e.target.closest('.meta-link')) return; 
+                if (e.target.closest('.genre-tag') || e.target.closest('.cast-card') || e.target.closest('.meta-link') || e.target.closest('.ai-audio-btn')) return; 
                 if (e.target.tagName === 'A' && (e.target.href.includes('ad') || e.target.href.includes('bet'))) e.preventDefault();
             }, true);
         })();
@@ -278,8 +290,11 @@
         const urlParams = new URLSearchParams(window.location.search);
         const tmdbId = urlParams.get('tmdb');
         const mediaType = urlParams.get('type') || 'movie';
+        let currentMovieTitle = "Unknown"; // For AI Speech Context
 
         const uiLangSelect = document.getElementById('uiLangSelect');
+        const aiSpeechBtn = document.getElementById('aiSpeechBtn');
+        let isSpeaking = false;
 
         function getT() {
             return translations[localStorage.getItem('uiLang') || 'en'];
@@ -305,6 +320,9 @@
             document.getElementById('lblBuffer').innerText = t.bufferHealth;
             document.getElementById('btnAuto').innerText = t.auto;
             document.getElementById('ccNotice').innerHTML = t.ccNotice;
+            
+            // Sync AI Button Text State
+            aiSpeechBtn.innerText = isSpeaking ? t.aiStopBtn : t.aiReadBtn;
 
             const titleEl = document.getElementById('movieTitle');
             if (titleEl.innerText === "DECRYPTING..." || titleEl.innerText === "កំពុងបកប្រែទិន្នន័យ..." || titleEl.innerText === "正在解密...") {
@@ -331,11 +349,11 @@
                 const res = await fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}&language=${tmdbLang}`);
                 const data = await res.json();
 
-                const title = data.title || data.name || "Unknown";
+                currentMovieTitle = data.title || data.name || "Unknown";
                 const year = (data.release_date || data.first_air_date || 'N/A').substring(0, 4);
 
-                document.title = `MVHD | ${title}`;
-                document.getElementById('movieTitle').innerHTML = `${title} <span style="color:var(--cyber-yellow);">(${year})</span>`;
+                document.title = `MVHD | ${currentMovieTitle}`;
+                document.getElementById('movieTitle').innerHTML = `${currentMovieTitle} <span style="color:var(--cyber-yellow);">(${year})</span>`;
                 document.getElementById('ratingVal').innerText = data.vote_average ? `${data.vote_average.toFixed(1)}/10` : t.na;
                 document.getElementById('runtimeVal').innerText = data.runtime ? `${data.runtime} min` : (data.episode_run_time && data.episode_run_time.length > 0 ? `${data.episode_run_time[0]} min` : t.na);
                 document.getElementById('releaseVal').innerText = data.release_date || data.first_air_date || t.na;
@@ -378,6 +396,50 @@
             } catch (e) { console.warn("TMDB sync failed."); }
         }
 
+        // --- AI WEB SPEECH API INTEGRATION ---
+        aiSpeechBtn.addEventListener('click', () => {
+            if (!('speechSynthesis' in window)) return alert("Your browser does not support AI Speech.");
+            
+            const t = getT();
+            
+            if (isSpeaking) {
+                window.speechSynthesis.cancel();
+                isSpeaking = false;
+                aiSpeechBtn.classList.remove('playing');
+                aiSpeechBtn.innerText = t.aiReadBtn;
+                return;
+            }
+
+            const overviewText = document.getElementById('movieOverview').innerText;
+            if (!overviewText) return;
+
+            const textToSpeak = `${currentMovieTitle}. ${overviewText}`;
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            
+            // Map our UI lang to Speech API lang
+            const uiLangCode = localStorage.getItem('uiLang') || 'en';
+            if(uiLangCode === 'km') utterance.lang = 'km-KH';
+            else if(uiLangCode === 'zh') utterance.lang = 'zh-CN';
+            else utterance.lang = 'en-US';
+
+            utterance.onend = () => {
+                isSpeaking = false;
+                aiSpeechBtn.classList.remove('playing');
+                aiSpeechBtn.innerText = getT().aiReadBtn;
+            };
+
+            window.speechSynthesis.cancel(); // Reset queue
+            window.speechSynthesis.speak(utterance);
+            
+            isSpeaking = true;
+            aiSpeechBtn.classList.add('playing');
+            aiSpeechBtn.innerText = t.aiStopBtn;
+        });
+
+        // Ensure Audio Stops if they leave or close page
+        window.addEventListener('beforeunload', () => window.speechSynthesis.cancel());
+
+
         function loadVsembedFrame() {
             if (!tmdbId) return dismissOverlay();
             const targetEmbed = mediaType === 'tv' ? `https://vsembed.ru/embed/tv/${tmdbId}/1/1` : `https://vsembed.ru/embed/movie/${tmdbId}`;
@@ -409,6 +471,10 @@
 
         uiLangSelect.addEventListener('change', (e) => {
             localStorage.setItem('uiLang', e.target.value);
+            window.speechSynthesis.cancel(); // Stop audio if language changes
+            isSpeaking = false;
+            aiSpeechBtn.classList.remove('playing');
+            
             updateUI();
             syncTmdbDetails(); // Re-fetch TMDB data in new language
         });
