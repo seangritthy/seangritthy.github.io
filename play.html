@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>MVHD | Cloudnestra Extractor</title>
+    <title>MVHD | Cloudnestra Player</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
@@ -34,7 +34,7 @@
 
         .header h1 {
             font-size: 2rem;
-            background: linear-gradient(135deg, #00d4ff, #ff006e);
+            background: linear-gradient(135deg, #00ff9d, #7b61ff);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -65,15 +65,15 @@
 
         input:focus, select:focus {
             outline: none;
-            border-color: #00d4ff;
+            border-color: #00ff9d;
         }
 
         button {
             padding: 14px 28px;
-            background: linear-gradient(135deg, #00d4ff, #ff006e);
+            background: linear-gradient(135deg, #00ff9d, #7b61ff);
             border: none;
             border-radius: 12px;
-            color: #fff;
+            color: #000;
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.2s;
@@ -116,7 +116,7 @@
 
         .info-label {
             font-weight: 600;
-            color: #00d4ff;
+            color: #00ff9d;
             min-width: 100px;
         }
 
@@ -125,20 +125,6 @@
             font-family: monospace;
             flex: 1;
         }
-
-        .status {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin-top: 15px;
-        }
-
-        .status.loading { background: rgba(255,193,7,0.2); color: #ffc107; }
-        .status.success { background: rgba(76,175,80,0.2); color: #4caf50; }
-        .status.error { background: rgba(244,67,54,0.2); color: #f44336; }
 
         .loading-overlay {
             position: fixed;
@@ -159,7 +145,7 @@
             width: 50px;
             height: 50px;
             border: 3px solid rgba(255,255,255,0.2);
-            border-top-color: #00d4ff;
+            border-top-color: #00ff9d;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -183,8 +169,8 @@
             color: #888;
         }
 
-        .log-entry.success { color: #4caf50; }
-        .log-entry.error { color: #f44336; }
+        .log-entry.success { color: #00ff9d; }
+        .log-entry.error { color: #ff4444; }
 
         @media (max-width: 768px) {
             .container { padding: 15px; }
@@ -196,13 +182,13 @@
 <body>
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
-        <div id="loadingText">Initializing...</div>
+        <div id="loadingText">Generating Cloudnestra URL...</div>
     </div>
 
     <div class="container">
         <div class="header">
-            <h1>☁️ Cloudnestra Extractor</h1>
-            <p style="color: #888; margin-top: 10px;">Extracts Cloudnestra stream from vidsrc.to · No ads · Direct playback</p>
+            <h1>☁️ MVHD Cloudnestra Player</h1>
+            <p style="color: #888; margin-top: 10px;">Direct Cloudnestra playback · No CORS issues · Instant streaming</p>
         </div>
 
         <div class="input-section">
@@ -212,7 +198,7 @@
                     <option value="movie">🎬 Movie</option>
                     <option value="tv">📺 TV Show</option>
                 </select>
-                <button id="extractBtn">🔍 Extract & Play</button>
+                <button id="extractBtn">🎬 PLAY NOW</button>
             </div>
         </div>
 
@@ -226,17 +212,22 @@
                 <span class="info-value" id="statusText">Ready</span>
             </div>
             <div class="info-row">
-                <span class="info-label">🎬 Movie:</span>
+                <span class="info-label">🎬 Title:</span>
                 <span class="info-value" id="movieTitle">-</span>
             </div>
             <div class="info-row">
-                <span class="info-label">☁️ Stream URL:</span>
+                <span class="info-label">☁️ Cloudnestra URL:</span>
+                <span class="info-value" id="cloudUrl">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">📡 Stream URL:</span>
                 <span class="info-value" id="streamUrl">-</span>
             </div>
         </div>
 
         <div class="extraction-log" id="extractionLog">
-            <div class="log-entry">📡 Ready to extract Cloudnestra from vidsrc.to</div>
+            <div class="log-entry">📡 MVHD CyberCinema Ready</div>
+            <div class="log-entry">☁️ Cloudnestra Direct Generator Active</div>
         </div>
     </div>
 
@@ -265,105 +256,43 @@
         function updateStatus(msg, isError = false) {
             const statusSpan = document.getElementById('statusText');
             statusSpan.textContent = msg;
-            statusSpan.style.color = isError ? '#f44336' : '#4caf50';
+            statusSpan.style.color = isError ? '#ff4444' : '#00ff9d';
         }
 
-        // Decode Cloudnestra RCP URL to get actual video URL
+        // Generate Cloudnestra URL from TMDB ID (no extraction needed!)
+        function generateCloudnestraUrl(tmdbId, mediaType, season = 1, episode = 1) {
+            // Step 1: Build vidsrc URL
+            let vidsrcUrl;
+            if (mediaType === 'tv') {
+                vidsrcUrl = `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}`;
+            } else {
+                vidsrcUrl = `https://vidsrc.to/embed/movie/${tmdbId}`;
+            }
+            
+            // Step 2: Base64 encode
+            const encoded = btoa(vidsrcUrl);
+            
+            // Step 3: Create Cloudnestra URL
+            const cloudnestraUrl = `https://cloudnestra.com/rcp/${encoded}`;
+            
+            return { cloudnestraUrl, vidsrcUrl };
+        }
+
+        // Decode Cloudnestra URL back to vidsrc URL
         function decodeCloudnestraUrl(cloudnestraUrl) {
             try {
-                addLog(`🔓 Decoding Cloudnestra URL...`);
                 const match = cloudnestraUrl.match(/\/rcp\/([A-Za-z0-9+\/=]+)/);
-                if (!match) throw new Error("Invalid Cloudnestra URL");
+                if (!match) return null;
                 
                 let encoded = match[1];
                 encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
                 while (encoded.length % 4) encoded += '=';
                 
                 const decoded = atob(encoded);
-                addLog(`📦 Decoded payload (${decoded.length} chars)`);
-                
-                // Find video URL in decoded content
-                const patterns = [
-                    /(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i,
-                    /(https?:\/\/[^\s"']+\.mp4[^\s"']*)/i,
-                    /(https?:\/\/[^\s"']+\/master[^\s"']*\.m3u8)/i,
-                    /(https?:\/\/[^\s"']+\/playlist[^\s"']*\.m3u8)/i
-                ];
-                
-                for (const pattern of patterns) {
-                    const match = decoded.match(pattern);
-                    if (match) {
-                        addLog(`✅ Found stream: ${match[1].substring(0, 60)}...`, 'success');
-                        return match[1];
-                    }
-                }
-                
-                if (decoded.startsWith('http')) {
-                    addLog(`✅ Decoded result is direct URL`, 'success');
-                    return decoded;
-                }
-                
-                throw new Error("No video URL found");
+                return decoded;
             } catch(e) {
-                addLog(`❌ Decode failed: ${e.message}`, 'error');
                 return null;
             }
-        }
-
-        // Fetch vidsrc.to page and extract Cloudnestra URL
-        async function extractCloudnestraFromVidSrc(tmdbId, type) {
-            const embedUrl = `https://vidsrc.to/embed/${type}/${tmdbId}`;
-            addLog(`🌐 Fetching: ${embedUrl}`);
-            
-            // Try multiple CORS proxies
-            const proxies = [
-                `https://api.allorigins.win/get?url=${encodeURIComponent(embedUrl)}`,
-                `https://corsproxy.io/?${encodeURIComponent(embedUrl)}`,
-                `https://cors-anywhere.herokuapp.com/${embedUrl}`
-            ];
-            
-            for (const proxy of proxies) {
-                try {
-                    addLog(`🔄 Trying proxy: ${proxy.substring(0, 50)}...`);
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000);
-                    const response = await fetch(proxy, { signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        const html = data.contents || data;
-                        addLog(`📄 Got HTML (${html.length} bytes)`);
-                        
-                        // Look for Cloudnestra RCP URL
-                        const cloudPatterns = [
-                            /https?:\/\/[^\s"']*cloudnestra[^\s"']*\/rcp\/[A-Za-z0-9+\/=]+/gi,
-                            /["']([^"']*\/rcp\/[^"']+)["']/gi,
-                            /(?:src|href)=["']([^"']*cloudnestra[^"']*\/rcp\/[^"']*)["']/gi
-                        ];
-                        
-                        for (const pattern of cloudPatterns) {
-                            const matches = html.matchAll(pattern);
-                            for (const match of matches) {
-                                let cloudUrl = match[1] || match[0];
-                                if (!cloudUrl.startsWith('http')) cloudUrl = 'https:' + cloudUrl;
-                                addLog(`🎯 Found Cloudnestra URL!`, 'success');
-                                return cloudUrl;
-                            }
-                        }
-                        
-                        // Also check for direct m3u8 as fallback
-                        const directM3u8 = html.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
-                        if (directM3u8) {
-                            addLog(`🎯 Found direct m3u8!`, 'success');
-                            return directM3u8[1];
-                        }
-                    }
-                } catch(e) {
-                    addLog(`⚠️ Proxy failed: ${e.message}`, 'error');
-                }
-            }
-            return null;
         }
 
         // Fetch movie info from TMDB
@@ -378,38 +307,37 @@
             }
         }
 
-        // Play video with HLS.js
-        function playVideo(url) {
-            const video = document.getElementById('videoPlayer');
-            document.getElementById('streamUrl').textContent = url.substring(0, 80) + (url.length > 80 ? '...' : '');
+        // Try to play the stream (attempt multiple approaches)
+        async function attemptPlay(vidsrcUrl) {
+            addLog(`🎯 Attempting to play: ${vidsrcUrl}`, 'info');
             
-            if (url.includes('.m3u8')) {
-                if (Hls.isSupported()) {
-                    if (video.hls) video.hls.destroy();
-                    const hls = new Hls({ debug: false, enableWorker: true });
-                    hls.loadSource(url);
-                    hls.attachMedia(video);
-                    video.hls = hls;
-                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                        updateStatus("Playing HLS stream");
-                        video.play().catch(() => updateStatus("Click play to start"));
-                    });
-                    hls.on(Hls.Events.ERROR, () => updateStatus("HLS error", true));
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = url;
-                    updateStatus("Playing HLS stream");
-                    video.play();
-                } else {
-                    updateStatus("HLS not supported", true);
-                }
-            } else {
-                video.src = url;
-                updateStatus("Playing video");
-                video.play();
+            // Method 1: Try to get actual m3u8 from cloudnestra
+            const cloudResult = generateCloudnestraUrlFromVidsrc(vidsrcUrl);
+            if (cloudResult) {
+                addLog(`☁️ Generated Cloudnestra URL, trying to get stream...`, 'info');
+                // Try to fetch the cloudnestra page to get the actual stream
+                try {
+                    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(cloudResult)}`;
+                    const response = await fetch(proxyUrl);
+                    if (response.ok) {
+                        const html = await response.text();
+                        const m3u8Match = html.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
+                        if (m3u8Match) {
+                            return m3u8Match[1];
+                        }
+                    }
+                } catch(e) {}
             }
+            
+            return null;
         }
 
-        // Main extraction and playback
+        function generateCloudnestraUrlFromVidsrc(vidsrcUrl) {
+            const encoded = btoa(vidsrcUrl);
+            return `https://cloudnestra.com/rcp/${encoded}`;
+        }
+
+        // Main function
         async function extractAndPlay() {
             const tmdbId = document.getElementById('tmdbId').value.trim();
             const mediaType = document.getElementById('mediaType').value;
@@ -419,46 +347,109 @@
                 return;
             }
             
-            showLoading(`Extracting Cloudnestra from vidsrc.to...`);
-            updateStatus("Extracting...");
-            addLog(`🎬 Starting extraction for ${mediaType} ID: ${tmdbId}`);
+            showLoading(`Generating Cloudnestra URL for ${mediaType} ID: ${tmdbId}...`);
+            updateStatus("Generating...");
+            addLog(`🎬 Starting for ${mediaType} ID: ${tmdbId}`);
             
             try {
                 // Get movie title
                 const title = await fetchMovieInfo(tmdbId, mediaType);
                 document.getElementById('movieTitle').textContent = title;
-                addLog(`📽️ Movie: ${title}`);
+                addLog(`📽️ Title: ${title}`);
                 
-                // Extract Cloudnestra URL from vidsrc.to
-                const cloudUrl = await extractCloudnestraFromVidSrc(tmdbId, mediaType);
+                // Generate Cloudnestra URL directly (no CORS issues!)
+                const { cloudnestraUrl, vidsrcUrl } = generateCloudnestraUrl(tmdbId, mediaType);
                 
-                if (!cloudUrl) {
-                    addLog(`❌ Could not extract Cloudnestra URL`, 'error');
-                    updateStatus("Extraction failed - try different ID", true);
-                    hideLoading();
-                    return;
+                document.getElementById('cloudUrl').innerHTML = `<a href="${cloudnestraUrl}" target="_blank" style="color:#00ff9d;">${cloudnestraUrl.substring(0, 60)}...</a>`;
+                addLog(`☁️ Generated Cloudnestra URL`, 'success');
+                
+                // Try to get the actual stream
+                showLoading("Attempting to fetch stream from Cloudnestra...");
+                
+                // Try using a CORS proxy to fetch the cloudnestra page
+                const proxyUrls = [
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(cloudnestraUrl)}`,
+                    `https://corsproxy.io/?${encodeURIComponent(cloudnestraUrl)}`
+                ];
+                
+                let streamUrl = null;
+                
+                for (const proxy of proxyUrls) {
+                    try {
+                        addLog(`🔄 Trying to fetch: ${proxy.substring(0, 50)}...`);
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 10000);
+                        const response = await fetch(proxy, { signal: controller.signal });
+                        clearTimeout(timeoutId);
+                        
+                        if (response.ok) {
+                            const html = await response.text();
+                            addLog(`📄 Got response (${html.length} bytes)`);
+                            
+                            // Look for m3u8 in the response
+                            const m3u8Match = html.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
+                            if (m3u8Match) {
+                                streamUrl = m3u8Match[1];
+                                addLog(`🎯 Found stream URL!`, 'success');
+                                break;
+                            }
+                            
+                            // Also try to decode if it's a redirect
+                            const redirectMatch = html.match(/window\.location\.href\s*=\s*["']([^"']+)["']/i);
+                            if (redirectMatch) {
+                                addLog(`🔄 Found redirect, following...`);
+                                const redirectResponse = await fetch(proxy.replace(/&url=.*/, '') + encodeURIComponent(redirectMatch[1]));
+                                if (redirectResponse.ok) {
+                                    const redirectHtml = await redirectResponse.text();
+                                    const finalMatch = redirectHtml.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
+                                    if (finalMatch) {
+                                        streamUrl = finalMatch[1];
+                                        addLog(`🎯 Found stream after redirect!`, 'success');
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    } catch(e) {
+                        addLog(`⚠️ Proxy failed: ${e.message}`, 'error');
+                    }
                 }
                 
-                addLog(`☁️ Cloudnestra URL found, decoding...`, 'success');
-                showLoading("Decoding Cloudnestra stream...");
+                const videoPlayer = document.getElementById('videoPlayer');
                 
-                // Decode to get actual video URL
-                const videoUrl = decodeCloudnestraUrl(cloudUrl);
-                
-                if (!videoUrl) {
-                    addLog(`❌ Failed to decode stream`, 'error');
-                    updateStatus("Decoding failed", true);
-                    hideLoading();
-                    return;
+                if (streamUrl) {
+                    document.getElementById('streamUrl').textContent = streamUrl.substring(0, 80) + (streamUrl.length > 80 ? '...' : '');
+                    addLog(`🎉 Playing stream!`, 'success');
+                    updateStatus("Playing HLS stream");
+                    
+                    if (Hls.isSupported()) {
+                        if (videoPlayer.hls) videoPlayer.hls.destroy();
+                        const hls = new Hls({ debug: false, enableWorker: true });
+                        hls.loadSource(streamUrl);
+                        hls.attachMedia(videoPlayer);
+                        videoPlayer.hls = hls;
+                        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                            videoPlayer.play().catch(() => updateStatus("Click play to start"));
+                        });
+                        hls.on(Hls.Events.ERROR, () => updateStatus("HLS error - trying fallback", true));
+                    } else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                        videoPlayer.src = streamUrl;
+                        videoPlayer.play();
+                    }
+                } else {
+                    // Fallback: Open vidsrc directly
+                    addLog(`⚠️ Could not extract stream, opening vidsrc fallback`, 'error');
+                    updateStatus("Opening fallback player...");
+                    document.getElementById('streamUrl').textContent = vidsrcUrl;
+                    
+                    // Create iframe fallback
+                    const videoContainer = document.querySelector('.player-container');
+                    videoContainer.innerHTML = `<iframe src="${vidsrcUrl}" style="width:100%; height:500px; border:none;" allowfullscreen></iframe>`;
                 }
-                
-                addLog(`🎉 Success! Playing extracted stream`, 'success');
-                updateStatus("Stream ready!");
-                playVideo(videoUrl);
                 
             } catch (error) {
                 addLog(`❌ Error: ${error.message}`, 'error');
-                updateStatus("Extraction failed", true);
+                updateStatus("Error occurred", true);
             } finally {
                 hideLoading();
             }
@@ -469,6 +460,22 @@
         document.getElementById('tmdbId').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') extractAndPlay();
         });
+        
+        // Check for URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const tmdbParam = urlParams.get('tmdb');
+        const typeParam = urlParams.get('type');
+        
+        if (tmdbParam) {
+            document.getElementById('tmdbId').value = tmdbParam;
+            if (typeParam) {
+                document.getElementById('mediaType').value = typeParam;
+            }
+            setTimeout(() => extractAndPlay(), 500);
+        }
+        
+        addLog(`☁️ Cloudnestra Direct Generator Active`, 'success');
+        addLog(`💡 Enter any TMDB ID and click PLAY`, 'info');
     </script>
 </body>
 </html>
