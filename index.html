@@ -118,7 +118,7 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, var(--cyber-blue), var(--primary), var(--accent));
+            background: linear-gradient(90deg, var(--cyber-blue), var(--primary), #ff00e5);
             opacity: 0;
             transition: 0.3s;
             z-index: 2;
@@ -281,9 +281,12 @@
                 const date = item.release_date || item.first_air_date;
                 const year = date ? date.substring(0, 4) : 'N/A';
                 const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+                
+                // FIXED: Changed from player.html to play.html
                 card.onclick = () => {
-                    window.location.href = `player.html?tmdb=${item.id}&type=${currentType}&title=${encodeURIComponent(title)}`;
+                    window.location.href = `play.html?tmdb=${item.id}&type=${currentType}&title=${encodeURIComponent(title)}`;
                 };
+                
                 card.innerHTML = `
                     <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" 
                          class="movie-poster" 
