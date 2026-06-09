@@ -43,7 +43,6 @@
         margin: 0 auto;
     }
     
-    /* Movie Info Panel */
     .movie-info {
         background: rgba(255,255,255,0.05);
         border: 1px solid #00ff9d;
@@ -88,7 +87,6 @@
         color: #ccc;
     }
     
-    /* Player */
     .player-container {
         background: #000;
         border: 3px solid #00ff9d;
@@ -122,7 +120,6 @@
         display: block;
     }
     
-    /* Status */
     .status {
         margin-top: 15px;
         padding: 12px;
@@ -144,12 +141,6 @@
         color: #00ff9d;
     }
     
-    .status.warning {
-        border-color: #ffaa00;
-        color: #ffaa00;
-    }
-    
-    /* Server Selector */
     .server-selector {
         display: flex;
         flex-wrap: wrap;
@@ -174,7 +165,6 @@
         color: #000;
     }
     
-    /* Loading Overlay */
     .loading-overlay {
         position: fixed;
         top: 0;
@@ -208,17 +198,6 @@
         font-family: monospace;
     }
     
-    button {
-        padding: 10px 20px;
-        background: #00ff9d;
-        color: #000;
-        border: none;
-        cursor: pointer;
-        font-weight: bold;
-        border-radius: 5px;
-        margin-top: 10px;
-    }
-    
     @media (max-width: 768px) {
         iframe { height: 50vh; }
         .movie-title { font-size: 1.3rem; }
@@ -239,16 +218,13 @@
 </div>
 
 <div class="container" id="mainContent" style="display: none;">
-    <!-- Server Selector -->
     <div class="server-selector" id="serverSelector">
-        <button class="server-btn active" data-server="cloud">☁️ CloudOrchestra</button>
-        <button class="server-btn" data-server="vidsrc">🎬 VidSrc.to</button>
+        <button class="server-btn active" data-server="vidsrc">🎬 VidSrc.to</button>
         <button class="server-btn" data-server="embed2">📺 2Embed</button>
         <button class="server-btn" data-server="auto">🔄 AutoEmbed</button>
         <button class="server-btn" data-server="multi">📽️ MultiEmbed</button>
     </div>
     
-    <!-- Movie Info -->
     <div class="movie-info" id="movieInfo">
         <img class="movie-poster" id="moviePoster" src="" alt="Poster">
         <div class="movie-details">
@@ -262,54 +238,71 @@
         </div>
     </div>
     
-    <!-- Player -->
     <div class="player-container">
         <iframe id="playerFrame" src="" allowfullscreen></iframe>
     </div>
     
-    <!-- Status -->
     <div class="status" id="status">Ready</div>
 </div>
 
 <script>
+    // TMDB API key - in production, use a backend proxy
+    // For GitHub Pages, this is the only way (no backend)
     const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
     
     // Get URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     let tmdbId = urlParams.get('tmdb') || '1380291';
     const mediaType = urlParams.get('type') || 'movie';
-    const season = urlParams.get('season') || 1;
-    const episode = urlParams.get('episode') || 1;
+    let season = urlParams.get('season') || '1';
+    let episode = urlParams.get('episode') || '1';
     
-    // Server configurations
+    // Validate IDs
+    tmdbId = tmdbId.replace(/[^0-9]/g, '');
+    season = season.replace(/[^0-9]/g, '');
+    episode = episode.replace(/[^0-9]/g, '');
+    
+    // Server configurations - FIXED for TV shows
     const servers = {
-        cloud: {
-            name: 'CloudOrchestra',
-            getUrl: () => {
-                const vidsrcUrl = `https://vidsrc.to/embed/${mediaType}/${tmdbId}`;
-                const encoded = btoa(vidsrcUrl);
-                return `https://cloudorchestranova.com/rcp/${encoded}`;
-            }
-        },
         vidsrc: {
             name: 'VidSrc.to',
-            getUrl: () => `https://vidsrc.to/embed/${mediaType}/${tmdbId}`
+            getUrl: () => {
+                if (mediaType === 'tv') {
+                    return `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}`;
+                }
+                return `https://vidsrc.to/embed/movie/${tmdbId}`;
+            }
         },
         embed2: {
             name: '2Embed',
-            getUrl: () => `https://www.2embed.cc/embed/${tmdbId}`
+            getUrl: () => {
+                if (mediaType === 'tv') {
+                    return `https://www.2embed.cc/embedtv/${tmdbId}&s=${season}&e=${episode}`;
+                }
+                return `https://www.2embed.cc/embed/${tmdbId}`;
+            }
         },
         auto: {
             name: 'AutoEmbed',
-            getUrl: () => `https://autoembed.to/${mediaType}/tmdb/${tmdbId}`
+            getUrl: () => {
+                if (mediaType === 'tv') {
+                    return `https://autoembed.to/tv/tmdb/${tmdbId}/${season}/${episode}`;
+                }
+                return `https://autoembed.to/movie/tmdb/${tmdbId}`;
+            }
         },
         multi: {
             name: 'MultiEmbed',
-            getUrl: () => `https://multiembed.mov/video/${tmdbId}`
+            getUrl: () => {
+                if (mediaType === 'tv') {
+                    return `https://multiembed.mov/video/${tmdbId}/tv-${season}-${episode}`;
+                }
+                return `https://multiembed.mov/video/${tmdbId}`;
+            }
         }
     };
     
-    let currentServer = 'cloud';
+    let currentServer = 'vidsrc';
     
     function updateLoading(text) {
         document.getElementById('loadingText').textContent = text;
@@ -324,19 +317,12 @@
         }, 500);
     }
     
-    function showLoading() {
-        const overlay = document.getElementById('loadingOverlay');
-        overlay.style.display = 'flex';
-        overlay.style.opacity = '1';
-    }
-    
     function updateStatus(text, type = 'info') {
         const statusDiv = document.getElementById('status');
         statusDiv.textContent = text;
         statusDiv.className = 'status';
         if (type === 'error') statusDiv.classList.add('error');
         else if (type === 'success') statusDiv.classList.add('success');
-        else if (type === 'warning') statusDiv.classList.add('warning');
     }
     
     // Fetch movie info from TMDB
@@ -354,8 +340,18 @@
             document.getElementById('movieTitle').textContent = title;
             document.getElementById('movieYear').textContent = year || 'N/A';
             document.getElementById('movieRating').textContent = data.vote_average ? data.vote_average.toFixed(1) : 'N/A';
-            document.getElementById('movieRuntime').textContent = data.runtime ? `${data.runtime} min` : (data.episode_run_time?.[0] ? `${data.episode_run_time[0]} min` : 'N/A');
-            document.getElementById('movieOverview').textContent = data.overview || 'No description available.';
+            
+            if (mediaType === 'tv') {
+                document.getElementById('movieRuntime').textContent = data.episode_run_time?.[0] ? `${data.episode_run_time[0]} min` : 'N/A';
+                if (season && episode) {
+                    document.getElementById('movieOverview').textContent = `Season ${season}, Episode ${episode}. ${data.overview || 'No description available.'}`;
+                } else {
+                    document.getElementById('movieOverview').textContent = data.overview || 'No description available.';
+                }
+            } else {
+                document.getElementById('movieRuntime').textContent = data.runtime ? `${data.runtime} min` : 'N/A';
+                document.getElementById('movieOverview').textContent = data.overview || 'No description available.';
+            }
             
             if (data.poster_path) {
                 document.getElementById('moviePoster').src = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
@@ -369,7 +365,7 @@
             return true;
         } catch(e) {
             console.error('TMDB Error:', e);
-            document.getElementById('movieTitle').textContent = `Movie ID: ${tmdbId}`;
+            document.getElementById('movieTitle').textContent = `${mediaType === 'tv' ? 'TV Show' : 'Movie'} ID: ${tmdbId}`;
             document.getElementById('movieOverview').textContent = 'Movie details unavailable, but stream may still work.';
             return false;
         }
@@ -393,7 +389,7 @@
         const iframe = document.getElementById('playerFrame');
         iframe.src = url;
         
-        updateStatus(`🎬 ${server.name} • ${url.substring(0, 80)}...`);
+        updateStatus(`🎬 ${server.name}: ${url.substring(0, 80)}...`);
         
         // Update active button
         document.querySelectorAll('.server-btn').forEach(btn => {
@@ -407,17 +403,13 @@
     
     // Initialize
     async function init() {
-        showLoading();
         updateLoading('FETCHING MOVIE INFO...');
         
-        // Fetch movie info
         await fetchMovieInfo();
         
-        // Load default server
         updateLoading('LOADING STREAM...');
         loadServer(currentServer);
         
-        // Hide loading after iframe loads or timeout
         const iframe = document.getElementById('playerFrame');
         iframe.onload = () => {
             updateStatus(`✅ Streaming from ${servers[currentServer].name}`, 'success');
@@ -434,11 +426,9 @@
         btn.addEventListener('click', () => {
             const serverKey = btn.dataset.server;
             loadServer(serverKey);
-            updateStatus(`Switching to ${servers[serverKey].name}...`);
         });
     });
     
-    // Start
     init();
 </script>
 
