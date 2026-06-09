@@ -10,6 +10,7 @@
             --primary: #00ff9d; --secondary: #7b61ff;
             --dark-bg: #0a0a0f; --card-bg: #13131f;
             --cyber-blue: #00ccff; --cyber-yellow: #fff200;
+            --accent: #ff00e5;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -18,10 +19,23 @@
             background-size: 50px 50px;
         }
         header {
-            padding: 30px 20px 20px; background: rgba(10, 10, 15, 0.95); text-align: center;
+            padding: 40px 20px 20px; background: rgba(10, 10, 15, 0.95); text-align: center;
             border-bottom: 2px solid var(--primary); box-shadow: 0 0 25px rgba(0, 255, 157, 0.3);
             position: sticky; top: 0; z-index: 1000;
         }
+        
+        /* Language UI Dropdown */
+        .ui-lang-wrapper {
+            position: absolute; top: 15px; right: 20px;
+        }
+        .ui-lang-select {
+            background: rgba(0, 0, 0, 0.8); border: 1px solid var(--primary); color: var(--primary);
+            padding: 5px 10px; font-family: 'Share Tech Mono', monospace; outline: none; cursor: pointer;
+            border-radius: 4px; transition: all 0.3s;
+        }
+        .ui-lang-select:hover { box-shadow: 0 0 10px var(--primary); }
+        .ui-lang-select option { background: var(--dark-bg); color: white; }
+
         h1 {
             font-family: 'Orbitron', sans-serif; color: var(--primary); margin-bottom: 20px;
             font-size: 2.8rem; text-shadow: 0 0 15px rgba(0, 255, 157, 0.6); letter-spacing: 4px;
@@ -41,16 +55,18 @@
         .type-selector { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
         .type-btn { padding: 8px 20px; background: rgba(0, 255, 157, 0.05); border: 1px solid var(--secondary); color: var(--secondary); cursor: pointer; font-family: 'Share Tech Mono', monospace; }
         .type-btn.active { background: var(--primary); color: #000; border-color: var(--primary); }
-        .filter-alert { background: rgba(255,0,229,0.2); border: 1px solid #ff00e5; color: #fff; display: none; }
+        .filter-alert { background: rgba(255,0,229,0.2); border: 1px solid var(--accent); color: #fff; display: none; }
         
-        /* New Category Sub-Nav */
         .category-selector { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
         .cat-btn { padding: 6px 15px; background: transparent; border: 1px solid var(--cyber-blue); color: var(--cyber-blue); cursor: pointer; font-family: 'Share Tech Mono', monospace; font-size: 0.85rem; transition: all 0.3s; border-radius: 4px;}
         .cat-btn.active, .cat-btn:hover { background: var(--cyber-blue); color: #000; box-shadow: 0 0 10px var(--cyber-blue); }
 
+        .lang-btn { padding: 6px 15px; background: transparent; border: 1px solid var(--accent); color: var(--accent); cursor: pointer; font-family: 'Share Tech Mono', monospace; font-size: 0.85rem; transition: all 0.3s; border-radius: 4px;}
+        .lang-btn.active, .lang-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 10px var(--accent); }
+
         .movies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 35px; padding: 40px 20px; max-width: 1400px; margin: 0 auto; }
         .movie-card { background: var(--card-bg); border: 1px solid var(--secondary); overflow: hidden; cursor: pointer; transition: all 0.3s ease; position: relative; border-radius: 5px; }
-        .movie-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--cyber-blue), var(--primary), #ff00e5); opacity: 0; transition: 0.3s; z-index: 2; }
+        .movie-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--cyber-blue), var(--primary), var(--accent)); opacity: 0; transition: 0.3s; z-index: 2; }
         .movie-card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 0 25px rgba(0, 255, 157, 0.4); }
         .movie-card:hover::before { opacity: 1; }
         .movie-poster { width: 100%; height: 330px; object-fit: cover; border-bottom: 1px solid rgba(123, 97, 255, 0.3); }
@@ -63,19 +79,34 @@
         .spinner { width: 50px; height: 50px; border: 3px solid rgba(0, 255, 157, 0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* New Pagination Styles */
         .pagination { display: none; justify-content: center; align-items: center; gap: 20px; padding: 20px; margin-bottom: 40px; }
         .page-btn { padding: 10px 20px; background: rgba(0, 255, 157, 0.1); border: 1px solid var(--primary); color: var(--primary); cursor: pointer; font-family: 'Orbitron', sans-serif; font-weight: bold; transition: all 0.3s; border-radius: 4px;}
         .page-btn:hover:not(:disabled) { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
         .page-btn:disabled { border-color: #555; color: #555; cursor: not-allowed; background: transparent; box-shadow: none; }
         .page-info { font-family: 'Share Tech Mono', monospace; color: var(--cyber-yellow); font-size: 1.2rem; letter-spacing: 2px;}
 
-        @media (max-width: 768px) { h1 { font-size: 2rem; } .movies-grid { gap: 20px; padding: 20px 15px; } .movie-poster { height: 280px; } .search-container { flex-direction: column; } #searchBtn { width: 100%; } }
+        @media (max-width: 768px) { 
+            h1 { font-size: 2rem; margin-top: 20px; } 
+            .ui-lang-wrapper { top: 10px; right: 10px; }
+            .movies-grid { gap: 20px; padding: 20px 15px; } 
+            .movie-poster { height: 280px; } 
+            .search-container { flex-direction: column; } 
+            #searchBtn { width: 100%; } 
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>MVHD CYBERCINEMA</h1>
+        <!-- Dynamic Interface Language Selector -->
+        <div class="ui-lang-wrapper">
+            <select id="uiLangSelect" class="ui-lang-select">
+                <option value="en">🇬🇧 English</option>
+                <option value="km">🇰🇭 ភាសាខ្មែរ</option>
+                <option value="zh">🇨🇳 中文</option>
+            </select>
+        </div>
+
+        <h1 id="siteTitle">MVHD CYBERCINEMA</h1>
         <div class="search-container">
             <input type="text" id="searchInput" placeholder="Search Database...">
             <button id="searchBtn">🔍 SEARCH</button>
@@ -87,16 +118,25 @@
             <button id="resetFilterBtn" class="type-btn filter-alert">✖ CLEAR ACTIVE FILTER</button>
         </div>
 
-        <div class="category-selector" id="categorySelector">
-            <button class="cat-btn active" data-cat="popular">🔥 POPULAR</button>
-            <button class="cat-btn" data-cat="trending">📈 TRENDING (WEEK)</button>
-            <button class="cat-btn" data-cat="top_rated">⭐ TOP RATED</button>
+        <div id="filterWrapper">
+            <div class="category-selector" id="categorySelector">
+                <button class="cat-btn active" data-cat="popular">🔥 POPULAR</button>
+                <button class="cat-btn" data-cat="trending">📈 TRENDING</button>
+                <button class="cat-btn" data-cat="top_rated">⭐ TOP RATED</button>
+            </div>
+
+            <div class="category-selector" id="languageSelector">
+                <button class="lang-btn active" data-lang="">🌐 ALL LANGUAGES</button>
+                <button class="lang-btn" data-lang="km">🇰🇭 KHMER</button>
+                <button class="lang-btn" data-lang="en">🇬🇧 ENGLISH</button>
+                <button class="lang-btn" data-lang="zh">🇨🇳 CHINESE</button>
+            </div>
         </div>
     </header>
 
     <main>
         <div id="moviesGrid" class="movies-grid">
-            <div class="loading"><div class="spinner"></div><div>INITIALIZING SYSTEM...</div></div>
+            <div class="loading"><div class="spinner"></div><div id="initText">INITIALIZING SYSTEM...</div></div>
         </div>
 
         <div class="pagination" id="pagination">
@@ -107,9 +147,92 @@
     </main>
 
     <script>
+        // --- TRANSLATION DICTIONARY ---
+        const translations = {
+            en: {
+                siteTitle: "MVHD CYBERCINEMA",
+                searchPlaceholder: "Search Database...",
+                searchBtn: "🔍 SEARCH",
+                moviesBtn: "🎥 MOVIES",
+                tvBtn: "📺 TV SHOWS",
+                clearFilter: "✖ CLEAR ACTIVE FILTER",
+                catPopular: "🔥 POPULAR",
+                catTrending: "📈 TRENDING",
+                catTopRated: "⭐ TOP RATED",
+                langAll: "🌐 ALL LANGUAGES",
+                langKhmer: "🇰🇭 KHMER",
+                langEnglish: "🇬🇧 ENGLISH",
+                langChinese: "🇨🇳 CHINESE",
+                prevBtn: "&#8592; PREV",
+                nextBtn: "NEXT &#8594;",
+                initSystem: "INITIALIZING SYSTEM...",
+                fetchingDB: "FETCHING DATABASE...",
+                noResults: "🔍 NO RESULTS FOUND IN ARCHIVE",
+                networkError: "⚠️ NETWORK ERROR • PLEASE REFRESH",
+                pageOf: (cur, tot) => `PAGE ${cur} OF ${tot}`,
+                scanCast: (name) => `SCANNING FILES FEATURING: ${name}`,
+                filterGenre: (name) => `FILTERING BY GENRE: ${name}`,
+                filterRegion: (name) => `FILTERING REGION: ${name}`,
+                filterLang: (name) => `FILTERING NATIVE LANGUAGE: ${name}`,
+                scanFor: (term) => `SCANNING FOR "${term}"...`
+            },
+            km: {
+                siteTitle: "MVHD សាយប័ររោងកុន",
+                searchPlaceholder: "ស្វែងរកទិន្នន័យ...",
+                searchBtn: "🔍 ស្វែងរក",
+                moviesBtn: "🎥 ភាពយន្ត",
+                tvBtn: "📺 កម្មវិធីទូរទស្សន៍",
+                clearFilter: "✖ លុបជម្រើស",
+                catPopular: "🔥 ពេញនិយម",
+                catTrending: "📈 កំពុងពេញនិយម",
+                catTopRated: "⭐ វាយតម្លៃខ្ពស់បំផុត",
+                langAll: "🌐 ភាសាទាំងអស់",
+                langKhmer: "🇰🇭 ខ្មែរ",
+                langEnglish: "🇬🇧 អង់គ្លេស",
+                langChinese: "🇨🇳 ចិន",
+                prevBtn: "&#8592; ថយក្រោយ",
+                nextBtn: "បន្ទាប់ &#8594;",
+                initSystem: "កំពុងចាប់ផ្តើមប្រព័ន្ធ...",
+                fetchingDB: "កំពុងទាញយកទិន្នន័យ...",
+                noResults: "🔍 រកមិនឃើញលទ្ធផលទេ",
+                networkError: "⚠️ បញ្ហាបណ្តាញ • សូមព្យាយាមម្តងទៀត",
+                pageOf: (cur, tot) => `ទំព័រ ${cur} នៃ ${tot}`,
+                scanCast: (name) => `ស្វែងរកតួសម្តែង: ${name}`,
+                filterGenre: (name) => `ប្រភេទ: ${name}`,
+                filterRegion: (name) => `តំបន់: ${name}`,
+                filterLang: (name) => `ភាសា: ${name}`,
+                scanFor: (term) => `ស្វែងរក "${term}"...`
+            },
+            zh: {
+                siteTitle: "MVHD 赛博影院",
+                searchPlaceholder: "搜索数据库...",
+                searchBtn: "🔍 搜索",
+                moviesBtn: "🎥 电影",
+                tvBtn: "📺 电视剧",
+                clearFilter: "✖ 清除过滤",
+                catPopular: "🔥 热门",
+                catTrending: "📈 趋势",
+                catTopRated: "⭐ 最高评分",
+                langAll: "🌐 所有语言",
+                langKhmer: "🇰🇭 高棉语",
+                langEnglish: "🇬🇧 英语",
+                langChinese: "🇨🇳 中文",
+                prevBtn: "&#8592; 上一页",
+                nextBtn: "下一页 &#8594;",
+                initSystem: "正在初始化系统...",
+                fetchingDB: "正在获取数据库...",
+                noResults: "🔍 未找到结果",
+                networkError: "⚠️ 网络错误 • 请刷新",
+                pageOf: (cur, tot) => `第 ${cur} 页，共 ${tot} 页`,
+                scanCast: (name) => `扫描参演文件: ${name}`,
+                filterGenre: (name) => `按类型过滤: ${name}`,
+                filterRegion: (name) => `过滤地区: ${name}`,
+                filterLang: (name) => `过滤语言: ${name}`,
+                scanFor: (term) => `正在搜索 "${term}"...`
+            }
+        };
+
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
-        
-        // Read URL Parameters
         const urlParams = new URLSearchParams(window.location.search);
         let currentType = urlParams.get('type') || 'movie';
         const targetGenreId = urlParams.get('genre');
@@ -122,36 +245,63 @@
         const targetLangId = urlParams.get('lang');
         const targetLangName = urlParams.get('langName');
 
-        // State Variables
         let currentPage = 1;
         let totalPages = 1;
         let currentCategory = 'popular';
+        let currentLanguage = '';
 
-        // DOM Elements
         const moviesGrid = document.getElementById('moviesGrid');
         const searchInput = document.getElementById('searchInput');
-        const movieBtn = document.getElementById('movieBtn');
-        const tvBtn = document.getElementById('tvBtn');
         const resetBtn = document.getElementById('resetFilterBtn');
-        const categorySelector = document.getElementById('categorySelector');
-        
-        // Pagination Elements
+        const filterWrapper = document.getElementById('filterWrapper');
         const paginationWrap = document.getElementById('pagination');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const pageInfo = document.getElementById('pageInfo');
+        const uiLangSelect = document.getElementById('uiLangSelect');
 
-        // Initialize UI State
+        // Initial Layout sync
         if (currentType === 'tv') {
-            tvBtn.classList.add('active');
-            movieBtn.classList.remove('active');
+            document.getElementById('tvBtn').classList.add('active');
+            document.getElementById('movieBtn').classList.remove('active');
         }
 
-        // Determine if we are in "Filter Mode" (came from play.html tags)
-        const isFilterActive = targetGenreId || targetActorId || targetSearch || targetCountryId || targetLangId;
-        if (isFilterActive) {
+        if (targetGenreId || targetActorId || targetSearch || targetCountryId || targetLangId) {
             resetBtn.style.display = 'block';
-            categorySelector.style.display = 'none'; // Hide categories if filtering by specific actor/genre
+            filterWrapper.style.display = 'none';
+        }
+
+        // UI Translating Function
+        function getT() {
+            return translations[localStorage.getItem('uiLang') || 'en'];
+        }
+
+        function updateUI() {
+            const lang = localStorage.getItem('uiLang') || 'en';
+            const t = translations[lang];
+            uiLangSelect.value = lang;
+            
+            document.getElementById('siteTitle').innerText = t.siteTitle;
+            document.title = t.siteTitle;
+            searchInput.placeholder = t.searchPlaceholder;
+            document.getElementById('searchBtn').innerText = t.searchBtn;
+            document.getElementById('movieBtn').innerText = t.moviesBtn;
+            document.getElementById('tvBtn').innerText = t.tvBtn;
+            resetBtn.innerText = t.clearFilter;
+            
+            document.querySelector('[data-cat="popular"]').innerText = t.catPopular;
+            document.querySelector('[data-cat="trending"]').innerText = t.catTrending;
+            document.querySelector('[data-cat="top_rated"]').innerText = t.catTopRated;
+            
+            document.querySelector('[data-lang=""]').innerText = t.langAll;
+            document.querySelector('[data-lang="km"]').innerText = t.langKhmer;
+            document.querySelector('[data-lang="en"]').innerText = t.langEnglish;
+            document.querySelector('[data-lang="zh"]').innerText = t.langChinese;
+
+            document.getElementById('prevBtn').innerHTML = t.prevBtn;
+            document.getElementById('nextBtn').innerHTML = t.nextBtn;
+            
+            const initEl = document.getElementById('initText');
+            if(initEl) initEl.innerText = t.initSystem;
+            
+            updatePaginationUI();
         }
 
         function setGridMessage(message, showSpinner = false) {
@@ -160,36 +310,45 @@
         }
 
         async function fetchDashboardData() {
-            if(currentPage === 1) setGridMessage('FETCHING DATABASE...', true);
+            const t = getT();
+            if(currentPage === 1) setGridMessage(t.fetchingDB, true);
             let url;
             let displayContext = "";
+            
+            // Format language code for TMDB Database Translation natively
+            const uiLangCode = localStorage.getItem('uiLang') || 'en';
+            const tmdbLang = uiLangCode === 'km' ? 'km-KH' : (uiLangCode === 'zh' ? 'zh-CN' : 'en-US');
 
             try {
-                // Route TMDB API based on active filters or selected category
                 if (targetActorId) {
-                    displayContext = `SCANNING FILES FEATURING: ${targetActorName.toUpperCase()}`;
-                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_cast=${targetActorId}&sort_by=popularity.desc&page=${currentPage}`;
+                    displayContext = t.scanCast(targetActorName.toUpperCase());
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_cast=${targetActorId}&sort_by=popularity.desc&page=${currentPage}&language=${tmdbLang}`;
                 } else if (targetGenreId) {
-                    displayContext = `FILTERING BY GENRE: ${targetGenreName.toUpperCase()}`;
-                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_genres=${targetGenreId}&sort_by=popularity.desc&page=${currentPage}`;
+                    displayContext = t.filterGenre(targetGenreName.toUpperCase());
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_genres=${targetGenreId}&sort_by=popularity.desc&page=${currentPage}&language=${tmdbLang}`;
                 } else if (targetCountryId) {
-                    displayContext = `FILTERING REGION: ${targetCountryName.toUpperCase()}`;
-                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_origin_country=${targetCountryId}&sort_by=popularity.desc&page=${currentPage}`;
+                    displayContext = t.filterRegion(targetCountryName.toUpperCase());
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_origin_country=${targetCountryId}&sort_by=popularity.desc&page=${currentPage}&language=${tmdbLang}`;
                 } else if (targetLangId) {
-                    displayContext = `FILTERING LANGUAGE: ${targetLangName.toUpperCase()}`;
-                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_original_language=${targetLangId}&sort_by=popularity.desc&page=${currentPage}`;
+                    displayContext = t.filterLang(targetLangName.toUpperCase());
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_original_language=${targetLangId}&sort_by=popularity.desc&page=${currentPage}&language=${tmdbLang}`;
                 } else if (targetSearch) {
-                    displayContext = `SCANNING FOR "${targetSearch.toUpperCase()}"...`;
-                    url = `https://api.themoviedb.org/3/search/${currentType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(targetSearch)}&page=${currentPage}`;
+                    displayContext = t.scanFor(targetSearch.toUpperCase());
+                    url = `https://api.themoviedb.org/3/search/${currentType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(targetSearch)}&page=${currentPage}&language=${tmdbLang}`;
                     searchInput.value = targetSearch;
                 } else {
-                    // Category Modes (Popular, Trending, Top Rated)
-                    if (currentCategory === 'trending') {
-                        url = `https://api.themoviedb.org/3/trending/${currentType}/week?api_key=${TMDB_API_KEY}&page=${currentPage}`;
-                    } else if (currentCategory === 'top_rated') {
-                        url = `https://api.themoviedb.org/3/${currentType}/top_rated?api_key=${TMDB_API_KEY}&language=en-US&page=${currentPage}`;
+                    // Standard Browse
+                    if (currentLanguage) {
+                        let sortType = currentCategory === 'top_rated' ? 'vote_average.desc&vote_count.gte=200' : 'popularity.desc';
+                        url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_original_language=${currentLanguage}&sort_by=${sortType}&page=${currentPage}&language=${tmdbLang}`;
                     } else {
-                        url = `https://api.themoviedb.org/3/${currentType}/popular?api_key=${TMDB_API_KEY}&language=en-US&page=${currentPage}`;
+                        if (currentCategory === 'trending') {
+                            url = `https://api.themoviedb.org/3/trending/${currentType}/week?api_key=${TMDB_API_KEY}&page=${currentPage}&language=${tmdbLang}`;
+                        } else if (currentCategory === 'top_rated') {
+                            url = `https://api.themoviedb.org/3/${currentType}/top_rated?api_key=${TMDB_API_KEY}&page=${currentPage}&language=${tmdbLang}`;
+                        } else {
+                            url = `https://api.themoviedb.org/3/${currentType}/popular?api_key=${TMDB_API_KEY}&page=${currentPage}&language=${tmdbLang}`;
+                        }
                     }
                 }
 
@@ -199,25 +358,25 @@
                 const data = await res.json();
                 
                 totalPages = data.total_pages || 1;
-                // Hardcap at 500 because TMDB API restricts pages over 500
                 if(totalPages > 500) totalPages = 500; 
 
                 displayItems(data.results);
                 updatePaginationUI();
             } catch (error) {
-                setGridMessage('⚠️ NETWORK ERROR • PLEASE REFRESH');
+                setGridMessage(t.networkError);
             }
         }
 
         function displayItems(items) {
             moviesGrid.innerHTML = '';
+            const t = getT();
             if (!items || items.length === 0) {
-                setGridMessage('🔍 NO RESULTS FOUND IN ARCHIVE');
+                setGridMessage(t.noResults);
                 return;
             }
             const fragment = document.createDocumentFragment();
             items.forEach(item => {
-                if (!item.poster_path) return; // Skip items without images
+                if (!item.poster_path) return;
                 const card = document.createElement('div');
                 card.className = 'movie-card';
                 const title = item.title || item.name;
@@ -225,9 +384,7 @@
                 const year = date ? date.substring(0, 4) : 'N/A';
                 const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
                 
-                card.onclick = () => {
-                    window.location.href = `play.html?tmdb=${item.id}&type=${currentType}&title=${encodeURIComponent(title)}`;
-                };
+                card.onclick = () => { window.location.href = `play.html?tmdb=${item.id}&type=${currentType}&title=${encodeURIComponent(title)}`; };
                 
                 card.innerHTML = `
                     <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" class="movie-poster" loading="lazy">
@@ -250,54 +407,59 @@
         }
 
         function updatePaginationUI() {
-            pageInfo.innerText = `PAGE ${currentPage} OF ${totalPages}`;
-            prevBtn.disabled = currentPage <= 1;
-            nextBtn.disabled = currentPage >= totalPages;
+            const t = getT();
+            document.getElementById('pageInfo').innerText = t.pageOf(currentPage, totalPages);
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
         }
 
-        // Logic Events
+        // Change UI Language
+        uiLangSelect.addEventListener('change', (e) => {
+            localStorage.setItem('uiLang', e.target.value);
+            updateUI();
+            currentPage = 1; // Reset to page 1 to load new language posters
+            fetchDashboardData();
+        });
+
+        // Navigation
         function searchContent() {
             const term = searchInput.value.trim();
             if (term) window.location.href = `index.html?search=${encodeURIComponent(term)}&type=${currentType}`;
             else window.location.href = `index.html?type=${currentType}`;
         }
-
-        movieBtn.addEventListener('click', () => { window.location.href = 'index.html?type=movie'; });
-        tvBtn.addEventListener('click', () => { window.location.href = 'index.html?type=tv'; });
+        document.getElementById('movieBtn').addEventListener('click', () => { window.location.href = 'index.html?type=movie'; });
+        document.getElementById('tvBtn').addEventListener('click', () => { window.location.href = 'index.html?type=tv'; });
         resetBtn.addEventListener('click', () => { window.location.href = `index.html?type=${currentType}`; });
-        
         document.getElementById('searchBtn').addEventListener('click', searchContent);
         searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchContent(); });
 
-        // Category Sub-Navigation Logic
         document.querySelectorAll('.cat-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 currentCategory = e.target.dataset.cat;
-                currentPage = 1;
-                fetchDashboardData();
+                currentPage = 1; fetchDashboardData();
             });
         });
 
-        // Pagination Events
-        prevBtn.addEventListener('click', () => {
-            if (currentPage > 1) {
-                currentPage--;
-                fetchDashboardData();
-                window.scrollTo({top: 0, behavior: 'smooth'});
-            }
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentLanguage = e.target.dataset.lang;
+                currentPage = 1; fetchDashboardData();
+            });
         });
 
-        nextBtn.addEventListener('click', () => {
-            if (currentPage < totalPages) {
-                currentPage++;
-                fetchDashboardData();
-                window.scrollTo({top: 0, behavior: 'smooth'});
-            }
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentPage > 1) { currentPage--; fetchDashboardData(); window.scrollTo({top: 0, behavior: 'smooth'}); }
+        });
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentPage < totalPages) { currentPage++; fetchDashboardData(); window.scrollTo({top: 0, behavior: 'smooth'}); }
         });
 
-        // Run
+        // Initialize App
+        updateUI();
         fetchDashboardData();
     </script>
 </body>
