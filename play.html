@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">MVHD | CyberCinema</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
     <style>
         :root {
             --primary: #00ff9d;
@@ -28,7 +26,6 @@
         body {
             background: var(--dark-bg); color: white;
             font-family: 'Exo 2', sans-serif; min-height: 100vh; overflow-x: hidden;
-            background-size: cover; background-attachment: fixed; background-position: center;
         }
 
         .cyber-grid {
@@ -43,16 +40,20 @@
             background-size: 100% 4px; z-index: -1; opacity: 0.2; pointer-events: none;
             animation: scanlines 10s linear infinite;
         }
+        
         @keyframes scanlines { 0% { background-position: 0 0; } 100% { background-position: 0 100px; } }
 
         .cyber-header {
             position: fixed; top: 0; width: 100%; background: rgba(10, 10, 15, 0.95);
             backdrop-filter: blur(15px); padding: 15px 0; z-index: 1000; border-bottom: var(--pixel-border);
-            box-shadow: 0 0 30px rgba(0, 255, 157, 0.5), 0 5px 15px rgba(0, 0, 0, 0.5); font-family: 'Share Tech Mono', monospace;
+            box-shadow: 0 0 30px rgba(0, 255, 157, 0.5);
         }
+        
         .header-content { max-width: 1400px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
-        .site-title { font-family: 'Orbitron', sans-serif; color: var(--primary); font-size: 1.5rem; text-shadow: 0 0 10px rgba(0, 255, 157, 0.7); font-weight: 700; text-decoration: none;}
-        .user-badge { padding: 8px 15px; background: rgba(0, 255, 157, 0.1); border: 1px solid var(--primary); font-size: 0.9rem; color: var(--primary); }
+        
+        .site-title { font-family: 'Orbitron', sans-serif; color: var(--primary); font-size: 1.5rem; text-shadow: 0 0 10px rgba(0, 255, 157, 0.7); font-weight: 700; text-decoration: none; }
+        
+        .user-badge { padding: 8px 15px; background: rgba(0, 255, 157, 0.1); border: 1px solid var(--primary); font-size: 0.9rem; color: var(--primary); font-family: 'Share Tech Mono', monospace; }
 
         .main-container { max-width: 1400px; margin: 0 auto; padding: 100px 20px 40px; display: none; }
         
@@ -60,11 +61,14 @@
             background: rgba(19, 19, 31, 0.9); backdrop-filter: blur(10px); border: var(--pixel-border);
             padding: 25px; margin-bottom: 30px; box-shadow: var(--neon-glow); position: relative; overflow: hidden; display: flex; gap: 30px; flex-wrap: wrap;
         }
+        
         .movie-info-panel::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
             background: linear-gradient(90deg, var(--cyber-red), var(--primary), var(--cyber-blue));
             animation: rainbow 3s linear infinite; background-size: 200% 100%;
         }
+        
+        @keyframes rainbow { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
 
         .movie-poster { flex: 0 0 200px; }
         .movie-poster img { width: 100%; height: auto; border: 2px solid var(--primary); box-shadow: 0 0 20px rgba(0, 255, 157, 0.3); }
@@ -76,8 +80,9 @@
 
         .player-container {
             background: var(--player-bg); border: 3px solid var(--primary); border-radius: 10px; overflow: hidden;
-            box-shadow: 0 0 50px rgba(0, 255, 157, 0.3), 0 20px 40px rgba(0, 0, 0, 0.8); margin-bottom: 30px; position: relative;
+            box-shadow: 0 0 50px rgba(0, 255, 157, 0.3); margin-bottom: 30px; position: relative;
         }
+        
         .player-container::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
             background: linear-gradient(90deg, var(--cyber-red), var(--cyber-yellow), var(--primary), var(--cyber-blue), var(--accent));
@@ -92,6 +97,7 @@
             padding: 12px 20px; font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; letter-spacing: 1px;
             display: inline-flex; align-items: center; gap: 10px;
         }
+        
         .badge-primary { background: rgba(0, 255, 157, 0.1); border: 2px solid var(--primary); color: var(--primary); box-shadow: 0 0 10px rgba(0,255,157,0.3);}
         .badge-warning { background: rgba(255, 242, 0, 0.1); border: 2px solid var(--cyber-yellow); color: var(--cyber-yellow); }
         .badge-success { background: rgba(0, 204, 255, 0.1); border: 2px solid var(--cyber-blue); color: var(--cyber-blue); }
@@ -100,12 +106,25 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95);
             display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s;
         }
+        
         .loading-content { text-align: center; }
         .loading-text { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: var(--primary); margin-bottom: 30px; text-shadow: 0 0 20px rgba(0, 255, 157, 0.7); animation: loadingText 2s infinite; }
+        
         @keyframes loadingText { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
         .loading-bar { width: 300px; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden; position: relative; }
         .loading-bar::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, var(--primary), transparent); animation: loading 2s infinite; }
+        
         @keyframes loading { 0% { left: -100%; } 100% { left: 100%; } }
+        
+        .back-button {
+            display: inline-block; margin-top: 20px; padding: 10px 20px;
+            background: rgba(0, 255, 157, 0.1); border: 1px solid var(--primary);
+            color: var(--primary); text-decoration: none; font-family: 'Orbitron', sans-serif;
+            transition: all 0.3s;
+        }
+        
+        .back-button:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary); }
         
         @media (max-width: 768px) { #stream-frame, #direct-player { height: 400px; } .movie-title { font-size: 1.8rem; } .main-container { padding: 120px 15px 30px; } }
     </style>
@@ -148,6 +167,7 @@
                     </div>
                 </div>
                 <div class="overview" id="m-overview"></div>
+                <a href="index.html" class="back-button">← BACK TO CINEMA</a>
             </div>
         </div>
 
@@ -176,8 +196,9 @@
             if (!tmdbId) {
                 document.getElementById('loading-msg').textContent = "ERROR: INVALID TMDB ID";
                 document.getElementById('loading-msg').style.color = "var(--cyber-red)";
+                setTimeout(() => { window.location.href = 'index.html'; }, 3000);
             } else {
-                document.getElementById('badge-tmdb').textContent = `🎬 TMDB ID: ${tmdbId}`;
+                document.getElementById('badge-tmdb').innerHTML = `🎬 TMDB ID: ${tmdbId}`;
                 fetchMovieAndStream(tmdbId);
             }
         });
@@ -187,9 +208,32 @@
             setTimeout(() => { document.getElementById('loadingOverlay').style.display = 'none'; }, 500);
         }
 
+        function decodeCloudnestraUrl(cloudnestraUrl) {
+            try {
+                const encodedPart = cloudnestraUrl.split('/rcp/')[1];
+                if (!encodedPart) return null;
+                const decoded = atob(encodedPart);
+                console.log('Decoded Cloudnestra:', decoded);
+                
+                const m3u8Match = decoded.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
+                if (m3u8Match) return m3u8Match[1];
+                
+                const mp4Match = decoded.match(/(https?:\/\/[^\s"']+\.mp4[^\s"']*)/i);
+                if (mp4Match) return mp4Match[1];
+                
+                const playlistMatch = decoded.match(/(https?:\/\/[^\s"']+\/playlist[^\s"']*)/i);
+                if (playlistMatch) return playlistMatch[1];
+                
+                if (decoded.startsWith('http')) return decoded;
+                return null;
+            } catch (e) {
+                console.error('Decode failed:', e);
+                return null;
+            }
+        }
+
         async function fetchMovieAndStream(id) {
             try {
-                // 1. Fetch TMDB Data
                 document.getElementById('loading-msg').textContent = "FETCHING TMDB DATABASE...";
                 const tmdbRes = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_API_KEY}&language=en-US`);
                 const movie = await tmdbRes.json();
@@ -205,19 +249,21 @@
                 
                 if (movie.backdrop_path) {
                     document.body.style.backgroundImage = `linear-gradient(rgba(10,10,15,0.9), rgba(10,10,15,0.9)), url('https://image.tmdb.org/t/p/original${movie.backdrop_path}')`;
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundAttachment = 'fixed';
                 }
 
                 document.getElementById('main-content').style.display = 'block';
 
-                // 2. EXTRACTION LOGIC (VidSrc.to -> Cloudnestra -> Base64 Decode -> .m3u8)
-                document.getElementById('loading-msg').textContent = "EXTRACTING RAW STREAM...";
+                document.getElementById('loading-msg').textContent = "EXTRACTING RAW STREAM FROM CLOUDNESTRA...";
+                
                 const iframeElement = document.getElementById('stream-frame');
                 const videoElement = document.getElementById('direct-player');
                 const playerBadge = document.getElementById('badge-player');
 
                 try {
-                    const targetUrl = encodeURIComponent(`https://vidsrc.to/embed/movie/${id}`);
-                    const proxyUrl = `https://api.allorigins.win/get?url=${targetUrl}`;
+                    const targetUrl = `https://vidsrc.to/embed/movie/${id}`;
+                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
 
                     const extractRes = await fetch(proxyUrl);
                     if (!extractRes.ok) throw new Error("Proxy failed");
@@ -225,35 +271,21 @@
                     const proxyData = await extractRes.json();
                     const html = proxyData.contents;
 
-                    // Locate Cloudnestra /rcp/ string
+                    // Method 1: Find Cloudnestra RCP URL
                     const rcpRegex = /(?:src|href)=["']([^"']*cloudnestra[^"']*\/rcp\/[^"']*)["']/i;
                     const match = html.match(rcpRegex);
 
                     if (match && match[1]) {
-                        let rcpUrl = match[1].startsWith('http') ? match[1] : `https:${match[1]}`;
-                        const encodedStr = rcpUrl.split('/rcp/')[1];
+                        let rcpUrl = match[1];
+                        if (!rcpUrl.startsWith('http')) rcpUrl = 'https:' + rcpUrl;
                         
-                        // Decode Base64 string exactly like Kotlin code
-                        const decodedStr = atob(encodedStr); 
-
-                        // Find .m3u8 or .mp4 inside the decoded text
-                        const m3u8Match = decodedStr.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
-                        const mp4Match = decodedStr.match(/(https?:\/\/[^\s"']+\.mp4[^\s"']*)/i);
+                        const directVideoUrl = decodeCloudnestraUrl(rcpUrl);
                         
-                        let directVideoUrl = null;
-
-                        if (m3u8Match) {
-                            directVideoUrl = m3u8Match[1]; 
-                        } else if (mp4Match) {
-                            directVideoUrl = mp4Match[1];
-                        }
-
                         if (directVideoUrl) {
-                            // SUCCESS! Play the raw URL directly using HLS.js
                             iframeElement.style.display = 'none';
                             videoElement.style.display = 'block';
                             playerBadge.className = "status-badge badge-primary";
-                            playerBadge.innerHTML = "🚀 DIRECT STREAM ACQUIRED • BONG BEE LOGIC";
+                            playerBadge.innerHTML = "🚀 DIRECT STREAM ACQUIRED • CLOUDNESTRA EXTRACTED";
 
                             if (directVideoUrl.includes('.m3u8')) {
                                 if (Hls.isSupported()) {
@@ -267,19 +299,36 @@
                                 videoElement.src = directVideoUrl;
                             }
                             hideLoading();
-                            return; // Stop execution, extraction was successful
+                            return;
                         }
                     }
-                    throw new Error("Direct stream link not found in payload");
+                    
+                    // Method 2: Direct m3u8 extraction
+                    const directM3u8 = html.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
+                    if (directM3u8) {
+                        iframeElement.style.display = 'none';
+                        videoElement.style.display = 'block';
+                        playerBadge.className = "status-badge badge-primary";
+                        playerBadge.innerHTML = "🚀 DIRECT HLS STREAM FOUND";
+                        
+                        if (Hls.isSupported()) {
+                            const hls = new Hls();
+                            hls.loadSource(directM3u8[1]);
+                            hls.attachMedia(videoElement);
+                        }
+                        hideLoading();
+                        return;
+                    }
+                    
+                    throw new Error("No direct stream found");
+                    
                 } catch (extractError) {
-                    // FALLBACK EXECUTES HERE IF CLOUDFLARE BLOCKS PROXY
-                    console.log("Extraction blocked. Engaging fallback iframe stream...");
+                    console.log("Extraction blocked or failed. Using fallback iframe...");
                     videoElement.style.display = 'none';
                     iframeElement.style.display = 'block';
                     iframeElement.src = `https://vidsrc.to/embed/movie/${id}`;
-                    
                     playerBadge.className = "status-badge badge-warning";
-                    playerBadge.innerHTML = "⚠️ FALLBACK PLAYER • STANDARD STREAM";
+                    playerBadge.innerHTML = "⚠️ FALLBACK PLAYER • USING VIDSRC EMBED";
                 }
 
                 iframeElement.onload = hideLoading;
@@ -289,6 +338,7 @@
                 console.error(error);
                 document.getElementById('loading-msg').textContent = "CRITICAL MAINFRAME ERROR";
                 document.getElementById('loading-msg').style.color = "var(--cyber-red)";
+                setTimeout(() => { window.location.href = 'index.html'; }, 3000);
             }
         }
     </script>
