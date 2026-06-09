@@ -4,14 +4,167 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MVHD CyberCinema</title>
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00ff9d;
+            --secondary: #7b61ff;
+            --dark-bg: #0a0a0f;
+            --card-bg: #13131f;
+            --cyber-blue: #00ccff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: var(--dark-bg);
+            color: white;
+            min-height: 100vh;
+        }
+
+        header {
+            padding: 30px 20px;
+            background: rgba(10, 10, 15, 0.95);
+            text-align: center;
+            border-bottom: 2px solid var(--primary);
+            box-shadow: 0 0 25px rgba(0, 255, 157, 0.3);
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 2.8rem;
+            text-shadow: 0 0 15px rgba(0, 255, 157, 0.6);
+            letter-spacing: 4px;
+        }
+
+        .search-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        #searchInput {
+            flex: 1;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--secondary);
+            color: var(--primary);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            outline: none;
+            min-width: 200px;
+        }
+
+        #searchInput:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
+        }
+
+        #searchBtn, #tvBtn, #movieBtn {
+            padding: 12px 24px;
+            border: 1px solid var(--primary);
+            background: rgba(0, 255, 157, 0.1);
+            color: var(--primary);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #searchBtn:hover, #tvBtn:hover, #movieBtn:hover {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 20px var(--primary);
+        }
+
+        .type-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .type-btn {
+            padding: 8px 20px;
+            background: rgba(0, 255, 157, 0.05);
+            border: 1px solid var(--secondary);
+            color: var(--secondary);
+            cursor: pointer;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .type-btn.active {
+            background: var(--primary);
+            color: #000;
+            border-color: var(--primary);
+        }
+
+        .movies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 35px;
+            padding: 40px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .movie-card {
+            background: var(--card-bg);
+            border: 1px solid var(--secondary);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: 0 0 25px rgba(0, 255, 157, 0.4);
+        }
+
+        .movie-poster {
+            width: 100%;
+            height: 330px;
+            object-fit: cover;
+        }
+
+        .movie-info {
+            padding: 15px;
+        }
+
+        .movie-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--primary);
+        }
+
+        .movie-year, .movie-rating {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--cyber-blue);
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <h1>MVHD CyberCinema</h1>
+        <h1>MVHD CYBERCINEMA</h1>
         <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Search for a movie...">
+            <input type="text" id="searchInput" placeholder="Search for a movie or TV show...">
             <button id="searchBtn">Search</button>
+        </div>
+        <div class="type-selector">
+            <button id="movieBtn" class="type-btn active">🎥 Movies</button>
+            <button id="tvBtn" class="type-btn">📺 TV Shows</button>
         </div>
     </header>
 
@@ -19,6 +172,107 @@
         <div id="moviesGrid" class="movies-grid"></div>
     </main>
 
-    <script src="script.js"></script>
+    <script>
+        const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
+        let currentType = 'movie';
+
+        const moviesGrid = document.getElementById('moviesGrid');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const movieBtn = document.getElementById('movieBtn');
+        const tvBtn = document.getElementById('tvBtn');
+
+        function setGridMessage(message) {
+            moviesGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--primary); font-family: monospace;">${message}</p>`;
+        }
+
+        async function fetchContent() {
+            try {
+                setGridMessage('Loading CyberCinema Data...');
+                let url;
+                if (currentType === 'movie') {
+                    url = `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`;
+                } else {
+                    url = `https://api.themoviedb.org/3/tv/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`;
+                }
+                const res = await fetch(url);
+                const data = await res.json();
+                displayItems(data.results);
+            } catch (error) {
+                setGridMessage('Network error. Please refresh.');
+            }
+        }
+
+        async function searchContent() {
+            const term = searchInput.value.trim();
+            if (!term) return fetchContent();
+            try {
+                setGridMessage('Scanning Databases...');
+                let url;
+                if (currentType === 'movie') {
+                    url = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(term)}`;
+                } else {
+                    url = `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(term)}`;
+                }
+                const res = await fetch(url);
+                const data = await res.json();
+                displayItems(data.results);
+            } catch (error) {
+                setGridMessage('Error searching.');
+            }
+        }
+
+        function displayItems(items) {
+            moviesGrid.innerHTML = '';
+            if (!items || items.length === 0) {
+                setGridMessage('No results found.');
+                return;
+            }
+            const fragment = document.createDocumentFragment();
+            items.forEach(item => {
+                if (!item.poster_path) return;
+                const card = document.createElement('div');
+                card.className = 'movie-card';
+                const title = item.title || item.name;
+                const date = item.release_date || item.first_air_date;
+                const year = date ? date.substring(0,4) : 'N/A';
+                const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+                
+                card.onclick = () => {
+                    window.location.href = `play.html?tmdb=${item.id}&type=${currentType}`;
+                };
+                
+                card.innerHTML = `
+                    <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" class="movie-poster" onerror="this.src='https://via.placeholder.com/300x450/1a1a1a/ffffff?text=MVHD'">
+                    <div class="movie-info">
+                        <div class="movie-title">${title}</div>
+                        <div class="movie-year">${year}</div>
+                        <div class="movie-rating">⭐ ${rating}</div>
+                    </div>
+                `;
+                fragment.appendChild(card);
+            });
+            moviesGrid.appendChild(fragment);
+        }
+
+        movieBtn.addEventListener('click', () => {
+            currentType = 'movie';
+            movieBtn.classList.add('active');
+            tvBtn.classList.remove('active');
+            fetchContent();
+        });
+
+        tvBtn.addEventListener('click', () => {
+            currentType = 'tv';
+            tvBtn.classList.add('active');
+            movieBtn.classList.remove('active');
+            fetchContent();
+        });
+
+        searchBtn.addEventListener('click', searchContent);
+        searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchContent(); });
+
+        fetchContent();
+    </script>
 </body>
 </html>
