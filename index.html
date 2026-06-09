@@ -312,7 +312,7 @@
                 const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
                 
                 card.onclick = () => {
-                    window.location.href = `player.html?id=${item.id}&type=${currentType}&title=${encodeURIComponent(title)}`;
+                    window.location.href = `player.html?tmdb=${item.id}&type=${currentType}&title=${encodeURIComponent(title)}`;
                 };
                 
                 card.innerHTML = `
