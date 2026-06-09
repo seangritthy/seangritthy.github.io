@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MVHD CyberCinema</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- ADDED: Battambang font for native Khmer rendering -->
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #00ff9d; --secondary: #7b61ff;
@@ -14,7 +15,9 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Exo 2', sans-serif; background: var(--dark-bg); color: white; min-height: 100vh;
+            /* ADDED: Battambang as the primary fallback for body text */
+            font-family: 'Exo 2', 'Battambang', sans-serif; 
+            background: var(--dark-bg); color: white; min-height: 100vh;
             background-image: linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(123, 97, 255, 0.03) 1px, transparent 1px);
             background-size: 50px 50px;
         }
@@ -24,44 +27,45 @@
             position: sticky; top: 0; z-index: 1000;
         }
         
-        /* Language UI Dropdown */
         .ui-lang-wrapper {
             position: absolute; top: 15px; right: 20px;
         }
         .ui-lang-select {
             background: rgba(0, 0, 0, 0.8); border: 1px solid var(--primary); color: var(--primary);
-            padding: 5px 10px; font-family: 'Share Tech Mono', monospace; outline: none; cursor: pointer;
+            padding: 5px 10px; font-family: 'Share Tech Mono', 'Battambang', monospace; outline: none; cursor: pointer;
             border-radius: 4px; transition: all 0.3s;
         }
         .ui-lang-select:hover { box-shadow: 0 0 10px var(--primary); }
         .ui-lang-select option { background: var(--dark-bg); color: white; }
 
         h1 {
-            font-family: 'Orbitron', sans-serif; color: var(--primary); margin-bottom: 20px;
+            /* ADDED: Battambang fallback for titles */
+            font-family: 'Orbitron', 'Battambang', sans-serif; 
+            color: var(--primary); margin-bottom: 20px;
             font-size: 2.8rem; text-shadow: 0 0 15px rgba(0, 255, 157, 0.6); letter-spacing: 4px;
         }
         .search-container { display: flex; justify-content: center; gap: 15px; max-width: 600px; margin: 0 auto; flex-wrap: wrap; }
         #searchInput {
             flex: 1; padding: 12px 15px; background: rgba(0, 0, 0, 0.8); border: 1px solid var(--secondary);
-            color: var(--primary); font-family: 'Share Tech Mono', monospace; font-size: 1rem; outline: none;
+            color: var(--primary); font-family: 'Share Tech Mono', 'Battambang', monospace; font-size: 1rem; outline: none;
         }
         #searchInput:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(0, 255, 157, 0.3); }
         #searchBtn {
             padding: 12px 24px; border: 1px solid var(--primary); background: rgba(0, 255, 157, 0.1);
-            color: var(--primary); font-family: 'Orbitron', sans-serif; font-weight: bold; cursor: pointer; transition: all 0.3s;
+            color: var(--primary); font-family: 'Orbitron', 'Battambang', sans-serif; font-weight: bold; cursor: pointer; transition: all 0.3s;
         }
         #searchBtn:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary); }
         
         .type-selector { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
-        .type-btn { padding: 8px 20px; background: rgba(0, 255, 157, 0.05); border: 1px solid var(--secondary); color: var(--secondary); cursor: pointer; font-family: 'Share Tech Mono', monospace; }
+        .type-btn { padding: 8px 20px; background: rgba(0, 255, 157, 0.05); border: 1px solid var(--secondary); color: var(--secondary); cursor: pointer; font-family: 'Share Tech Mono', 'Battambang', monospace; }
         .type-btn.active { background: var(--primary); color: #000; border-color: var(--primary); }
         .filter-alert { background: rgba(255,0,229,0.2); border: 1px solid var(--accent); color: #fff; display: none; }
         
         .category-selector { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
-        .cat-btn { padding: 6px 15px; background: transparent; border: 1px solid var(--cyber-blue); color: var(--cyber-blue); cursor: pointer; font-family: 'Share Tech Mono', monospace; font-size: 0.85rem; transition: all 0.3s; border-radius: 4px;}
+        .cat-btn { padding: 6px 15px; background: transparent; border: 1px solid var(--cyber-blue); color: var(--cyber-blue); cursor: pointer; font-family: 'Share Tech Mono', 'Battambang', monospace; font-size: 0.85rem; transition: all 0.3s; border-radius: 4px;}
         .cat-btn.active, .cat-btn:hover { background: var(--cyber-blue); color: #000; box-shadow: 0 0 10px var(--cyber-blue); }
 
-        .lang-btn { padding: 6px 15px; background: transparent; border: 1px solid var(--accent); color: var(--accent); cursor: pointer; font-family: 'Share Tech Mono', monospace; font-size: 0.85rem; transition: all 0.3s; border-radius: 4px;}
+        .lang-btn { padding: 6px 15px; background: transparent; border: 1px solid var(--accent); color: var(--accent); cursor: pointer; font-family: 'Share Tech Mono', 'Battambang', monospace; font-size: 0.85rem; transition: all 0.3s; border-radius: 4px;}
         .lang-btn.active, .lang-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 10px var(--accent); }
 
         .movies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 35px; padding: 40px 20px; max-width: 1400px; margin: 0 auto; }
@@ -71,19 +75,19 @@
         .movie-card:hover::before { opacity: 1; }
         .movie-poster { width: 100%; height: 330px; object-fit: cover; border-bottom: 1px solid rgba(123, 97, 255, 0.3); }
         .movie-info { padding: 15px; }
-        .movie-title { font-family: 'Orbitron', sans-serif; font-size: 1.1rem; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--primary); }
-        .movie-year, .movie-rating { font-family: 'Share Tech Mono', monospace; color: var(--cyber-blue); font-size: 0.9rem; margin-bottom: 5px; }
+        .movie-title { font-family: 'Orbitron', 'Battambang', sans-serif; font-size: 1.1rem; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--primary); }
+        .movie-year, .movie-rating { font-family: 'Share Tech Mono', 'Battambang', monospace; color: var(--cyber-blue); font-size: 0.9rem; margin-bottom: 5px; }
         .movie-rating { color: var(--cyber-yellow); }
         
-        .loading { text-align: center; padding: 60px; color: var(--primary); font-family: 'Orbitron', sans-serif; grid-column: 1 / -1; font-size: 1.2rem; }
+        .loading { text-align: center; padding: 60px; color: var(--primary); font-family: 'Orbitron', 'Battambang', sans-serif; grid-column: 1 / -1; font-size: 1.2rem; }
         .spinner { width: 50px; height: 50px; border: 3px solid rgba(0, 255, 157, 0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
         .pagination { display: none; justify-content: center; align-items: center; gap: 20px; padding: 20px; margin-bottom: 40px; }
-        .page-btn { padding: 10px 20px; background: rgba(0, 255, 157, 0.1); border: 1px solid var(--primary); color: var(--primary); cursor: pointer; font-family: 'Orbitron', sans-serif; font-weight: bold; transition: all 0.3s; border-radius: 4px;}
+        .page-btn { padding: 10px 20px; background: rgba(0, 255, 157, 0.1); border: 1px solid var(--primary); color: var(--primary); cursor: pointer; font-family: 'Orbitron', 'Battambang', sans-serif; font-weight: bold; transition: all 0.3s; border-radius: 4px;}
         .page-btn:hover:not(:disabled) { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
         .page-btn:disabled { border-color: #555; color: #555; cursor: not-allowed; background: transparent; box-shadow: none; }
-        .page-info { font-family: 'Share Tech Mono', monospace; color: var(--cyber-yellow); font-size: 1.2rem; letter-spacing: 2px;}
+        .page-info { font-family: 'Share Tech Mono', 'Battambang', monospace; color: var(--cyber-yellow); font-size: 1.2rem; letter-spacing: 2px;}
 
         @media (max-width: 768px) { 
             h1 { font-size: 2rem; margin-top: 20px; } 
@@ -268,7 +272,6 @@
             filterWrapper.style.display = 'none';
         }
 
-        // UI Translating Function
         function getT() {
             return translations[localStorage.getItem('uiLang') || 'en'];
         }
@@ -315,7 +318,6 @@
             let url;
             let displayContext = "";
             
-            // Format language code for TMDB Database Translation natively
             const uiLangCode = localStorage.getItem('uiLang') || 'en';
             const tmdbLang = uiLangCode === 'km' ? 'km-KH' : (uiLangCode === 'zh' ? 'zh-CN' : 'en-US');
 
@@ -337,7 +339,6 @@
                     url = `https://api.themoviedb.org/3/search/${currentType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(targetSearch)}&page=${currentPage}&language=${tmdbLang}`;
                     searchInput.value = targetSearch;
                 } else {
-                    // Standard Browse
                     if (currentLanguage) {
                         let sortType = currentCategory === 'top_rated' ? 'vote_average.desc&vote_count.gte=200' : 'popularity.desc';
                         url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_original_language=${currentLanguage}&sort_by=${sortType}&page=${currentPage}&language=${tmdbLang}`;
@@ -413,15 +414,13 @@
             document.getElementById('nextBtn').disabled = currentPage >= totalPages;
         }
 
-        // Change UI Language
         uiLangSelect.addEventListener('change', (e) => {
             localStorage.setItem('uiLang', e.target.value);
             updateUI();
-            currentPage = 1; // Reset to page 1 to load new language posters
+            currentPage = 1; 
             fetchDashboardData();
         });
 
-        // Navigation
         function searchContent() {
             const term = searchInput.value.trim();
             if (term) window.location.href = `index.html?search=${encodeURIComponent(term)}&type=${currentType}`;
@@ -458,7 +457,6 @@
             if (currentPage < totalPages) { currentPage++; fetchDashboardData(); window.scrollTo({top: 0, behavior: 'smooth'}); }
         });
 
-        // Initialize App
         updateUI();
         fetchDashboardData();
     </script>
