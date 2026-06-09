@@ -100,7 +100,6 @@
             color: var(--secondary);
             cursor: pointer;
             font-family: 'Share Tech Mono', monospace;
-            transition: all 0.3s;
         }
 
         .type-btn.active {
@@ -254,13 +253,6 @@
             `;
         }
 
-        // Generate Cloudnestra URL from TMDB ID
-        function generateCloudnestraUrl(id, type) {
-            const vidsrcUrl = `https://vidsrc.to/embed/${type}/${id}`;
-            const encoded = btoa(vidsrcUrl);
-            return `https://cloudorchestranova.com/rcp/${encoded}`;
-        }
-
         async function fetchContent() {
             try {
                 setGridMessage('FETCHING DATABASE...', true);
@@ -320,8 +312,7 @@
                 const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
                 
                 card.onclick = () => {
-                    const cloudUrl = generateCloudnestraUrl(item.id, currentType);
-                    window.location.href = `play.html?tmdb=${item.id}&title=${encodeURIComponent(title)}&type=${currentType}`;
+                    window.location.href = `player.html?id=${item.id}&type=${currentType}&title=${encodeURIComponent(title)}`;
                 };
                 
                 card.innerHTML = `
