@@ -3,51 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MVHD CyberCinema</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <title>MVHD | Cyberpunk Movie Streaming</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #00ff9d;
             --secondary: #7b61ff;
             --accent: #ff00e5;
             --dark-bg: #0a0a0f;
-            --card-bg: #13131f;
+            --dark-card: #13131f;
+            --neon-glow: 0 0 20px rgba(0, 255, 157, 0.5);
+            --pixel-border: 2px solid var(--primary);
+            --cyber-red: #ff003c;
             --cyber-blue: #00ccff;
             --cyber-yellow: #fff200;
         }
 
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Exo 2', sans-serif;
             background: var(--dark-bg);
             color: white;
+            font-family: 'Exo 2', sans-serif;
             min-height: 100vh;
-            background-image: linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px), 
-                              linear-gradient(90deg, rgba(123, 97, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
+            overflow-x: hidden;
         }
 
-        /* Cyberpunk grid overlay */
         .cyber-grid {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: linear-gradient(rgba(0, 255, 157, 0.02) 1px, transparent 1px), 
-                              linear-gradient(90deg, rgba(123, 97, 255, 0.02) 1px, transparent 1px);
+            background-image: linear-gradient(rgba(0, 255, 157, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(123, 97, 255, 0.02) 1px, transparent 1px);
             background-size: 50px 50px;
             z-index: -1;
             opacity: 0.3;
-            pointer-events: none;
         }
 
-        /* Scan lines effect */
         .scanlines {
             position: fixed;
             top: 0;
@@ -58,7 +55,6 @@
             background-size: 100% 4px;
             z-index: -1;
             opacity: 0.2;
-            pointer-events: none;
             animation: scanlines 10s linear infinite;
         }
 
@@ -68,106 +64,165 @@
         }
 
         header {
-            padding: 30px 20px;
-            background: rgba(10, 10, 15, 0.95);
-            text-align: center;
-            border-bottom: 2px solid var(--primary);
-            box-shadow: 0 0 25px rgba(0, 255, 157, 0.3);
-            position: relative;
-            z-index: 100;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(10, 10, 15, 0.98);
+            backdrop-filter: blur(15px);
+            padding: 15px 0;
+            z-index: 1000;
+            border-bottom: var(--pixel-border);
+            box-shadow: 0 0 30px rgba(0, 255, 157, 0.5);
         }
 
-        h1 {
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: var(--primary);
+            text-decoration: none;
+            font-family: 'Share Tech Mono', monospace;
+            padding: 10px 25px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        nav a:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .header-content {
+            margin-top: 100px;
+            text-align: center;
+            padding: 50px 20px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .site-title {
             font-family: 'Orbitron', sans-serif;
             color: var(--primary);
+            font-size: 3rem;
             margin-bottom: 20px;
-            font-size: 2.8rem;
-            text-shadow: 0 0 15px rgba(0, 255, 157, 0.6);
+            text-shadow: 0 0 20px rgba(0, 255, 157, 0.7);
             letter-spacing: 4px;
+        }
+
+        .site-subtitle {
+            font-size: 1.2rem;
+            color: var(--cyber-blue);
+            margin-bottom: 30px;
+            font-family: monospace;
+        }
+
+        .datetime {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            font-family: monospace;
+            color: var(--cyber-yellow);
+        }
+
+        .cyber-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .cyber-stat {
+            text-align: center;
+            padding: 20px 30px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--secondary);
+            min-width: 150px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--cyber-blue);
+            text-transform: uppercase;
         }
 
         .search-container {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            max-width: 600px;
+            padding: 30px 20px;
+            max-width: 800px;
             margin: 0 auto;
-            flex-wrap: wrap;
         }
 
-        #searchInput {
-            flex: 1;
-            padding: 12px 15px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid var(--secondary);
-            color: var(--primary);
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 1rem;
-            outline: none;
-            min-width: 200px;
+        .search-form {
+            width: 100%;
         }
 
-        #searchInput:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
-        }
-
-        #searchBtn {
-            padding: 12px 24px;
-            border: 1px solid var(--primary);
-            background: rgba(0, 255, 157, 0.1);
-            color: var(--primary);
-            font-family: 'Orbitron', sans-serif;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        #searchBtn:hover {
-            background: var(--primary);
-            color: #000;
-            box-shadow: 0 0 20px var(--primary);
-        }
-
-        .type-selector {
+        .search-input-container {
             display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 15px;
+            position: relative;
         }
 
-        .type-btn {
-            padding: 8px 20px;
-            background: rgba(0, 255, 157, 0.05);
-            border: 1px solid var(--secondary);
-            color: var(--secondary);
-            cursor: pointer;
-            font-family: 'Share Tech Mono', monospace;
-            transition: all 0.3s;
+        .search-input {
+            width: 100%;
+            padding: 18px 25px;
+            font-size: 1.1rem;
+            border: 2px solid var(--secondary);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-family: monospace;
         }
 
-        .type-btn.active {
-            background: var(--primary);
-            color: #000;
+        .search-input:focus {
+            outline: none;
             border-color: var(--primary);
+            box-shadow: 0 0 30px rgba(0, 255, 157, 0.3);
         }
 
-        .type-btn:hover {
-            border-color: var(--primary);
+        .search-button {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
             color: var(--primary);
+            cursor: pointer;
+            font-size: 1.3rem;
         }
 
-        .movies-grid {
+        .results-info {
+            text-align: center;
+            padding: 20px;
+            color: var(--cyber-blue);
+            font-family: monospace;
+        }
+
+        .movie-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 35px;
-            padding: 40px 20px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 30px;
+            padding: 40px;
             max-width: 1400px;
             margin: 0 auto;
         }
 
-        .movie-card {
-            background: var(--card-bg);
+        .movie-item {
+            background: rgba(0, 0, 0, 0.7);
             border: 1px solid var(--secondary);
             overflow: hidden;
             cursor: pointer;
@@ -175,99 +230,75 @@
             position: relative;
         }
 
-        .movie-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--cyber-blue), var(--primary), var(--accent));
-            opacity: 0;
-            transition: 0.3s;
-            z-index: 2;
-        }
-
-        .movie-card:hover {
+        .movie-item:hover {
             transform: translateY(-10px);
             border-color: var(--primary);
             box-shadow: 0 0 25px rgba(0, 255, 157, 0.4);
         }
 
-        .movie-card:hover::before {
+        .movie-poster {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+        }
+
+        .cyber-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .movie-item:hover .cyber-overlay {
             opacity: 1;
         }
 
-        .movie-poster {
+        .watch-now {
+            background: linear-gradient(45deg, var(--primary), var(--cyber-blue));
+            color: #000;
+            padding: 10px 20px;
+            border: none;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
             width: 100%;
-            height: 330px;
-            object-fit: cover;
-            border-bottom: 1px solid rgba(123, 97, 255, 0.3);
         }
 
-        .movie-info {
-            padding: 15px;
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 40px;
         }
 
-        .movie-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .pagination a, .pagination span {
+            padding: 12px 25px;
+            border: 1px solid var(--primary);
             color: var(--primary);
+            text-decoration: none;
+            font-family: monospace;
         }
 
-        .movie-year, .movie-rating {
-            font-family: 'Share Tech Mono', monospace;
-            color: var(--cyber-blue);
-            font-size: 0.9rem;
-            margin-bottom: 5px;
+        .pagination a:hover {
+            background: var(--primary);
+            color: #000;
         }
 
-        .movie-rating {
-            color: var(--cyber-yellow);
-        }
-
-        .loading {
+        .search-results {
             text-align: center;
-            padding: 60px;
+            padding: 20px;
             color: var(--primary);
             font-family: 'Orbitron', sans-serif;
-            font-size: 1.2rem;
-        }
-
-        .loading .spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(0, 255, 157, 0.2);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .footer {
-            text-align: center;
-            padding: 30px;
-            color: var(--cyber-blue);
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.8rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            margin-top: 20px;
         }
 
         @media (max-width: 768px) {
-            h1 { font-size: 2rem; }
-            .movies-grid { gap: 20px; padding: 20px 15px; }
-            .movie-poster { height: 280px; }
-            .search-container { flex-direction: column; }
-            #searchBtn { width: 100%; }
+            .movie-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; padding: 20px; }
+            .site-title { font-size: 2rem; }
+            .movie-poster { height: 220px; }
         }
     </style>
 </head>
@@ -276,188 +307,189 @@
     <div class="scanlines"></div>
 
     <header>
-        <h1>MVHD CYBERCINEMA</h1>
-        <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Search for a movie or TV show...">
-            <button id="searchBtn">🔍 SEARCH</button>
-        </div>
-        <div class="type-selector">
-            <button id="movieBtn" class="type-btn active">🎥 MOVIES</button>
-            <button id="tvBtn" class="type-btn">📺 TV SHOWS</button>
-        </div>
+        <nav>
+            <a href="#">HOME</a>
+            <a href="#">IPTV</a>
+            <a href="#">PROFILE</a>
+            <a href="#">CONTACT</a>
+        </nav>
     </header>
 
-    <main>
-        <div id="moviesGrid" class="movies-grid">
-            <div class="loading">
-                <div class="spinner"></div>
-                <div>LOADING CYBERCINEMA DATA...</div>
+    <div class="header-content">
+        <h1 class="site-title">MVHD CYBERCINEMA</h1>
+        <div class="site-subtitle">NEURAL STREAMING NETWORK • 100+ MOVIES PER LOAD</div>
+        
+        <div class="datetime">
+            <div id="current-date"></div>
+            <div id="current-time"></div>
+        </div>
+        
+        <div class="cyber-stats">
+            <div class="cyber-stat">
+                <div class="stat-value" id="totalResults">0</div>
+                <div class="stat-label">DATABANKS</div>
+            </div>
+            <div class="cyber-stat">
+                <div class="stat-value" id="totalPages">0</div>
+                <div class="stat-label">SECTORS</div>
+            </div>
+            <div class="cyber-stat">
+                <div class="stat-value">100+</div>
+                <div class="stat-label">PER SECTOR</div>
             </div>
         </div>
-        <div class="footer">
-            ⚡ MVHD CYBERCINEMA • CLOUDNESTRA POWERED • STREAM ANYWHERE
-        </div>
-    </main>
+    </div>
+
+    <div class="search-container">
+        <form class="search-form" onsubmit="searchMovies(event)">
+            <div class="search-input-container">
+                <input type="text" id="searchInput" placeholder="ENTER NEURAL SEARCH PARAMETERS..." class="search-input">
+                <button type="submit" class="search-button">🔍</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="results-info" id="resultsInfo">ACCESSING DATABANKS...</div>
+    <div class="search-results" id="searchResults" style="display: none;"></div>
+
+    <div class="movie-grid" id="movieGrid">
+        <div class="cyber-loading">LOADING...</div>
+    </div>
+
+    <div class="pagination" id="pagination"></div>
 
     <script>
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
-        let currentType = 'movie';
         let currentPage = 1;
-        let isLoading = false;
+        let currentSearch = '';
+        let totalResults = 0;
+        let totalPages = 1;
 
-        const moviesGrid = document.getElementById('moviesGrid');
-        const searchInput = document.getElementById('searchInput');
-        const searchBtn = document.getElementById('searchBtn');
-        const movieBtn = document.getElementById('movieBtn');
-        const tvBtn = document.getElementById('tvBtn');
-
-        function setGridMessage(message, showSpinner = false) {
-            moviesGrid.innerHTML = `
-                <div class="loading">
-                    ${showSpinner ? '<div class="spinner"></div>' : ''}
-                    <div>${message}</div>
-                </div>
-            `;
+        // Update date and time
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('current-date').innerHTML = `DATE: ${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+            document.getElementById('current-time').innerHTML = `TIME: ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
         }
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
 
-        // Generate Cloudnestra URL from TMDB ID
-        function generateCloudnestraUrl(id, type, season = 1, episode = 1) {
-            let vidsrcUrl;
-            if (type === 'tv') {
-                vidsrcUrl = `https://vidsrc.to/embed/tv/${id}/${season}/${episode}`;
-            } else {
-                vidsrcUrl = `https://vidsrc.to/embed/movie/${id}`;
-            }
+        // Generate Cloudnestra URL
+        function generateCloudnestraUrl(tmdbId, type = 'movie') {
+            const vidsrcUrl = `https://vidsrc.to/embed/${type}/${tmdbId}`;
             const encoded = btoa(vidsrcUrl);
-            return `https://cloudnestra.com/rcp/${encoded}`;
+            return `https://cloudorchestranova.com/rcp/${encoded}`;
         }
 
-        async function fetchContent(page = 1) {
-            if (isLoading) return;
-            isLoading = true;
+        // Search movies
+        async function searchMovies(event) {
+            if (event) event.preventDefault();
+            currentSearch = document.getElementById('searchInput').value.trim();
+            currentPage = 1;
+            await loadMovies();
+        }
+
+        // Load movies from TMDB
+        async function loadMovies() {
+            const movieGrid = document.getElementById('movieGrid');
+            movieGrid.innerHTML = '<div class="cyber-loading">LOADING DATABANKS...</div>';
             
             try {
-                setGridMessage('FETCHING FROM DATABASE...', true);
                 let url;
-                if (currentType === 'movie') {
-                    url = `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=${page}`;
+                if (currentSearch) {
+                    url = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(currentSearch)}&page=${currentPage}`;
+                    document.getElementById('searchResults').style.display = 'block';
+                    document.getElementById('searchResults').innerHTML = `🔍 NEURAL SCAN RESULTS FOR: "<strong>${currentSearch}</strong>"`;
                 } else {
-                    url = `https://api.themoviedb.org/3/tv/popular?api_key=${TMDB_API_KEY}&language=en-US&page=${page}`;
+                    url = `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&page=${currentPage}`;
+                    document.getElementById('searchResults').style.display = 'none';
                 }
-                const res = await fetch(url);
-                const data = await res.json();
-                displayItems(data.results);
-            } catch (error) {
-                console.error('Fetch error:', error);
-                setGridMessage('⚠️ NETWORK ERROR • PLEASE REFRESH');
-            } finally {
-                isLoading = false;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                totalResults = data.total_results;
+                totalPages = Math.min(data.total_pages, 50);
+                
+                document.getElementById('totalResults').innerHTML = totalResults.toLocaleString();
+                document.getElementById('totalPages').innerHTML = totalPages;
+                document.getElementById('resultsInfo').innerHTML = `ACCESSING ${data.results.length} DATABANKS • SECTOR ${currentPage} OF ${totalPages} • ${totalResults.toLocaleString()} TOTAL ENTRIES`;
+                
+                displayMovies(data.results);
+                setupPagination();
+                
+            } catch(error) {
+                console.error('Error:', error);
+                movieGrid.innerHTML = '<div class="cyber-error">⚠️ NETWORK ERROR • INITIATE NEW NEURAL SEARCH</div>';
             }
         }
 
-        async function searchContent() {
-            const term = searchInput.value.trim();
-            if (!term) {
-                currentPage = 1;
-                fetchContent();
+        function displayMovies(movies) {
+            const movieGrid = document.getElementById('movieGrid');
+            movieGrid.innerHTML = '';
+            
+            if (movies.length === 0) {
+                movieGrid.innerHTML = '<div class="search-results">⚠️ NO DATABANKS FOUND • INITIATE NEW NEURAL SEARCH</div>';
                 return;
             }
             
-            if (isLoading) return;
-            isLoading = true;
-            
-            try {
-                setGridMessage(`SCANNING FOR "${term}"...`, true);
-                let url;
-                if (currentType === 'movie') {
-                    url = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(term)}`;
-                } else {
-                    url = `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(term)}`;
-                }
-                const res = await fetch(url);
-                const data = await res.json();
-                displayItems(data.results);
-            } catch (error) {
-                console.error('Search error:', error);
-                setGridMessage('⚠️ SEARCH ERROR • TRY AGAIN');
-            } finally {
-                isLoading = false;
-            }
-        }
-
-        function displayItems(items) {
-            moviesGrid.innerHTML = '';
-            if (!items || items.length === 0) {
-                setGridMessage('🔍 NO RESULTS FOUND');
-                return;
-            }
-            
-            const fragment = document.createDocumentFragment();
-            items.forEach(item => {
-                if (!item.poster_path) return;
+            movies.forEach(movie => {
+                if (!movie.poster_path) return;
                 
-                const card = document.createElement('div');
-                card.className = 'movie-card';
-                const title = item.title || item.name;
-                const date = item.release_date || item.first_air_date;
-                const year = date ? date.substring(0, 4) : 'N/A';
-                const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
-                
-                card.onclick = () => {
-                    const cloudUrl = generateCloudnestraUrl(item.id, currentType);
-                    window.location.href = `play.html?url=${encodeURIComponent(cloudUrl)}&title=${encodeURIComponent(title)}&id=${item.id}&type=${currentType}`;
+                const movieItem = document.createElement('div');
+                movieItem.className = 'movie-item';
+                movieItem.onclick = () => {
+                    const cloudUrl = generateCloudnestraUrl(movie.id, 'movie');
+                    window.location.href = `play.html?tmdb=${movie.id}&title=${encodeURIComponent(movie.title)}`;
                 };
                 
-                card.innerHTML = `
-                    <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" 
-                         class="movie-poster" 
-                         onerror="this.src='https://via.placeholder.com/300x450/1a1a1a/ffffff?text=MVHD'">
-                    <div class="movie-info">
-                        <div class="movie-title">${escapeHtml(title)}</div>
-                        <div class="movie-year">📅 ${year}</div>
-                        <div class="movie-rating">⭐ ${rating}/10</div>
+                movieItem.innerHTML = `
+                    <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" class="movie-poster" alt="${movie.title}">
+                    <div class="cyber-overlay">
+                        <button class="watch-now">STREAM NOW</button>
                     </div>
                 `;
-                fragment.appendChild(card);
+                movieGrid.appendChild(movieItem);
             });
-            moviesGrid.appendChild(fragment);
         }
 
-        // Helper function to escape HTML
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        function setupPagination() {
+            const paginationDiv = document.getElementById('pagination');
+            paginationDiv.innerHTML = '';
+            
+            if (totalPages <= 1) return;
+            
+            if (currentPage > 1) {
+                const prevLink = document.createElement('a');
+                prevLink.href = '#';
+                prevLink.innerHTML = '◄ PREV SECTOR';
+                prevLink.onclick = (e) => {
+                    e.preventDefault();
+                    currentPage--;
+                    loadMovies();
+                };
+                paginationDiv.appendChild(prevLink);
+            }
+            
+            const pageSpan = document.createElement('span');
+            pageSpan.innerHTML = `SECTOR ${currentPage} OF ${totalPages}`;
+            paginationDiv.appendChild(pageSpan);
+            
+            if (currentPage < totalPages) {
+                const nextLink = document.createElement('a');
+                nextLink.href = '#';
+                nextLink.innerHTML = 'NEXT SECTOR ►';
+                nextLink.onclick = (e) => {
+                    e.preventDefault();
+                    currentPage++;
+                    loadMovies();
+                };
+                paginationDiv.appendChild(nextLink);
+            }
         }
-
-        // Event listeners
-        movieBtn.addEventListener('click', () => {
-            if (currentType === 'movie') return;
-            currentType = 'movie';
-            currentPage = 1;
-            movieBtn.classList.add('active');
-            tvBtn.classList.remove('active');
-            searchInput.value = '';
-            fetchContent();
-        });
-
-        tvBtn.addEventListener('click', () => {
-            if (currentType === 'tv') return;
-            currentType = 'tv';
-            currentPage = 1;
-            tvBtn.classList.add('active');
-            movieBtn.classList.remove('active');
-            searchInput.value = '';
-            fetchContent();
-        });
-
-        searchBtn.addEventListener('click', searchContent);
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') searchContent();
-        });
 
         // Initial load
-        fetchContent();
+        loadMovies();
     </script>
 </body>
 </html>
