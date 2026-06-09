@@ -6,56 +6,486 @@
     <title>MVHD CyberCinema</title>
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Exo+2:wght@300;400;600&family=Noto+Sans+SC:wght@400;500;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #00ff9d; --secondary: #7b61ff; --dark-bg: #0a0a0f; --card-bg: #13131f; --cyber-blue: #00ccff; --accent: #ff00e5; }
+        :root {
+            --primary: #00ff9d; --secondary: #7b61ff;
+            --dark-bg: #0a0a0f; --card-bg: #13131f;
+            --cyber-blue: #00ccff; --cyber-yellow: #fff200;
+            --accent: #ff00e5;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Exo 2', 'Noto Sans SC', 'Battambang', sans-serif; background: var(--dark-bg); color: white; min-height: 100vh; }
+        body {
+            font-family: 'Exo 2', 'Noto Sans SC', 'Battambang', sans-serif; 
+            background: var(--dark-bg); color: white; min-height: 100vh;
+            background-image: linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(123, 97, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        
+        /* NEW: Added smooth transition for sliding up/down */
+        header {
+            padding: 40px 20px 20px; background: rgba(10, 10, 15, 0.95); text-align: center;
+            border-bottom: 2px solid var(--primary); box-shadow: 0 0 25px rgba(0, 255, 157, 0.3);
+            position: sticky; top: 0; z-index: 1000;
+            transition: transform 0.4s cubic-bezier(0.3, 1, 0.2, 1);
+            will-change: transform;
+        }
+        
+        /* This class will be added by Javascript when scrolling down */
+        .header-hidden {
+            transform: translateY(-100%);
+        }
+        
+        .ui-lang-wrapper { position: absolute; top: 15px; right: 20px; }
+        .ui-lang-select {
+            background: rgba(0, 0, 0, 0.8); border: 1px solid var(--primary); color: var(--primary);
+            padding: 5px 10px; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; outline: none; cursor: pointer;
+            border-radius: 4px; transition: all 0.3s;
+        }
+        .ui-lang-select:hover { box-shadow: 0 0 10px var(--primary); }
+        .ui-lang-select option { background: var(--dark-bg); color: white; }
 
-        .menu-toggle { position: fixed; top: 20px; left: 20px; z-index: 2100; background: var(--primary); color: #000; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-family: 'Orbitron'; font-weight: bold; }
-        #sideDrawer { position: fixed; top: 0; left: -320px; width: 300px; height: 100%; background: rgba(10, 10, 15, 0.98); border-right: 2px solid var(--primary); transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 2000; padding: 80px 20px; }
-        #sideDrawer.open { left: 0; }
+        h1 {
+            font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; 
+            color: var(--primary); margin-bottom: 20px;
+            font-size: 2.8rem; text-shadow: 0 0 15px rgba(0, 255, 157, 0.6); letter-spacing: 4px;
+        }
+        .search-container { display: flex; justify-content: center; gap: 15px; max-width: 600px; margin: 0 auto; flex-wrap: wrap; }
+        #searchInput {
+            flex: 1; padding: 12px 15px; background: rgba(0, 0, 0, 0.8); border: 1px solid var(--secondary);
+            color: var(--primary); font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 1rem; outline: none;
+        }
+        #searchInput:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(0, 255, 157, 0.3); }
+        #searchBtn {
+            padding: 12px 24px; border: 1px solid var(--primary); background: rgba(0, 255, 157, 0.1);
+            color: var(--primary); font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; font-weight: bold; cursor: pointer; transition: all 0.3s;
+        }
+        #searchBtn:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary); }
+        
+        .type-selector { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .type-btn { padding: 8px 20px; background: rgba(0, 255, 157, 0.05); border: 1px solid var(--secondary); color: var(--secondary); cursor: pointer; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; }
+        .type-btn.active { background: var(--primary); color: #000; border-color: var(--primary); }
+        .filter-alert { background: rgba(255,0,229,0.2); border: 1px solid var(--accent); color: #fff; display: none; }
+        
+        .category-selector { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .cat-btn { padding: 6px 15px; background: transparent; border: 1px solid var(--cyber-blue); color: var(--cyber-blue); cursor: pointer; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.85rem; transition: all 0.3s; border-radius: 4px;}
+        .cat-btn.active, .cat-btn:hover { background: var(--cyber-blue); color: #000; box-shadow: 0 0 10px var(--cyber-blue); }
 
-        .ui-lang-select { background: #000; border: 1px solid var(--primary); color: var(--primary); padding: 5px; width: 100%; margin-bottom: 20px; cursor: pointer; }
-        .btn-group { display: flex; flex-direction: column; gap: 10px; }
-        .btn { padding: 10px; border: 1px solid var(--secondary); background: transparent; color: white; cursor: pointer; text-align: left; }
-        .btn.active { border-color: var(--primary); color: var(--primary); }
+        .lang-btn { padding: 6px 15px; background: transparent; border: 1px solid var(--accent); color: var(--accent); cursor: pointer; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.85rem; transition: all 0.3s; border-radius: 4px;}
+        .lang-btn.active, .lang-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 10px var(--accent); }
 
-        .movies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; padding: 80px 20px; }
-        .movie-card { background: var(--card-bg); cursor: pointer; border-radius: 5px; overflow: hidden; }
-        .movie-poster { width: 100%; height: 280px; object-fit: cover; }
-        .movie-info { padding: 10px; }
+        .movies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 35px; padding: 40px 20px; max-width: 1400px; margin: 0 auto; }
+        .movie-card { background: var(--card-bg); border: 1px solid var(--secondary); overflow: hidden; cursor: pointer; transition: all 0.3s ease; position: relative; border-radius: 5px; }
+        .movie-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--cyber-blue), var(--primary), var(--accent)); opacity: 0; transition: 0.3s; z-index: 2; }
+        .movie-card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 0 25px rgba(0, 255, 157, 0.4); }
+        .movie-card:hover::before { opacity: 1; }
+        .movie-poster { width: 100%; height: 330px; object-fit: cover; border-bottom: 1px solid rgba(123, 97, 255, 0.3); }
+        .movie-info { padding: 15px; }
+        .movie-title { font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; font-size: 1.1rem; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--primary); }
+        .movie-year, .movie-rating { font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; color: var(--cyber-blue); font-size: 0.9rem; margin-bottom: 5px; }
+        .movie-rating { color: var(--cyber-yellow); }
+        
+        .loading { text-align: center; padding: 60px; color: var(--primary); font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; grid-column: 1 / -1; font-size: 1.2rem; }
+        .spinner { width: 50px; height: 50px; border: 3px solid rgba(0, 255, 157, 0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .pagination { display: none; justify-content: center; align-items: center; gap: 20px; padding: 20px; margin-bottom: 40px; }
+        .page-btn { padding: 10px 20px; background: rgba(0, 255, 157, 0.1); border: 1px solid var(--primary); color: var(--primary); cursor: pointer; font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; font-weight: bold; transition: all 0.3s; border-radius: 4px;}
+        .page-btn:hover:not(:disabled) { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
+        .page-btn:disabled { border-color: #555; color: #555; cursor: not-allowed; background: transparent; box-shadow: none; }
+        .page-info { font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; color: var(--cyber-yellow); font-size: 1.2rem; letter-spacing: 2px;}
+
+        @media (max-width: 768px) { 
+            h1 { font-size: 2rem; margin-top: 20px; } 
+            .ui-lang-wrapper { top: 10px; right: 10px; }
+            .movies-grid { gap: 20px; padding: 20px 15px; } 
+            .movie-poster { height: 280px; } 
+            .search-container { flex-direction: column; } 
+            #searchBtn { width: 100%; } 
+            
+            /* Add bottom padding on mobile so header can drop fully out of frame cleanly */
+            header { padding-bottom: 15px; }
+        }
     </style>
 </head>
 <body>
-    <div class="menu-toggle" onclick="document.getElementById('sideDrawer').classList.toggle('open')">≡ MENU</div>
-    <aside id="sideDrawer">
-        <select id="uiLangSelect" class="ui-lang-select">
-            <option value="en">🇬🇧 English</option>
-            <option value="km">🇰🇭 ភាសាខ្មែរ</option>
-            <option value="zh">🇨🇳 中文</option>
-        </select>
-        <div class="btn-group">
-            <button class="btn active" onclick="window.location.href='index.html?type=movie'">🎥 MOVIES</button>
-            <button class="btn" onclick="window.location.href='index.html?type=tv'">📺 TV SHOWS</button>
+    <!-- ID added to header for Javascript targeting -->
+    <header id="mainHeader">
+        <div class="ui-lang-wrapper">
+            <select id="uiLangSelect" class="ui-lang-select">
+                <option value="en">🇬🇧 English</option>
+                <option value="km">🇰🇭 ភាសាខ្មែរ</option>
+                <option value="zh">🇨🇳 中文</option>
+            </select>
         </div>
-    </aside>
-    <main><div id="moviesGrid" class="movies-grid"></div></main>
+
+        <h1 id="siteTitle">MVHD CYBERCINEMA</h1>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search Database...">
+            <button id="searchBtn">🔍 SEARCH</button>
+        </div>
+        
+        <div class="type-selector">
+            <button id="movieBtn" class="type-btn active">🎥 MOVIES</button>
+            <button id="tvBtn" class="type-btn">📺 TV SHOWS</button>
+            <button id="resetFilterBtn" class="type-btn filter-alert">✖ CLEAR ACTIVE FILTER</button>
+        </div>
+
+        <div id="filterWrapper">
+            <div class="category-selector" id="categorySelector">
+                <button class="cat-btn active" data-cat="popular" id="catPopular">🔥 POPULAR</button>
+                <button class="cat-btn" data-cat="trending" id="catTrending">📈 TRENDING</button>
+                <button class="cat-btn" data-cat="top_rated" id="catTopRated">⭐ TOP RATED</button>
+            </div>
+
+            <div class="category-selector" id="languageSelector">
+                <button class="lang-btn active" data-lang="" id="langAll">🌐 ALL LANGUAGES</button>
+                <button class="lang-btn" data-lang="km" id="langKhmer">🇰🇭 KHMER</button>
+                <button class="lang-btn" data-lang="en" id="langEnglish">🇬🇧 ENGLISH</button>
+                <button class="lang-btn" data-lang="zh" id="langChinese">🇨🇳 CHINESE</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div id="moviesGrid" class="movies-grid">
+            <div class="loading"><div class="spinner"></div><div id="initText">INITIALIZING SYSTEM...</div></div>
+        </div>
+
+        <div class="pagination" id="pagination">
+            <button id="prevBtn" class="page-btn" disabled>&#8592; PREV</button>
+            <span id="pageInfo" class="page-info">PAGE 1</span>
+            <button id="nextBtn" class="page-btn">NEXT &#8594;</button>
+        </div>
+    </main>
+
     <script>
-        const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
-        async function loadMovies() {
-            const lang = localStorage.getItem('uiLang') || 'en';
-            const tmdbLang = lang === 'km' ? 'km-KH' : (lang === 'zh' ? 'zh-CN' : 'en-US');
-            const type = new URLSearchParams(window.location.search).get('type') || 'movie';
-            const res = await fetch(`https://api.themoviedb.org/3/${type}/popular?api_key=${TMDB_API_KEY}&language=${tmdbLang}`);
-            const data = await res.json();
-            const grid = document.getElementById('moviesGrid');
-            grid.innerHTML = data.results.map(m => `
-                <div class="movie-card" onclick="window.location.href='play.html?tmdb=${m.id}&type=${type}'">
-                    <img class="movie-poster" src="https://image.tmdb.org/t/p/w500${m.poster_path}">
-                    <div class="movie-info"><div class="movie-title">${m.title || m.name}</div></div>
-                </div>`).join('');
+        // --- NEW: HEADER HIDE ON SCROLL LOGIC ---
+        let lastScrollY = window.scrollY;
+        const mainHeader = document.getElementById('mainHeader');
+        
+        window.addEventListener('scroll', () => {
+            // Only hide header if scrolled past its own height (so it doesn't glitch at the top)
+            if (window.scrollY > lastScrollY && window.scrollY > mainHeader.offsetHeight) {
+                // Scrolling DOWN - Hide Header
+                mainHeader.classList.add('header-hidden');
+            } else {
+                // Scrolling UP - Show Header
+                mainHeader.classList.remove('header-hidden');
+            }
+            lastScrollY = window.scrollY;
+        });
+
+        // Automatic Browser Language Detection on First Visit
+        if (!localStorage.getItem('uiLang')) {
+            const browserLang = navigator.language || navigator.userLanguage;
+            if (browserLang.toLowerCase().includes('km')) localStorage.setItem('uiLang', 'km');
+            else if (browserLang.toLowerCase().includes('zh')) localStorage.setItem('uiLang', 'zh');
+            else localStorage.setItem('uiLang', 'en');
         }
-        document.getElementById('uiLangSelect').onchange = (e) => { localStorage.setItem('uiLang', e.target.value); location.reload(); };
-        loadMovies();
+
+        const translations = {
+            en: {
+                siteTitle: "MVHD CYBERCINEMA",
+                searchPlaceholder: "Search Database...",
+                searchBtn: "🔍 SEARCH",
+                moviesBtn: "🎥 MOVIES",
+                tvBtn: "📺 TV SHOWS",
+                clearFilter: "✖ CLEAR ACTIVE FILTER",
+                catPopular: "🔥 POPULAR",
+                catTrending: "📈 TRENDING",
+                catTopRated: "⭐ TOP RATED",
+                langAll: "🌐 ALL LANGUAGES",
+                langKhmer: "🇰🇭 KHMER",
+                langEnglish: "🇬🇧 ENGLISH",
+                langChinese: "🇨🇳 CHINESE",
+                prevBtn: "&#8592; PREV",
+                nextBtn: "NEXT &#8594;",
+                initSystem: "INITIALIZING SYSTEM...",
+                fetchingDB: "FETCHING DATABASE...",
+                noResults: "🔍 NO RESULTS FOUND IN ARCHIVE",
+                networkError: "⚠️ NETWORK ERROR • PLEASE REFRESH",
+                pageOf: (cur, tot) => `PAGE ${cur} OF ${tot}`,
+                scanCast: (name) => `SCANNING FILES FEATURING: ${name}`,
+                filterGenre: (name) => `FILTERING BY GENRE: ${name}`,
+                filterRegion: (name) => `FILTERING REGION: ${name}`,
+                filterLang: (name) => `FILTERING NATIVE LANGUAGE: ${name}`,
+                scanFor: (term) => `SCANNING FOR "${term}"...`
+            },
+            km: {
+                siteTitle: "MVHD សាយប័ររោងកុន",
+                searchPlaceholder: "ស្វែងរកទិន្នន័យ...",
+                searchBtn: "🔍 ស្វែងរក",
+                moviesBtn: "🎥 ភាពយន្ត",
+                tvBtn: "📺 កម្មវិធីទូរទស្សន៍",
+                clearFilter: "✖ លុបជម្រើស",
+                catPopular: "🔥 ពេញនិយម",
+                catTrending: "📈 កំពុងពេញនិយម",
+                catTopRated: "⭐ វាយតម្លៃខ្ពស់បំផុត",
+                langAll: "🌐 ភាសាទាំងអស់",
+                langKhmer: "🇰🇭 ខ្មែរ",
+                langEnglish: "🇬🇧 អង់គ្លេស",
+                langChinese: "🇨🇳 ចិន",
+                prevBtn: "&#8592; ថយក្រោយ",
+                nextBtn: "បន្ទាប់ &#8594;",
+                initSystem: "កំពុងចាប់ផ្តើមប្រព័ន្ធ...",
+                fetchingDB: "កំពុងទាញយកទិន្នន័យ...",
+                noResults: "🔍 រកមិនឃើញលទ្ធផលទេ",
+                networkError: "⚠️ បញ្ហាបណ្តាញ • សូមព្យាយាមម្តងទៀត",
+                pageOf: (cur, tot) => `ទំព័រ ${cur} នៃ ${tot}`,
+                scanCast: (name) => `ស្វែងរកតួសម្តែង: ${name}`,
+                filterGenre: (name) => `ប្រភេទ: ${name}`,
+                filterRegion: (name) => `តំបន់: ${name}`,
+                filterLang: (name) => `ភាសា: ${name}`,
+                scanFor: (term) => `ស្វែងរក "${term}"...`
+            },
+            zh: {
+                siteTitle: "MVHD 赛博影院",
+                searchPlaceholder: "搜索数据库...",
+                searchBtn: "🔍 搜索",
+                moviesBtn: "🎥 电影",
+                tvBtn: "📺 电视剧",
+                clearFilter: "✖ 清除过滤",
+                catPopular: "🔥 热门",
+                catTrending: "📈 趋势",
+                catTopRated: "⭐ 最高评分",
+                langAll: "🌐 所有语言",
+                langKhmer: "🇰🇭 高棉语",
+                langEnglish: "🇬🇧 英语",
+                langChinese: "🇨🇳 中文",
+                prevBtn: "&#8592; 上一页",
+                nextBtn: "下一页 &#8594;",
+                initSystem: "正在初始化系统...",
+                fetchingDB: "正在获取数据库...",
+                noResults: "🔍 未找到结果",
+                networkError: "⚠️ 网络错误 • 请刷新",
+                pageOf: (cur, tot) => `第 ${cur} 页，共 ${tot} 页`,
+                scanCast: (name) => `扫描参演文件: ${name}`,
+                filterGenre: (name) => `按类型过滤: ${name}`,
+                filterRegion: (name) => `过滤地区: ${name}`,
+                filterLang: (name) => `过滤语言: ${name}`,
+                scanFor: (term) => `正在搜索 "${term}"...`
+            }
+        };
+
+        const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentType = urlParams.get('type') || 'movie';
+        const targetGenreId = urlParams.get('genre');
+        const targetGenreName = urlParams.get('genreName');
+        const targetActorId = urlParams.get('actor');
+        const targetActorName = urlParams.get('actorName');
+        const targetSearch = urlParams.get('search');
+        const targetCountryId = urlParams.get('country');
+        const targetCountryName = urlParams.get('countryName');
+        const targetLangId = urlParams.get('lang');
+        const targetLangName = urlParams.get('langName');
+
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentCategory = 'popular';
+        let currentLanguage = '';
+
+        const moviesGrid = document.getElementById('moviesGrid');
+        const searchInput = document.getElementById('searchInput');
+        const resetBtn = document.getElementById('resetFilterBtn');
+        const filterWrapper = document.getElementById('filterWrapper');
+        const paginationWrap = document.getElementById('pagination');
+        const uiLangSelect = document.getElementById('uiLangSelect');
+
+        if (currentType === 'tv') {
+            document.getElementById('tvBtn').classList.add('active');
+            document.getElementById('movieBtn').classList.remove('active');
+        }
+
+        if (targetGenreId || targetActorId || targetSearch || targetCountryId || targetLangId) {
+            resetBtn.style.display = 'block';
+            filterWrapper.style.display = 'none';
+        }
+
+        function getT() { return translations[localStorage.getItem('uiLang') || 'en']; }
+
+        function updateUI() {
+            const lang = localStorage.getItem('uiLang') || 'en';
+            const t = translations[lang];
+            uiLangSelect.value = lang;
+            
+            document.getElementById('siteTitle').innerText = t.siteTitle;
+            document.title = t.siteTitle;
+            searchInput.placeholder = t.searchPlaceholder;
+            document.getElementById('searchBtn').innerText = t.searchBtn;
+            document.getElementById('movieBtn').innerText = t.moviesBtn;
+            document.getElementById('tvBtn').innerText = t.tvBtn;
+            resetBtn.innerText = t.clearFilter;
+            
+            document.getElementById('catPopular').innerText = t.catPopular;
+            document.getElementById('catTrending').innerText = t.catTrending;
+            document.getElementById('catTopRated').innerText = t.catTopRated;
+            
+            document.getElementById('langAll').innerText = t.langAll;
+            document.getElementById('langKhmer').innerText = t.langKhmer;
+            document.getElementById('langEnglish').innerText = t.langEnglish;
+            document.getElementById('langChinese').innerText = t.langChinese;
+
+            document.getElementById('prevBtn').innerHTML = t.prevBtn;
+            document.getElementById('nextBtn').innerHTML = t.nextBtn;
+            
+            const initEl = document.getElementById('initText');
+            if(initEl) initEl.innerText = t.initSystem;
+            
+            updatePaginationUI();
+        }
+
+        function setGridMessage(message, showSpinner = false) {
+            moviesGrid.innerHTML = `<div class="loading">${showSpinner ? '<div class="spinner"></div>' : ''}<div>${message}</div></div>`;
+            paginationWrap.style.display = 'none';
+        }
+
+        async function fetchDashboardData() {
+            const t = getT();
+            if(currentPage === 1) setGridMessage(t.fetchingDB, true);
+            let url;
+            let displayContext = "";
+            
+            const uiLangCode = localStorage.getItem('uiLang') || 'en';
+            const tmdbLang = uiLangCode === 'km' ? 'km-KH' : (uiLangCode === 'zh' ? 'zh-CN' : 'en-US');
+
+            try {
+                if (targetActorId) {
+                    displayContext = t.scanCast(targetActorName.toUpperCase());
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_cast=${targetActorId}&sort_by=popularity.desc&page=${currentPage}&language=${tmdbLang}`;
+                } else if (targetGenreId) {
+                    displayContext = t.filterGenre(targetGenreName.toUpperCase());
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_genres=${targetGenreId}&sort_by=popularity.desc&page=${currentPage}&language=${tmdbLang}`;
+                } else if (targetCountryId) {
+                    displayContext = t.filterRegion(targetCountryName.toUpperCase());
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_origin_country=${targetCountryId}&sort_by=popularity.desc&page=${currentPage}&language=${tmdbLang}`;
+                } else if (targetLangId) {
+                    displayContext = t.filterLang(targetLangName.toUpperCase());
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_original_language=${targetLangId}&sort_by=popularity.desc&page=${currentPage}&language=${tmdbLang}`;
+                } else if (targetSearch) {
+                    displayContext = t.scanFor(targetSearch.toUpperCase());
+                    url = `https://api.themoviedb.org/3/search/${currentType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(targetSearch)}&page=${currentPage}&language=${tmdbLang}`;
+                    searchInput.value = targetSearch;
+                } else {
+                    if (currentLanguage) {
+                        let sortType = currentCategory === 'top_rated' ? 'vote_average.desc&vote_count.gte=200' : 'popularity.desc';
+                        url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_original_language=${currentLanguage}&sort_by=${sortType}&page=${currentPage}&language=${tmdbLang}`;
+                    } else {
+                        if (currentCategory === 'trending') {
+                            url = `https://api.themoviedb.org/3/trending/${currentType}/week?api_key=${TMDB_API_KEY}&page=${currentPage}&language=${tmdbLang}`;
+                        } else if (currentCategory === 'top_rated') {
+                            url = `https://api.themoviedb.org/3/${currentType}/top_rated?api_key=${TMDB_API_KEY}&page=${currentPage}&language=${tmdbLang}`;
+                        } else {
+                            url = `https://api.themoviedb.org/3/${currentType}/popular?api_key=${TMDB_API_KEY}&page=${currentPage}&language=${tmdbLang}`;
+                        }
+                    }
+                }
+
+                if (displayContext && currentPage === 1) setGridMessage(displayContext, true);
+
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                totalPages = data.total_pages || 1;
+                if(totalPages > 500) totalPages = 500; 
+
+                displayItems(data.results);
+                updatePaginationUI();
+            } catch (error) {
+                setGridMessage(t.networkError);
+            }
+        }
+
+        function displayItems(items) {
+            moviesGrid.innerHTML = '';
+            const t = getT();
+            if (!items || items.length === 0) {
+                setGridMessage(t.noResults);
+                return;
+            }
+            const fragment = document.createDocumentFragment();
+            items.forEach(item => {
+                if (!item.poster_path) return;
+                const card = document.createElement('div');
+                card.className = 'movie-card';
+                const title = item.title || item.name;
+                const date = item.release_date || item.first_air_date;
+                const year = date ? date.substring(0, 4) : 'N/A';
+                const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+                
+                card.onclick = () => { window.location.href = `play.html?tmdb=${item.id}&type=${currentType}&title=${encodeURIComponent(title)}`; };
+                
+                card.innerHTML = `
+                    <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" class="movie-poster" loading="lazy">
+                    <div class="movie-info">
+                        <div class="movie-title">${escapeHtml(title)}</div>
+                        <div class="movie-year">📅 ${year}</div>
+                        <div class="movie-rating">⭐ ${rating}/10</div>
+                    </div>
+                `;
+                fragment.appendChild(card);
+            });
+            moviesGrid.appendChild(fragment);
+            paginationWrap.style.display = 'flex';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function updatePaginationUI() {
+            const t = getT();
+            document.getElementById('pageInfo').innerText = t.pageOf(currentPage, totalPages);
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+        }
+
+        uiLangSelect.addEventListener('change', (e) => {
+            localStorage.setItem('uiLang', e.target.value);
+            updateUI();
+            currentPage = 1; 
+            fetchDashboardData();
+        });
+
+        function searchContent() {
+            const term = searchInput.value.trim();
+            if (term) window.location.href = `index.html?search=${encodeURIComponent(term)}&type=${currentType}`;
+            else window.location.href = `index.html?type=${currentType}`;
+        }
+        document.getElementById('movieBtn').addEventListener('click', () => { window.location.href = 'index.html?type=movie'; });
+        document.getElementById('tvBtn').addEventListener('click', () => { window.location.href = 'index.html?type=tv'; });
+        resetBtn.addEventListener('click', () => { window.location.href = `index.html?type=${currentType}`; });
+        document.getElementById('searchBtn').addEventListener('click', searchContent);
+        searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchContent(); });
+
+        document.querySelectorAll('.cat-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentCategory = e.target.dataset.cat;
+                currentPage = 1; fetchDashboardData();
+            });
+        });
+
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentLanguage = e.target.dataset.lang;
+                currentPage = 1; fetchDashboardData();
+            });
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentPage > 1) { currentPage--; fetchDashboardData(); window.scrollTo({top: 0, behavior: 'smooth'}); }
+        });
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentPage < totalPages) { currentPage++; fetchDashboardData(); window.scrollTo({top: 0, behavior: 'smooth'}); }
+        });
+
+        updateUI();
+        fetchDashboardData();
     </script>
 </body>
 </html>
