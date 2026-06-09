@@ -145,7 +145,7 @@
         <div class="header-content">
             <a href="index.html" class="site-title">MVHD CYBERCINEMA</a>
             <div class="user-info">
-                <div class="user-badge">👤 CLOUDNESTRA DIRECT EXTRACTOR</div>
+                <div class="user-badge">👤 CLOUDNESTRA V3 • GITHUB PAGES</div>
             </div>
         </div>
     </header>
@@ -190,11 +190,11 @@
     <script>
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         
-        // Alternative CORS proxies that actually work
+        // Working CORS proxies for GitHub Pages (no backend required)
         const CORS_PROXIES = [
-            'https://cors-anywhere.herokuapp.com/',
-            'https://thingproxy.freeboard.io/fetch/',
-            'https://api.allorigins.win/raw?url='
+            'https://api.allorigins.win/raw?url=',
+            'https://corsproxy.io/?',
+            'https://cors-anywhere.herokuapp.com/'
         ];
 
         function hideLoading() {
@@ -206,31 +206,29 @@
             document.getElementById('loading-msg').textContent = msg;
         }
 
-        // Decode Cloudnestra URL correctly
+        // Decode Cloudnestra URL (base64)
         function decodeCloudnestraUrl(cloudnestraUrl) {
             try {
                 console.log('Decoding URL:', cloudnestraUrl);
-                const match = cloudnestraUrl.match(/\/rcp\/([^?]+)/);
+                const match = cloudnestraUrl.match(/\/rcp\/([^?&"'>]+)/);
                 if (!match) return null;
                 
                 let encoded = match[1];
                 // Fix URL-safe base64
                 encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
-                // Add padding if needed
                 while (encoded.length % 4) {
                     encoded += '=';
                 }
                 
                 const decoded = atob(encoded);
-                console.log('Decoded:', decoded.substring(0, 200));
+                console.log('Decoded content:', decoded.substring(0, 300));
                 
-                // Find video URL patterns
+                // Find video URL
                 const patterns = [
                     /(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i,
                     /(https?:\/\/[^\s"']+\.mp4[^\s"']*)/i,
                     /(https?:\/\/[^\s"']+\/master[^\s"']*\.m3u8)/i,
-                    /(https?:\/\/[^\s"']+\/playlist[^\s"']*\.m3u8)/i,
-                    /(https?:\/\/[^\s"']+\/index[^\s"']*\.m3u8)/i
+                    /(https?:\/\/[^\s"']+\/playlist[^\s"']*\.m3u8)/i
                 ];
                 
                 for (const pattern of patterns) {
@@ -240,134 +238,74 @@
                     }
                 }
                 
-                // If decoded string itself is a URL
-                if (decoded.startsWith('http')) {
-                    return decoded;
-                }
-                
-                return null;
+                return decoded.startsWith('http') ? decoded : null;
             } catch(e) {
                 console.error('Decode error:', e);
                 return null;
             }
         }
 
-        // Fetch with retry logic
-        async function fetchWithRetry(url, retries = 3) {
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 15000);
-                    const response = await fetch(url, { signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    if (response.ok) return await response.text();
-                } catch(e) {
-                    console.log(`Attempt ${i + 1} failed:`, e.message);
-                    await new Promise(r => setTimeout(r, 1000));
-                }
+        // Direct fetch with timeout
+        async function fetchWithTimeout(url, timeout = 10000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            try {
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (response.ok) return await response.text();
+            } catch(e) {
+                clearTimeout(timeoutId);
+                throw e;
             }
             return null;
         }
 
-        // Method 1: Direct Cloudnestra from vidsrc using iframe injection
-        async function extractCloudnestraDirect(tmdbId) {
-            return new Promise((resolve) => {
-                updateLoadingMessage("INJECTING VIDSRC IFRAME...");
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = `https://vidsrc.to/embed/movie/${tmdbId}`;
-                document.body.appendChild(iframe);
-                
-                let timeout = setTimeout(() => {
-                    iframe.remove();
-                    resolve(null);
-                }, 15000);
-                
-                // Listen for messages from iframe (not reliable due to CORS)
-                window.addEventListener('message', function handler(event) {
-                    if (event.data && typeof event.data === 'string' && event.data.includes('cloudnestra')) {
-                        clearTimeout(timeout);
-                        iframe.remove();
-                        window.removeEventListener('message', handler);
-                        resolve(decodeCloudnestraUrl(event.data));
-                    }
-                });
-                
-                // Alternative: Try to access iframe content after a delay
-                setTimeout(() => {
-                    try {
-                        // This will fail due to CORS, but worth trying
-                        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-                        if (iframeDoc) {
-                            const html = iframeDoc.documentElement?.outerHTML || '';
-                            const cloudMatch = html.match(/cloudnestra[^"']*\/rcp\/[^"']+/i);
-                            if (cloudMatch) {
-                                clearTimeout(timeout);
-                                iframe.remove();
-                                let url = cloudMatch[0];
-                                if (!url.startsWith('http')) url = 'https://' + url;
-                                resolve(decodeCloudnestraUrl(url));
-                            }
-                        }
-                    } catch(e) {}
-                }, 5000);
-            });
-        }
-
-        // Method 2: Use multiple proxies
-        async function extractWithProxies(tmdbId) {
-            updateLoadingMessage("SCANNING PROXY NETWORKS...");
+        // Extract Cloudnestra using multiple methods
+        async function extractCloudnestraUrl(tmdbId) {
+            updateLoadingMessage("SCANNING CLOUDNESTRA NETWORK...");
             
-            for (const proxy of CORS_PROXIES) {
-                try {
-                    const url = `${proxy}https://vidsrc.to/embed/movie/${tmdbId}`;
-                    const html = await fetchWithRetry(url);
-                    if (!html) continue;
-                    
-                    // Look for Cloudnestra URL
-                    const cloudMatch = html.match(/cloudnestra[^"']*\/rcp\/[^"']+/i);
-                    if (cloudMatch) {
-                        let cloudUrl = cloudMatch[0];
-                        if (!cloudUrl.startsWith('http')) cloudUrl = 'https://' + cloudUrl;
-                        const videoUrl = decodeCloudnestraUrl(cloudUrl);
-                        if (videoUrl) return videoUrl;
-                    }
-                    
-                    // Look for direct m3u8
-                    const m3u8Match = html.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
-                    if (m3u8Match) return m3u8Match[1];
-                    
-                } catch(e) {
-                    console.log(`Proxy ${proxy} failed:`, e.message);
-                }
-            }
-            return null;
-        }
-
-        // Method 3: Use alternative embed source
-        async function extractFromAlternative(tmdbId) {
-            updateLoadingMessage("CHECKING ALTERNATIVE SOURCES...");
-            const altSources = [
+            // Try different embed sources
+            const embedSources = [
+                `https://vidsrc.to/embed/movie/${tmdbId}`,
+                `https://vidsrc.xyz/embed/movie/${tmdbId}`,
+                `https://vidsrc.net/embed/movie/${tmdbId}`,
                 `https://2embed.cc/embed/${tmdbId}`,
-                `https://embed.su/embed/movie/${tmdbId}`,
-                `https://multiembed.mov/video/${tmdbId}`
+                `https://embed.su/embed/movie/${tmdbId}`
             ];
             
-            for (const source of altSources) {
+            for (const source of embedSources) {
                 for (const proxy of CORS_PROXIES) {
                     try {
-                        const url = `${proxy}${source}`;
-                        const html = await fetchWithRetry(url);
+                        const proxyUrl = proxy + encodeURIComponent(source);
+                        console.log(`Trying: ${proxyUrl.substring(0, 80)}...`);
+                        updateLoadingMessage(`PROBING: ${source.split('/')[2]}...`);
+                        
+                        const html = await fetchWithTimeout(proxyUrl, 8000);
                         if (!html) continue;
                         
-                        const cloudMatch = html.match(/cloudnestra[^"']*\/rcp\/[^"']+/i);
+                        // Method 1: Find Cloudnestra RCP URL
+                        const cloudMatch = html.match(/https?:\/\/[^\s"']*cloudnestra[^\s"']*\/rcp\/[^\s"']+/i);
                         if (cloudMatch) {
-                            let cloudUrl = cloudMatch[0];
-                            if (!cloudUrl.startsWith('http')) cloudUrl = 'https://' + cloudUrl;
-                            const videoUrl = decodeCloudnestraUrl(cloudUrl);
+                            const videoUrl = decodeCloudnestraUrl(cloudMatch[0]);
                             if (videoUrl) return videoUrl;
                         }
-                    } catch(e) {}
+                        
+                        // Method 2: Look for encoded RCP in attributes
+                        const rcpMatch = html.match(/["']([^"']*\/rcp\/[^"']+)["']/i);
+                        if (rcpMatch) {
+                            let rcpUrl = rcpMatch[1];
+                            if (!rcpUrl.startsWith('http')) rcpUrl = 'https:' + rcpUrl;
+                            const videoUrl = decodeCloudnestraUrl(rcpUrl);
+                            if (videoUrl) return videoUrl;
+                        }
+                        
+                        // Method 3: Direct m3u8
+                        const m3u8Match = html.match(/(https?:\/\/[^\s"']+\.m3u8[^\s"']*)/i);
+                        if (m3u8Match) return m3u8Match[1];
+                        
+                    } catch(e) {
+                        console.log(`Failed: ${source} via ${proxy}`, e.message);
+                    }
                 }
             }
             return null;
@@ -402,41 +340,40 @@
                 const videoElement = document.getElementById('direct-player');
                 const playerBadge = document.getElementById('badge-player');
 
-                // Try all extraction methods
-                let videoUrl = null;
+                // Extract Cloudnestra URL
+                updateLoadingMessage("EXTRACTING CLOUDNESTRA URL...");
+                const videoUrl = await extractCloudnestraUrl(id);
                 
-                updateLoadingMessage("EXTRACTING CLOUDNESTRA...");
-                videoUrl = await extractWithProxies(id);
-                
-                if (!videoUrl) {
-                    updateLoadingMessage("TRYING DIRECT IFRAME...");
-                    videoUrl = await extractCloudnestraDirect(id);
-                }
-                
-                if (!videoUrl) {
-                    updateLoadingMessage("CHECKING ALTERNATIVE SOURCES...");
-                    videoUrl = await extractFromAlternative(id);
-                }
-                
-                if (videoUrl) {
-                    // Success - play directly
-                    console.log('Extracted video URL:', videoUrl);
+                if (videoUrl && videoUrl.includes('.m3u8')) {
+                    console.log('SUCCESS! Video URL:', videoUrl);
                     iframeElement.style.display = 'none';
                     videoElement.style.display = 'block';
                     playerBadge.className = "status-badge badge-primary";
-                    playerBadge.innerHTML = "🚀 CLOUDNESTRA EXTRACTED • DIRECT PLAY";
+                    playerBadge.innerHTML = "🚀 CLOUDNESTRA EXTRACTED • HLS STREAM";
                     
-                    if (videoUrl.includes('.m3u8')) {
-                        if (Hls.isSupported()) {
-                            const hls = new Hls();
-                            hls.loadSource(videoUrl);
-                            hls.attachMedia(videoElement);
-                        } else {
-                            videoElement.src = videoUrl;
-                        }
-                    } else {
+                    if (Hls.isSupported()) {
+                        const hls = new Hls({
+                            debug: false,
+                            enableWorker: true,
+                            manifestLoadingTimeOut: 15000,
+                            manifestLoadingMaxRetry: 3
+                        });
+                        hls.loadSource(videoUrl);
+                        hls.attachMedia(videoElement);
+                        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                            videoElement.play().catch(e => console.log('Autoplay prevented'));
+                        });
+                    } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
                         videoElement.src = videoUrl;
                     }
+                    hideLoading();
+                } else if (videoUrl && videoUrl.includes('.mp4')) {
+                    console.log('SUCCESS! MP4 URL:', videoUrl);
+                    iframeElement.style.display = 'none';
+                    videoElement.style.display = 'block';
+                    videoElement.src = videoUrl;
+                    playerBadge.className = "status-badge badge-primary";
+                    playerBadge.innerHTML = "🚀 CLOUDNESTRA EXTRACTED • MP4 STREAM";
                     hideLoading();
                 } else {
                     // Fallback to iframe
