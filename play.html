@@ -375,13 +375,11 @@
         // TMDB API Key
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         
-        // Get parameters from URL
+        // Get parameters from URL - SUPPORTS BOTH 'url' AND 'tmdb'
         const urlParams = new URLSearchParams(window.location.search);
         let cloudnestraUrl = urlParams.get('url');
-        const tmdbId = urlParams.get('id');
+        const tmdbId = urlParams.get('tmdb');
         const mediaType = urlParams.get('type') || 'movie';
-        const season = urlParams.get('season') || 1;
-        const episode = urlParams.get('episode') || 1;
         const titleParam = urlParams.get('title') || '';
 
         function showLoading(msg, step) {
@@ -466,23 +464,6 @@
             });
         }
 
-        // Decode Cloudnestra URL to get vidsrc URL
-        function decodeCloudnestraUrl(cloudUrl) {
-            try {
-                const match = cloudUrl.match(/\/rcp\/([A-Za-z0-9+\/=]+)/);
-                if (!match) throw new Error('Invalid Cloudnestra URL');
-                
-                let encoded = match[1];
-                encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
-                while (encoded.length % 4) encoded += '=';
-                
-                return atob(encoded);
-            } catch(e) {
-                console.error('Decode error:', e);
-                return null;
-            }
-        }
-
         // Main function
         async function main() {
             let cloudUrl = cloudnestraUrl;
@@ -501,45 +482,25 @@
                 return;
             }
             
-            // Set player URL to Cloudnestra (same as PHP version)
+            // Set player URL to Cloudnestra
             playerUrl = cloudUrl;
             
-            // Try to decode to get movie info from vidsrc URL if no TMDB ID
-            if (!tmdbId) {
-                const decoded = decodeCloudnestraUrl(cloudUrl);
-                if (decoded && decoded.includes('/movie/')) {
-                    const extractedId = decoded.match(/\/movie\/(\d+)/);
-                    if (extractedId) {
-                        showLoading('FETCHING MOVIE INFO...', `TMDB ID: ${extractedId[1]}`);
-                        const movieInfo = await fetchMovieInfo(extractedId[1], 'movie');
-                        updateMovieUI(movieInfo);
-                    } else {
-                        document.getElementById('movieTitle').textContent = titleParam || 'Cloudnestra Stream';
-                        hideLoading();
-                    }
-                } else {
-                    document.getElementById('movieTitle').textContent = titleParam || 'Cloudnestra Stream';
-                    hideLoading();
-                }
-            } else {
-                // Fetch and display movie info
+            // Fetch and display movie info if TMDB ID is provided
+            if (tmdbId) {
                 showLoading('FETCHING MOVIE INFO...', `Loading from TMDB`);
                 const movieInfo = await fetchMovieInfo(tmdbId, mediaType);
                 updateMovieUI(movieInfo);
-                hideLoading();
+            } else {
+                document.getElementById('movieTitle').textContent = titleParam || 'Cloudnestra Stream';
+                document.getElementById('tmdbBadge').innerHTML = '🎬 CLOUDNESTRA STREAM';
             }
             
-            // Set the iframe source to Cloudnestra URL (same as PHP version)
+            hideLoading();
+            
+            // Set the iframe source to Cloudnestra URL
             const iframe = document.getElementById('stream-frame');
             iframe.src = playerUrl;
             document.getElementById('streamBadge').innerHTML = '🚀 CLOUDNESTRA STREAM • DIRECT PLAY';
-            
-            // Hide loading when iframe loads
-            iframe.onload = function() {
-                const overlay = document.getElementById('loadingOverlay');
-                overlay.style.opacity = '0';
-                setTimeout(() => overlay.style.display = 'none', 500);
-            };
             
             // Fallback timeout
             setTimeout(() => {
