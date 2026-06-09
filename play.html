@@ -46,7 +46,6 @@
     .meta-link { color: var(--cyber-yellow); text-decoration: none; border-bottom: 1px dashed transparent; transition: all 0.3s ease; }
     .meta-link:hover { color: #fff; border-color: #fff; text-shadow: 0 0 10px var(--cyber-yellow); }
     
-    /* AI AUDIO BUTTON */
     .ai-audio-btn { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(0, 204, 255, 0.1); border: 1px solid var(--cyber-blue); color: var(--cyber-blue); font-family: 'Share Tech Mono', 'Battambang', monospace; font-size: 0.85rem; cursor: pointer; border-radius: 4px; transition: all 0.3s ease; margin-bottom: 10px; }
     .ai-audio-btn:hover { background: var(--cyber-blue); color: #000; box-shadow: 0 0 15px rgba(0, 204, 255, 0.6); }
     .ai-audio-btn.playing { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 0 15px var(--accent); animation: pulseAudio 1.5s infinite; }
@@ -144,7 +143,7 @@
                     <div class="meta-item">🗣️ <span id="langVal">N/A</span></div>
                 </div>
                 
-                <!-- NEW: AI AUDIO BUTTON -->
+                <!-- AI AUDIO BUTTON -->
                 <button class="ai-audio-btn" id="aiSpeechBtn">🔊 AI SYSTEM AUDIO</button>
 
                 <div class="overview" id="movieOverview">Loading encrypted data...</div>
@@ -203,7 +202,14 @@
     </div>
 
     <script>
-        // --- TRANSLATION DICTIONARY ---
+        // Automatic Browser Language Detection on First Visit
+        if (!localStorage.getItem('uiLang')) {
+            const browserLang = navigator.language || navigator.userLanguage;
+            if (browserLang.toLowerCase().includes('km')) localStorage.setItem('uiLang', 'km');
+            else if (browserLang.toLowerCase().includes('zh')) localStorage.setItem('uiLang', 'zh');
+            else localStorage.setItem('uiLang', 'en');
+        }
+
         const translations = {
             en: {
                 returnBtn: "← RETURN TO MAINFRAME",
@@ -300,6 +306,7 @@
             return translations[localStorage.getItem('uiLang') || 'en'];
         }
 
+        // DYNAMIC INSTANT AUTO-TRANSLATE (UI Elements)
         function updateUI() {
             const lang = localStorage.getItem('uiLang') || 'en';
             const t = translations[lang];
@@ -321,7 +328,6 @@
             document.getElementById('btnAuto').innerText = t.auto;
             document.getElementById('ccNotice').innerHTML = t.ccNotice;
             
-            // Sync AI Button Text State
             aiSpeechBtn.innerText = isSpeaking ? t.aiStopBtn : t.aiReadBtn;
 
             const titleEl = document.getElementById('movieTitle');
@@ -339,6 +345,7 @@
             if (overlay) { overlay.style.opacity = '0'; setTimeout(() => overlay.style.display = 'none', 500); }
         }
 
+        // DYNAMIC INSTANT AUTO-TRANSLATE (TMDB DATA)
         async function syncTmdbDetails() {
             if (!tmdbId) return;
             const t = getT();
@@ -416,7 +423,6 @@
             const textToSpeak = `${currentMovieTitle}. ${overviewText}`;
             const utterance = new SpeechSynthesisUtterance(textToSpeak);
             
-            // Map our UI lang to Speech API lang
             const uiLangCode = localStorage.getItem('uiLang') || 'en';
             if(uiLangCode === 'km') utterance.lang = 'km-KH';
             else if(uiLangCode === 'zh') utterance.lang = 'zh-CN';
@@ -428,7 +434,7 @@
                 aiSpeechBtn.innerText = getT().aiReadBtn;
             };
 
-            window.speechSynthesis.cancel(); // Reset queue
+            window.speechSynthesis.cancel(); 
             window.speechSynthesis.speak(utterance);
             
             isSpeaking = true;
@@ -436,9 +442,7 @@
             aiSpeechBtn.innerText = t.aiStopBtn;
         });
 
-        // Ensure Audio Stops if they leave or close page
         window.addEventListener('beforeunload', () => window.speechSynthesis.cancel());
-
 
         function loadVsembedFrame() {
             if (!tmdbId) return dismissOverlay();
@@ -469,6 +473,7 @@
             });
         }
 
+        // LANGUAGE CHANGE EVENT LISTENER
         uiLangSelect.addEventListener('change', (e) => {
             localStorage.setItem('uiLang', e.target.value);
             window.speechSynthesis.cancel(); // Stop audio if language changes
@@ -476,7 +481,7 @@
             aiSpeechBtn.classList.remove('playing');
             
             updateUI();
-            syncTmdbDetails(); // Re-fetch TMDB data in new language
+            syncTmdbDetails(); 
         });
 
         document.addEventListener('DOMContentLoaded', () => {
