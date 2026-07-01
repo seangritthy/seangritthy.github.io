@@ -17,21 +17,21 @@ export default async function handler(req, res) {
     }
 
     try {
-        const targetUrl = `https://vidsrc.xyz/embed/movie/${tmdb}`;
+        const targetUrl = `https://vidsrc.to/embed/movie/${tmdb}`;
         
-        // 2. Fetch HTML from VidSrc with spoofed user-agent parameters
+        // 2. Fetch HTML from VidSrc.to with spoofed user-agent parameters
         const response = await fetch(targetUrl, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
-                'Referer': 'https://vidsrc.xyz/',
+                'Referer': 'https://vidsrc.to/',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
             }
         });
 
         const html = await response.text();
 
-        // 3. Extract the Cloudnestra iframe URL using Regex
-        const iframeRegex = /iframe[^>]+src=["']([^"']*cloudnestra[^"']*)["']/i;
+        // 3. Extract the CloudOrchestra iframe URL using Regex
+        const iframeRegex = /iframe[^>]+src=["']([^"']*cloudorchestra[^"']*)["']/i;
         const match = html.match(iframeRegex);
 
         let finalUrl = null;
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
             finalUrl = match[1].startsWith('http') ? match[1] : `https:${match[1]}`;
         }
 
-        // 4. Return extracted link context
+        // 4. Return extracted CloudOrchestra URL or fallback to raw VidSrc.to embed page
         if (finalUrl) {
             return res.status(200).json({ success: true, url: finalUrl });
         } else {

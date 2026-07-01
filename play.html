@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MVHD CyberCinema | Secure Stream</title>
+    <title>GitHub Movies | Secure Stream</title>
     
-    <meta property="og:title" id="ogTitle" content="MVHD CyberCinema">
+    <meta property="og:title" id="ogTitle" content="GitHub Movies">
     <meta property="og:image" id="ogImage" content="">
     <meta property="og:url" id="ogUrl" content="">
     <meta property="og:type" content="video.movie">
@@ -149,7 +149,7 @@
             </select>
         </div>
         <div class="header-content">
-            <div class="site-title">MVHD CYBERCINEMA</div>
+            <div class="site-title">GITHUB MOVIES</div>
             <a href="index.html" class="nav-link" id="returnBtn">← RETURN TO MAINFRAME</a>
         </div>
     </header>
@@ -431,7 +431,7 @@
                 currentMovieTitle = data.title || data.name || "Unknown";
                 const year = (data.release_date || data.first_air_date || 'N/A').substring(0, 4);
 
-                document.title = `MVHD | ${currentMovieTitle}`;
+                document.title = `GitHub Movies | ${currentMovieTitle}`;
                 document.getElementById('movieTitle').innerHTML = `${currentMovieTitle} <span style="color:var(--cyber-yellow);">(${year})</span>`;
                 document.getElementById('ratingVal').innerText = data.vote_average ? `${data.vote_average.toFixed(1)}/10` : t.na;
                 document.getElementById('runtimeVal').innerText = data.runtime ? `${data.runtime} min` : (data.episode_run_time && data.episode_run_time.length > 0 ? `${data.episode_run_time[0]} min` : t.na);
@@ -451,7 +451,7 @@
                     shareModalPoster.src = currentPosterUrl;
                     document.getElementById('ogImage').setAttribute("content", currentPosterUrl);
                 }
-                document.getElementById('ogTitle').setAttribute("content", `Watch ${currentMovieTitle} on MVHD CyberCinema`);
+                document.getElementById('ogTitle').setAttribute("content", `Watch ${currentMovieTitle} on GitHub Movies`);
                 document.getElementById('ogUrl').setAttribute("content", window.location.href);
 
                 if (data.backdrop_path) {
@@ -487,8 +487,8 @@
         // --- SHARE SYSTEM LOGIC ---
         shareMovieBtn.addEventListener('click', async () => {
             const shareData = {
-                title: `Watch ${currentMovieTitle} on MVHD`,
-                text: `Check out ${currentMovieTitle} on MVHD CyberCinema!`,
+                title: `Watch ${currentMovieTitle} on GitHub Movies`,
+                text: `Check out ${currentMovieTitle} on GitHub Movies!`,
                 url: window.location.href
             };
 
@@ -569,11 +569,21 @@
 
         window.addEventListener('beforeunload', () => window.speechSynthesis.cancel());
 
-        function loadVsembedFrame() {
+        async function loadVidsrcFrame() {
             if (!tmdbId) return dismissOverlay();
-            const targetEmbed = mediaType === 'tv' ? `https://vsembed.ru/embed/tv/${tmdbId}/1/1` : `https://vsembed.ru/embed/movie/${tmdbId}`;
             const frame = document.getElementById('stream-frame');
-            if (frame) { frame.src = targetEmbed; frame.onload = dismissOverlay; }
+            if (!frame) return dismissOverlay();
+
+            try {
+                const response = await fetch(`/api/extract?tmdb=${encodeURIComponent(tmdbId)}`);
+                const data = await response.json();
+                const targetEmbed = data?.success && data.url ? data.url : `https://vidsrc.to/embed/movie/${tmdbId}`;
+                frame.src = targetEmbed;
+            } catch (err) {
+                frame.src = `https://vidsrc.to/embed/movie/${tmdbId}`;
+            } finally {
+                frame.onload = dismissOverlay;
+            }
         }
 
         function handleDashboardLoops() {
@@ -612,7 +622,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             updateUI();
             syncTmdbDetails();
-            loadVsembedFrame();
+            loadVidsrcFrame();
             handleDashboardLoops();
             setTimeout(dismissOverlay, 6000); 
         });

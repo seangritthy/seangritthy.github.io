@@ -66,3 +66,68 @@ function displayMovies(moviesToDisplay) {
     });
     moviesGrid.appendChild(fragment);
 }
+
+// --- GOOGLE SIGN-IN (Client-only) ---
+// NOTE: Replace with your Google OAuth Client ID from Google Cloud Console.
+const GOOGLE_CLIENT_ID = 'REPLACE_WITH_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+
+function handleCredentialResponse(response) {
+    try {
+        const jwt = response.credential;
+        const payload = JSON.parse(atob(jwt.split('.')[1]));
+        const name = payload.name || payload.email || 'User';
+        document.getElementById('userInfo').innerText = `Hello, ${name}`;
+        document.getElementById('userInfo').style.display = 'block';
+        document.getElementById('gSignInDiv').style.display = 'none';
+        document.getElementById('signOutBtn').style.display = 'inline-block';
+        localStorage.setItem('g_user', JSON.stringify(payload));
+    } catch (e) { console.warn('Google sign-in parse failed', e); }
+}
+
+function initializeGoogleSignIn() {
+    if (!window.google || !google.accounts || !google.accounts.id) return;
+    if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.startsWith('REPLACE_')) {
+        console.warn('Google Sign-In not initialized: set GOOGLE_CLIENT_ID in script.js');
+        return;
+    }
+    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse });
+    google.accounts.id.renderButton(document.getElementById('gSignInDiv'), { theme: 'outline', size: 'medium' });
+}
+
+function signOut() {
+    const stored = localStorage.getItem('g_user');
+    if (stored) {
+        try {
+            const parsed = JSON.parse(stored);
+            if (window.google && google.accounts && google.accounts.id && parsed.email) {
+                google.accounts.id.revoke(parsed.email, () => console.log('revoked'));
+            }
+        } catch (e) {}
+    }
+    localStorage.removeItem('g_user');
+    document.getElementById('userInfo').style.display = 'none';
+    document.getElementById('gSignInDiv').style.display = 'block';
+    document.getElementById('signOutBtn').style.display = 'none';
+}
+
+// Wire up auth UI on load
+window.addEventListener('DOMContentLoaded', () => {
+    // Initialize Google Sign-In (if client lib loaded)
+    initializeGoogleSignIn();
+
+    // Restore UI from localStorage if possible
+    const stored = localStorage.getItem('g_user');
+    if (stored) {
+        try {
+            const parsed = JSON.parse(stored);
+            const name = parsed.name || parsed.email || 'User';
+            document.getElementById('userInfo').innerText = `Hello, ${name}`;
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('gSignInDiv').style.display = 'none';
+            document.getElementById('signOutBtn').style.display = 'inline-block';
+        } catch (e) { console.warn(e); }
+    }
+
+    const outBtn = document.getElementById('signOutBtn');
+    if (outBtn) outBtn.addEventListener('click', signOut);
+});

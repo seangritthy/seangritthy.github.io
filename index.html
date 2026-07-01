@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MVHD CyberCinema</title>
+    <title>GitHub Movies</title>
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Exo+2:wght@300;400;600&family=Noto+Sans+SC:wght@400;500;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
             --primary: #00ff9d; --secondary: #7b61ff;
@@ -145,8 +146,13 @@
 <body>
     <header id="mainHeader">
         <div class="top-bar">
-            <h1 id="siteTitle">MVHD CYBERCINEMA</h1>
+            <h1 id="siteTitle">GITHUB MOVIES</h1>
             <button id="menuToggleBtn" class="menu-toggle-btn">☰ MENU</button>
+            <div id="authContainer" style="display:flex;align-items:center;gap:10px;">
+                <div id="gSignInDiv"></div>
+                <div id="userInfo" style="display:none;color:var(--primary);font-family:'Share Tech Mono',monospace;"></div>
+                <button id="signOutBtn" class="type-btn" style="display:none;">Sign out</button>
+            </div>
         </div>
 
         <div id="menuContainer" class="menu-container">
@@ -236,7 +242,7 @@
 
         const translations = {
             en: {
-                siteTitle: "MVHD CYBERCINEMA",
+                siteTitle: "GITHUB MOVIES",
                 searchPlaceholder: "Search Database...",
                 searchBtn: "🔍 SEARCH",
                 menuBtn: "☰ MENU",
@@ -264,7 +270,7 @@
                 scanFor: (term) => `SCANNING FOR "${term}"...`
             },
             km: {
-                siteTitle: "MVHD សាយប័ររោងកុន",
+                siteTitle: "GITHUB MOVIES",
                 searchPlaceholder: "ស្វែងរកទិន្នន័យ...",
                 searchBtn: "🔍 ស្វែងរក",
                 menuBtn: "☰ ម៉ឺនុយ",
@@ -292,7 +298,7 @@
                 scanFor: (term) => `ស្វែងរក "${term}"...`
             },
             zh: {
-                siteTitle: "MVHD 赛博影院",
+                siteTitle: "GITHUB MOVIES",
                 searchPlaceholder: "搜索数据库...",
                 searchBtn: "🔍 搜索",
                 menuBtn: "☰ 菜单",
