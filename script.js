@@ -101,7 +101,7 @@ function displayMovies(moviesToDisplay) {
 
 // --- GOOGLE SIGN-IN (Client-only) ---
 // NOTE: Replace with your Google OAuth Client ID from Google Cloud Console.
-const GOOGLE_CLIENT_ID = 'REPLACE_WITH_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '977612649614-l0573h7jas2dqrnm87tf5s2o0dfm080g.apps.googleusercontent.com';
 
 function handleCredentialResponse(response) {
     try {

@@ -258,7 +258,7 @@
         }
         function playInitGoogle() {
             if (!window.google || !google.accounts || !google.accounts.id) return;
-            const CLIENT_ID = 'REPLACE_WITH_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+            const CLIENT_ID = '977612649614-l0573h7jas2dqrnm87tf5s2o0dfm080g.apps.googleusercontent.com';
             if (CLIENT_ID.startsWith('REPLACE_')) return;
             google.accounts.id.initialize({ client_id: CLIENT_ID, callback: playHandleCredentialResponse });
             google.accounts.id.renderButton(document.getElementById('gSignInDiv'), { theme: 'outline', size: 'medium' });
