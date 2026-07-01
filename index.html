@@ -152,10 +152,8 @@
             <h1 id="siteTitle">GITHUB MOVIES</h1>
             <button id="menuToggleBtn" class="menu-toggle-btn">☰ MENU</button>
             <div id="authContainer" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                <button id="metamaskBtn" class="web3-btn metamask-btn">🦊 MetaMask</button>
-                <button id="trustwalletBtn" class="web3-btn trustwallet-btn">💎 Trust Wallet</button>
-                <div id="userInfo" style="display:none;color:var(--primary);font-family:'Share Tech Mono',monospace;"></div>
-                <div id="walletInfo" style="display:none;color:var(--primary);font-family:'Share Tech Mono',monospace;font-size:0.9rem;"></div>
+                <div id="userInfo" style="display:none;color:var(--primary);font-family:'Share Tech Mono',monospace;cursor:pointer;"></div>
+                <div id="walletInfo" style="display:none;color:var(--primary);font-family:'Share Tech Mono',monospace;font-size:0.9rem;cursor:pointer;"></div>
                 <button id="signOutBtn" class="type-btn" style="display:none;">Sign out</button>
             </div>
         </div>
@@ -175,7 +173,8 @@
             </div>
 
             <div style="display:flex;justify-content:center;gap:10px;margin-top:12px;">
-                <button id="menuProfileBtn" class="type-btn">👤 Profile</button>
+                <button id="menuLoginBtn" class="type-btn">🔐 Login</button>
+                <button id="menuProfileBtn" class="type-btn" style="display:none;">👤 Profile</button>
             </div>
             
             <div class="type-selector">
@@ -213,8 +212,29 @@
         </div>
     </main>
 
-    <!-- Profile Modal -->
-    <div class="share-modal" id="profileModal">
+    <!-- Wallet Selection Modal (Like OpenSea) -->
+    <div class="wallet-modal" id="walletModal" style="display:none;">
+        <div class="wallet-modal-content">
+            <div class="wallet-modal-header">
+                <h2>Connect Wallet</h2>
+                <span class="wallet-modal-close" id="walletModalClose">&times;</span>
+            </div>
+            <div class="wallet-modal-body">
+                <p style="color:var(--cyber-blue);margin-bottom:20px;text-align:center;font-family:'Share Tech Mono',monospace;">Select a wallet to connect</p>
+                <button class="wallet-option" id="connectMetaMask">
+                    <div class="wallet-icon">🦊</div>
+                    <div class="wallet-name">MetaMask</div>
+                    <div class="wallet-desc">Connect to your MetaMask wallet</div>
+                </button>
+                <button class="wallet-option" id="connectTrustWallet">
+                    <div class="wallet-icon">💎</div>
+                    <div class="wallet-name">Trust Wallet</div>
+                    <div class="wallet-desc">Connect to your Trust Wallet</div>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="wallet-modal-overlay" id="walletModalOverlay" style="display:none;"></div>
         <div class="share-modal-content">
             <span class="share-close" id="profileClose">&times;</span>
             <h2 class="share-title" id="profileName">Profile</h2>

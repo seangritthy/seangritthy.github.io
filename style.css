@@ -38,6 +38,127 @@ h1 {
     letter-spacing: 4px;
 }
 
+/* WALLET SELECTION MODAL (OpenSea Style) */
+.wallet-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+    z-index: 9999;
+}
+
+.wallet-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10000;
+    background: var(--card-bg);
+    border: 2px solid var(--primary);
+    border-radius: 10px;
+    box-shadow: 0 0 40px rgba(0, 255, 157, 0.5);
+    min-width: 350px;
+    max-width: 450px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -45%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+.wallet-modal-content {
+    padding: 0;
+}
+
+.wallet-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--secondary);
+}
+
+.wallet-modal-header h2 {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--primary);
+    font-size: 1.3rem;
+    margin: 0;
+}
+
+.wallet-modal-close {
+    font-size: 1.8rem;
+    color: var(--cyber-blue);
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.wallet-modal-close:hover {
+    color: var(--accent);
+}
+
+.wallet-modal-body {
+    padding: 20px;
+}
+
+.wallet-option {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 12px;
+    background: rgba(123, 97, 255, 0.1);
+    border: 1.5px solid var(--secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    text-align: left;
+    color: white;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+.wallet-option:hover {
+    background: var(--secondary);
+    box-shadow: 0 0 20px rgba(123, 97, 255, 0.6);
+    transform: translateX(5px);
+    border-color: var(--primary);
+}
+
+.wallet-icon {
+    font-size: 2rem;
+    min-width: 50px;
+    text-align: center;
+}
+
+.wallet-name {
+    font-weight: bold;
+    font-size: 1rem;
+    color: var(--primary);
+}
+
+.wallet-desc {
+    font-size: 0.8rem;
+    color: var(--cyber-blue);
+    margin-top: 3px;
+}
+
+@media (max-width: 600px) {
+    .wallet-modal {
+        min-width: 90vw;
+        max-width: 90vw;
+    }
+}
+
 /* LOGO STYLING */
 .logo-container {
     display: flex;

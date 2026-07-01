@@ -12,14 +12,52 @@ searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchM
 
 // Menu buttons (profile only)
 const menuProfileBtn = document.getElementById('menuProfileBtn');
+const menuLoginBtn = document.getElementById('menuLoginBtn');
 
 function openProfileModal() {
     updateProfileModal();
     document.getElementById('profileModal').classList.add('active');
 }
 
-// Wire profile button if present
+function openWalletModal() {
+    document.getElementById('walletModal').style.display = 'block';
+    document.getElementById('walletModalOverlay').style.display = 'block';
+}
+
+function closeWalletModal() {
+    document.getElementById('walletModal').style.display = 'none';
+    document.getElementById('walletModalOverlay').style.display = 'none';
+}
+
+// Wire menu buttons if present
+if (menuLoginBtn) menuLoginBtn.addEventListener('click', openWalletModal);
 if (menuProfileBtn) menuProfileBtn.addEventListener('click', openProfileModal);
+
+// Wallet modal listeners
+const walletModalClose = document.getElementById('walletModalClose');
+const walletModalOverlay = document.getElementById('walletModalOverlay');
+const connectMetaMask = document.getElementById('connectMetaMask');
+const connectTrustWallet = document.getElementById('connectTrustWallet');
+
+if (walletModalClose) walletModalClose.addEventListener('click', closeWalletModal);
+if (walletModalOverlay) walletModalOverlay.addEventListener('click', closeWalletModal);
+
+// Connect from modal
+if (connectMetaMask) {
+    connectMetaMask.addEventListener('click', async () => {
+        closeWalletModal();
+        const result = await web3Auth.connectMetaMask();
+        if (result) handleWeb3Login(result, 'MetaMask');
+    });
+}
+
+if (connectTrustWallet) {
+    connectTrustWallet.addEventListener('click', async () => {
+        closeWalletModal();
+        const result = await web3Auth.connectTrustWallet();
+        if (result) handleWeb3Login(result, 'Trust Wallet');
+    });
+}
 
 // Profile modal listeners
 const profileClose = document.getElementById('profileClose');
@@ -90,17 +128,11 @@ function signOutWeb3() {
     localStorage.removeItem('g_user');
     document.getElementById('userInfo').style.display = 'none';
     document.getElementById('walletInfo').style.display = 'none';
-    document.getElementById('metamaskBtn').style.display = 'inline-block';
-    document.getElementById('trustwalletBtn').style.display = 'inline-block';
     document.getElementById('signOutBtn').style.display = 'none';
 }
 
 // Wire up Web3 auth UI on load
 window.addEventListener('DOMContentLoaded', () => {
-    // Show Web3 buttons
-    document.getElementById('metamaskBtn').style.display = 'inline-block';
-    document.getElementById('trustwalletBtn').style.display = 'inline-block';
-
     // Restore UI from localStorage if possible
     const stored = localStorage.getItem('g_user');
     if (stored) {
@@ -111,8 +143,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('userInfo').style.display = 'block';
                 document.getElementById('walletInfo').innerText = `Connected via ${parsed.provider}`;
                 document.getElementById('walletInfo').style.display = 'block';
-                document.getElementById('metamaskBtn').style.display = 'none';
-                document.getElementById('trustwalletBtn').style.display = 'none';
                 document.getElementById('signOutBtn').style.display = 'inline-block';
             }
         } catch (e) { console.warn(e); }
@@ -123,29 +153,12 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // ===== WEB3 WALLET HANDLERS =====
-
-// Connect MetaMask
-document.getElementById('metamaskBtn')?.addEventListener('click', async () => {
-    const result = await web3Auth.connectMetaMask();
-    if (result) {
-        handleWeb3Login(result, 'MetaMask');
-    }
-});
-
-// Connect Trust Wallet
-document.getElementById('trustwalletBtn')?.addEventListener('click', async () => {
-    const result = await web3Auth.connectTrustWallet();
-    if (result) {
-        handleWeb3Login(result, 'Trust Wallet');
-    }
-});
+// Handlers moved to modal click listeners above
 
 // Handle Web3 login
 function handleWeb3Login(walletData, provider) {
     const userInfo = document.getElementById('userInfo');
     const walletInfo = document.getElementById('walletInfo');
-    const metamaskBtn = document.getElementById('metamaskBtn');
-    const trustwalletBtn = document.getElementById('trustwalletBtn');
     const signOutBtn = document.getElementById('signOutBtn');
 
     // Update UI
@@ -153,8 +166,6 @@ function handleWeb3Login(walletData, provider) {
     userInfo.style.display = 'block';
     walletInfo.innerText = `Connected via ${provider}`;
     walletInfo.style.display = 'block';
-    metamaskBtn.style.display = 'none';
-    trustwalletBtn.style.display = 'none';
     signOutBtn.style.display = 'inline-block';
 
     // Store wallet data in localStorage
