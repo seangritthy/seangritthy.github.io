@@ -1,0 +1,27 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .logo-glow { filter: drop-shadow(0 0 4px rgba(0, 255, 157, 0.8)); }
+      .logo-neon { stroke: #00ff9d; stroke-width: 1.5; fill: none; }
+      .logo-fill { fill: #00ff9d; }
+    </style>
+  </defs>
+  
+  <!-- Outer square frame -->
+  <g class="logo-glow">
+    <rect x="5" y="5" width="90" height="90" class="logo-neon" rx="4"/>
+    
+    <!-- Play button symbol (film/movie theme) -->
+    <polygon points="35,30 35,70 70,50" class="logo-fill"/>
+    
+    <!-- Accent lines -->
+    <line x1="10" y1="50" x2="25" y2="50" class="logo-neon" stroke-linecap="round"/>
+    <line x1="75" y1="50" x2="90" y2="50" class="logo-neon" stroke-linecap="round"/>
+    
+    <!-- Corner accents -->
+    <line x1="15" y1="15" x2="20" y2="20" class="logo-neon" stroke-linecap="round" stroke-width="2"/>
+    <line x1="85" y1="15" x2="80" y2="20" class="logo-neon" stroke-linecap="round" stroke-width="2"/>
+    <line x1="15" y1="85" x2="20" y2="80" class="logo-neon" stroke-linecap="round" stroke-width="2"/>
+    <line x1="85" y1="85" x2="80" y2="80" class="logo-neon" stroke-linecap="round" stroke-width="2"/>
+  </g>
+</svg>

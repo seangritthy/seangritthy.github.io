@@ -38,6 +38,74 @@ h1 {
     letter-spacing: 4px;
 }
 
+/* LOGO STYLING */
+.logo-container {
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+    flex-shrink: 0;
+}
+
+.site-logo {
+    height: 45px;
+    width: auto;
+    border: 1.5px solid var(--primary);
+    padding: 6px;
+    background: rgba(0, 255, 157, 0.08);
+    box-shadow: 0 0 15px rgba(0, 255, 157, 0.4), inset 0 0 10px rgba(0, 255, 157, 0.1);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.site-logo:hover {
+    box-shadow: 0 0 25px rgba(0, 255, 157, 0.6), inset 0 0 15px rgba(0, 255, 157, 0.2);
+    transform: scale(1.05);
+}
+
+/* WEB3 WALLET BUTTONS */
+.web3-btn {
+    padding: 10px 16px;
+    border: 1.5px solid var(--primary);
+    background: rgba(0, 255, 157, 0.1);
+    color: var(--primary);
+    font-family: 'Share Tech Mono', monospace;
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.web3-btn:hover {
+    background: var(--primary);
+    color: #000;
+    box-shadow: 0 0 20px rgba(0, 255, 157, 0.6);
+    transform: translateY(-2px);
+}
+
+.metamask-btn {
+    border-color: #f6851b;
+    color: #f6851b;
+}
+
+.metamask-btn:hover {
+    background: #f6851b;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(246, 133, 27, 0.6);
+}
+
+.trustwallet-btn {
+    border-color: #3375bb;
+    color: #3375bb;
+}
+
+.trustwallet-btn:hover {
+    background: #3375bb;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(51, 117, 187, 0.6);
+}
+
 .search-container {
     display: flex;
     justify-content: center;
@@ -150,4 +218,21 @@ h1 {
 
 .movie-rating {
     color: var(--cyber-yellow);
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 768px) {
+    .logo-container {
+        margin-right: 10px;
+    }
+    
+    .site-logo {
+        height: 35px;
+        padding: 4px;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+    }
 }

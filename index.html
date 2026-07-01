@@ -146,11 +146,18 @@
 <body>
     <header id="mainHeader">
         <div class="top-bar">
+            <div class="logo-container">
+                <img src="logo.svg" alt="GitHub Movies" class="site-logo">
+            </div>
             <h1 id="siteTitle">GITHUB MOVIES</h1>
             <button id="menuToggleBtn" class="menu-toggle-btn">☰ MENU</button>
-            <div id="authContainer" style="display:flex;align-items:center;gap:10px;">
+            <div id="authContainer" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                 <div id="gSignInDiv"></div>
+                <button id="metamaskBtn" class="web3-btn metamask-btn" style="display:none;">🦊 MetaMask</button>
+                <button id="trustwalletBtn" class="web3-btn trustwallet-btn" style="display:none;">💎 Trust Wallet</button>
+                <div id="authStatus" style="color:var(--cyber-blue);font-family:'Share Tech Mono',monospace;font-size:0.85rem;"></div>
                 <div id="userInfo" style="display:none;color:var(--primary);font-family:'Share Tech Mono',monospace;"></div>
+                <div id="walletInfo" style="display:none;color:var(--primary);font-family:'Share Tech Mono',monospace;font-size:0.9rem;"></div>
                 <button id="signOutBtn" class="type-btn" style="display:none;">Sign out</button>
             </div>
         </div>
@@ -215,6 +222,16 @@
             <span class="share-close" id="profileClose">&times;</span>
             <h2 class="share-title" id="profileName">Profile</h2>
             <div id="profileEmail" style="color:var(--cyber-blue);margin-bottom:10px;"></div>
+            
+            <!-- Web3 Wallet Assets -->
+            <div id="walletAssetsSection" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--secondary);">
+                <h3 style="color:var(--primary);margin-bottom:10px;font-size:0.9rem;">💰 Wallet Assets</h3>
+                <div id="walletAddress" style="color:var(--cyber-blue);font-family:'Share Tech Mono',monospace;font-size:0.8rem;margin-bottom:8px;"></div>
+                <div id="walletBalance" style="color:var(--cyber-yellow);font-family:'Share Tech Mono',monospace;font-size:1rem;margin-bottom:8px;"></div>
+                <div id="walletChain" style="color:var(--primary);font-family:'Share Tech Mono',monospace;font-size:0.85rem;margin-bottom:10px;"></div>
+                <button class="copy-btn" id="walletRefresh" style="background:var(--primary);color:black;margin-bottom:10px;width:100%;">🔄 Refresh Balance</button>
+            </div>
+            
             <button class="copy-btn" id="profileSignOut">Sign out</button>
         </div>
     </div>
@@ -564,5 +581,6 @@
         updateUI();
         fetchDashboardData();
     </script>
+    <script src="web3-auth.js"></script>
 </body>
 </html>
