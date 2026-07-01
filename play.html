@@ -12,7 +12,6 @@
     <meta property="og:type" content="video.movie">
 
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Exo+2:wght@300;400;600&family=Noto+Sans+SC:wght@400;500;700&family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-        <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
     :root {
         --primary: #00ff9d; --secondary: #7b61ff; --accent: #ff00e5; --dark-bg: #0a0a0f;
@@ -245,39 +244,76 @@
     </div>
 
     <script>
-        // --- Lightweight Google Sign-In placeholders for player page ---
-        function playHandleCredentialResponse(response) {
-            try {
-                const jwt = response.credential;
-                const payload = JSON.parse(atob(jwt.split('.')[1]));
-                localStorage.setItem('g_user', JSON.stringify(payload));
-                const name = payload.name || payload.email || 'User';
-                const ui = document.getElementById('userInfo'); if (ui) { ui.innerText = `Hello, ${name}`; ui.style.display = 'block'; }
-                const out = document.getElementById('signOutBtn'); if (out) out.style.display = 'inline-block';
-                const gdiv = document.getElementById('gSignInDiv'); if (gdiv) gdiv.style.display = 'none';
-            } catch (e) { console.warn(e); }
-        }
-        function playInitGoogle() {
-            if (!window.google || !google.accounts || !google.accounts.id) return;
-            const CLIENT_ID = '977612649614-l0573h7jas2dqrnm87tf5s2o0dfm080g.apps.googleusercontent.com';
-            if (CLIENT_ID.startsWith('REPLACE_')) return;
-            google.accounts.id.initialize({ client_id: CLIENT_ID, callback: playHandleCredentialResponse });
-            google.accounts.id.renderButton(document.getElementById('gSignInDiv'), { theme: 'outline', size: 'medium' });
-        }
+        // --- Web3 Wallet Login for Player Page ---
         window.addEventListener('DOMContentLoaded', () => {
+            // Show Web3 buttons
+            document.getElementById('metamaskBtn').style.display = 'inline-block';
+            document.getElementById('trustwalletBtn').style.display = 'inline-block';
+
             // Restore UI from localStorage
             const stored = localStorage.getItem('g_user');
             if (stored) {
                 try {
                     const parsed = JSON.parse(stored);
-                    const name = parsed.name || parsed.email || 'User';
-                    const ui = document.getElementById('userInfo'); if (ui) { ui.innerText = `Hello, ${name}`; ui.style.display = 'block'; }
-                    const out = document.getElementById('signOutBtn'); if (out) out.style.display = 'inline-block';
-                    const gdiv = document.getElementById('gSignInDiv'); if (gdiv) gdiv.style.display = 'none';
+                    if (parsed.type === 'web3') {
+                        const ui = document.getElementById('userInfo');
+                        if (ui) { ui.innerText = parsed.shortAddress; ui.style.display = 'block'; }
+                        const out = document.getElementById('signOutBtn');
+                        if (out) out.style.display = 'inline-block';
+                        document.getElementById('metamaskBtn').style.display = 'none';
+                        document.getElementById('trustwalletBtn').style.display = 'none';
+                    }
                 } catch (e){}
             }
-            const outBtn = document.getElementById('signOutBtn'); if (outBtn) outBtn.addEventListener('click', () => { localStorage.removeItem('g_user'); location.reload(); });
-            playInitGoogle();
+            const outBtn = document.getElementById('signOutBtn');
+            if (outBtn) outBtn.addEventListener('click', () => { 
+                web3Auth.disconnect();
+                localStorage.removeItem('g_user'); 
+                location.reload(); 
+            });
+        });
+
+        // Web3 button handlers
+        document.getElementById('metamaskBtn')?.addEventListener('click', async () => {
+            const result = await web3Auth.connectMetaMask();
+            if (result) {
+                localStorage.setItem('g_user', JSON.stringify({
+                    type: 'web3',
+                    provider: 'MetaMask',
+                    address: result.address,
+                    shortAddress: result.shortAddress,
+                    balance: result.balance,
+                    chainId: result.chainId,
+                    chainName: result.chainName
+                }));
+                const ui = document.getElementById('userInfo');
+                if (ui) { ui.innerText = result.shortAddress; ui.style.display = 'block'; }
+                const out = document.getElementById('signOutBtn');
+                if (out) out.style.display = 'inline-block';
+                document.getElementById('metamaskBtn').style.display = 'none';
+                document.getElementById('trustwalletBtn').style.display = 'none';
+            }
+        });
+
+        document.getElementById('trustwalletBtn')?.addEventListener('click', async () => {
+            const result = await web3Auth.connectTrustWallet();
+            if (result) {
+                localStorage.setItem('g_user', JSON.stringify({
+                    type: 'web3',
+                    provider: 'Trust Wallet',
+                    address: result.address,
+                    shortAddress: result.shortAddress,
+                    balance: result.balance,
+                    chainId: result.chainId,
+                    chainName: result.chainName
+                }));
+                const ui = document.getElementById('userInfo');
+                if (ui) { ui.innerText = result.shortAddress; ui.style.display = 'block'; }
+                const out = document.getElementById('signOutBtn');
+                if (out) out.style.display = 'inline-block';
+                document.getElementById('metamaskBtn').style.display = 'none';
+                document.getElementById('trustwalletBtn').style.display = 'none';
+            }
         });
 
         if (!localStorage.getItem('uiLang')) {

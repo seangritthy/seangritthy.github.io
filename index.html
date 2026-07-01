@@ -6,7 +6,6 @@
     <title>GitHub Movies</title>
     <link rel="icon" type="image/svg+xml" href="logo.svg">
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Exo+2:wght@300;400;600&family=Noto+Sans+SC:wght@400;500;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
             --primary: #00ff9d; --secondary: #7b61ff;
@@ -153,10 +152,8 @@
             <h1 id="siteTitle">GITHUB MOVIES</h1>
             <button id="menuToggleBtn" class="menu-toggle-btn">☰ MENU</button>
             <div id="authContainer" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                <div id="gSignInDiv"></div>
-                <button id="metamaskBtn" class="web3-btn metamask-btn" style="display:none;">🦊 MetaMask</button>
-                <button id="trustwalletBtn" class="web3-btn trustwallet-btn" style="display:none;">💎 Trust Wallet</button>
-                <div id="authStatus" style="color:var(--cyber-blue);font-family:'Share Tech Mono',monospace;font-size:0.85rem;"></div>
+                <button id="metamaskBtn" class="web3-btn metamask-btn">🦊 MetaMask</button>
+                <button id="trustwalletBtn" class="web3-btn trustwallet-btn">💎 Trust Wallet</button>
                 <div id="userInfo" style="display:none;color:var(--primary);font-family:'Share Tech Mono',monospace;"></div>
                 <div id="walletInfo" style="display:none;color:var(--primary);font-family:'Share Tech Mono',monospace;font-size:0.9rem;"></div>
                 <button id="signOutBtn" class="type-btn" style="display:none;">Sign out</button>
@@ -178,8 +175,7 @@
             </div>
 
             <div style="display:flex;justify-content:center;gap:10px;margin-top:12px;">
-                <button id="menuLoginBtn" class="type-btn">🔐 Login</button>
-                <button id="menuProfileBtn" class="type-btn" style="display:none;">👤 Profile</button>
+                <button id="menuProfileBtn" class="type-btn">👤 Profile</button>
             </div>
             
             <div class="type-selector">

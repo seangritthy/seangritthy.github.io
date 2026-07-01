@@ -10,37 +10,22 @@ window.addEventListener('DOMContentLoaded', fetchPopularMovies);
 searchBtn.addEventListener('click', searchMovies);
 searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchMovies(); });
 
-// Menu buttons (login/profile)
-const menuLoginBtn = document.getElementById('menuLoginBtn');
+// Menu buttons (profile only)
 const menuProfileBtn = document.getElementById('menuProfileBtn');
 
 function openProfileModal() {
-    const stored = localStorage.getItem('g_user');
-    if (!stored) return alert('Not signed in');
-    const parsed = JSON.parse(stored);
-    document.getElementById('profileName').innerText = parsed.name || parsed.email || 'Profile';
-    document.getElementById('profileEmail').innerText = parsed.email || '';
+    updateProfileModal();
     document.getElementById('profileModal').classList.add('active');
 }
 
-// Wire menu buttons if present
-if (menuLoginBtn) {
-    menuLoginBtn.addEventListener('click', () => {
-        if (window.google && google.accounts && google.accounts.id) {
-            google.accounts.id.prompt();
-        } else {
-            // fallback: scroll to header sign-in UI
-            const s = document.getElementById('gSignInDiv'); if (s) s.scrollIntoView({behavior:'smooth'});
-        }
-    });
-}
+// Wire profile button if present
 if (menuProfileBtn) menuProfileBtn.addEventListener('click', openProfileModal);
 
 // Profile modal listeners
 const profileClose = document.getElementById('profileClose');
 if (profileClose) profileClose.addEventListener('click', () => document.getElementById('profileModal').classList.remove('active'));
 const profileSignOut = document.getElementById('profileSignOut');
-if (profileSignOut) profileSignOut.addEventListener('click', () => { signOut(); document.getElementById('profileModal').classList.remove('active'); });
+if (profileSignOut) profileSignOut.addEventListener('click', () => { signOutWeb3(); document.getElementById('profileModal').classList.remove('active'); });
 
 function setGridMessage(message) {
     moviesGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--primary); font-family: 'Share Tech Mono', monospace; font-size: 1.2rem;">${message}</p>`;
@@ -99,67 +84,146 @@ function displayMovies(moviesToDisplay) {
     moviesGrid.appendChild(fragment);
 }
 
-// --- GOOGLE SIGN-IN (Client-only) ---
-// NOTE: Replace with your Google OAuth Client ID from Google Cloud Console.
-const GOOGLE_CLIENT_ID = '977612649614-l0573h7jas2dqrnm87tf5s2o0dfm080g.apps.googleusercontent.com';
-
-function handleCredentialResponse(response) {
-    try {
-        const jwt = response.credential;
-        const payload = JSON.parse(atob(jwt.split('.')[1]));
-        const name = payload.name || payload.email || 'User';
-        document.getElementById('userInfo').innerText = `Hello, ${name}`;
-        document.getElementById('userInfo').style.display = 'block';
-        document.getElementById('gSignInDiv').style.display = 'none';
-        document.getElementById('signOutBtn').style.display = 'inline-block';
-        localStorage.setItem('g_user', JSON.stringify(payload));
-    } catch (e) { console.warn('Google sign-in parse failed', e); }
-}
-
-function initializeGoogleSignIn() {
-    if (!window.google || !google.accounts || !google.accounts.id) return;
-    if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.startsWith('REPLACE_')) {
-        console.warn('Google Sign-In not initialized: set GOOGLE_CLIENT_ID in script.js');
-        return;
-    }
-    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse });
-    google.accounts.id.renderButton(document.getElementById('gSignInDiv'), { theme: 'outline', size: 'medium' });
-}
-
-function signOut() {
-    const stored = localStorage.getItem('g_user');
-    if (stored) {
-        try {
-            const parsed = JSON.parse(stored);
-            if (window.google && google.accounts && google.accounts.id && parsed.email) {
-                google.accounts.id.revoke(parsed.email, () => console.log('revoked'));
-            }
-        } catch (e) {}
-    }
+// --- WEB3 SIGN OUT ---
+function signOutWeb3() {
+    web3Auth.disconnect();
     localStorage.removeItem('g_user');
     document.getElementById('userInfo').style.display = 'none';
-    document.getElementById('gSignInDiv').style.display = 'block';
+    document.getElementById('walletInfo').style.display = 'none';
+    document.getElementById('metamaskBtn').style.display = 'inline-block';
+    document.getElementById('trustwalletBtn').style.display = 'inline-block';
     document.getElementById('signOutBtn').style.display = 'none';
 }
 
-// Wire up auth UI on load
+// Wire up Web3 auth UI on load
 window.addEventListener('DOMContentLoaded', () => {
-    // Initialize Google Sign-In (if client lib loaded)
-    initializeGoogleSignIn();
+    // Show Web3 buttons
+    document.getElementById('metamaskBtn').style.display = 'inline-block';
+    document.getElementById('trustwalletBtn').style.display = 'inline-block';
 
     // Restore UI from localStorage if possible
     const stored = localStorage.getItem('g_user');
     if (stored) {
         try {
             const parsed = JSON.parse(stored);
-            const name = parsed.name || parsed.email || 'User';
-            document.getElementById('userInfo').innerText = `Hello, ${name}`;
-            document.getElementById('userInfo').style.display = 'block';
-            document.getElementById('gSignInDiv').style.display = 'none';
-            document.getElementById('signOutBtn').style.display = 'inline-block';
+            if (parsed.type === 'web3') {
+                document.getElementById('userInfo').innerText = parsed.shortAddress;
+                document.getElementById('userInfo').style.display = 'block';
+                document.getElementById('walletInfo').innerText = `Connected via ${parsed.provider}`;
+                document.getElementById('walletInfo').style.display = 'block';
+                document.getElementById('metamaskBtn').style.display = 'none';
+                document.getElementById('trustwalletBtn').style.display = 'none';
+                document.getElementById('signOutBtn').style.display = 'inline-block';
+            }
         } catch (e) { console.warn(e); }
     }
 
     const outBtn = document.getElementById('signOutBtn');
-    if (outBtn) outBtn.addEventListener('click', signOut);
+    if (outBtn) outBtn.addEventListener('click', signOutWeb3);
+});
+
+// ===== WEB3 WALLET HANDLERS =====
+
+// Connect MetaMask
+document.getElementById('metamaskBtn')?.addEventListener('click', async () => {
+    const result = await web3Auth.connectMetaMask();
+    if (result) {
+        handleWeb3Login(result, 'MetaMask');
+    }
+});
+
+// Connect Trust Wallet
+document.getElementById('trustwalletBtn')?.addEventListener('click', async () => {
+    const result = await web3Auth.connectTrustWallet();
+    if (result) {
+        handleWeb3Login(result, 'Trust Wallet');
+    }
+});
+
+// Handle Web3 login
+function handleWeb3Login(walletData, provider) {
+    const userInfo = document.getElementById('userInfo');
+    const walletInfo = document.getElementById('walletInfo');
+    const metamaskBtn = document.getElementById('metamaskBtn');
+    const trustwalletBtn = document.getElementById('trustwalletBtn');
+    const signOutBtn = document.getElementById('signOutBtn');
+
+    // Update UI
+    userInfo.innerText = `Wallet: ${walletData.shortAddress}`;
+    userInfo.style.display = 'block';
+    walletInfo.innerText = `Connected via ${provider}`;
+    walletInfo.style.display = 'block';
+    metamaskBtn.style.display = 'none';
+    trustwalletBtn.style.display = 'none';
+    signOutBtn.style.display = 'inline-block';
+
+    // Store wallet data in localStorage
+    localStorage.setItem('g_user', JSON.stringify({
+        type: 'web3',
+        provider: provider,
+        address: walletData.address,
+        shortAddress: walletData.shortAddress,
+        balance: walletData.balance,
+        chainId: walletData.chainId,
+        chainName: walletData.chainName,
+        email: walletData.shortAddress
+    }));
+
+    console.log(`Connected to ${provider}:`, walletData);
+}
+
+// Update profile modal with wallet data
+function updateProfileModal() {
+    const profileModal = document.getElementById('profileModal');
+    const profileName = document.getElementById('profileName');
+    const profileEmail = document.getElementById('profileEmail');
+    const walletAssetsSection = document.getElementById('walletAssetsSection');
+    const walletAddress = document.getElementById('walletAddress');
+    const walletBalance = document.getElementById('walletBalance');
+    const walletChain = document.getElementById('walletChain');
+
+    const stored = localStorage.getItem('g_user');
+    if (!stored) return;
+
+    try {
+        const userData = JSON.parse(stored);
+
+        if (userData.type === 'web3') {
+            // Web3 wallet login
+            profileName.innerText = userData.provider;
+            profileEmail.innerText = userData.shortAddress;
+            walletAssetsSection.style.display = 'block';
+            walletAddress.innerHTML = `<strong>Address:</strong> ${userData.address}`;
+            walletBalance.innerHTML = `<strong>Balance:</strong> ${userData.balance} ${userData.chainName.includes('Polygon') ? 'MATIC' : userData.chainName.includes('Binance') ? 'BNB' : 'ETH'}`;
+            walletChain.innerHTML = `<strong>Network:</strong> ${userData.chainName}`;
+        }
+    } catch (e) {
+        console.error('Profile update error:', e);
+    }
+}
+
+// Open profile modal from wallet info
+document.getElementById('userInfo')?.addEventListener('click', () => {
+    updateProfileModal();
+    document.getElementById('profileModal').classList.add('active');
+});
+
+document.getElementById('walletInfo')?.addEventListener('click', () => {
+    updateProfileModal();
+    document.getElementById('profileModal').classList.add('active');
+});
+
+// Refresh wallet balance
+document.getElementById('walletRefresh')?.addEventListener('click', async () => {
+    if (web3Auth.isConnected()) {
+        const balance = await web3Auth.refreshBalance();
+        const walletBalance = document.getElementById('walletBalance');
+        const userData = JSON.parse(localStorage.getItem('g_user'));
+        walletBalance.innerHTML = `<strong>Balance:</strong> ${balance} ${userData.chainName.includes('Polygon') ? 'MATIC' : userData.chainName.includes('Binance') ? 'BNB' : 'ETH'}`;
+        
+        // Update localStorage
+        userData.balance = balance;
+        localStorage.setItem('g_user', JSON.stringify(userData));
+    }
+});
 });
