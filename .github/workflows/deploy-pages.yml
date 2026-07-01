@@ -1,0 +1,41 @@
+name: Deploy Pages (inject Google Client ID)
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare site directory
+        run: |
+          rm -rf site
+          mkdir site
+          # copy all files except GitHub workflows to a clean folder
+          rsync -av --exclude='.git' --exclude='.github' ./ site/
+
+      - name: Inject Google Client ID
+        env:
+          G_CLIENT_ID: ${{ secrets.G_CLIENT_ID }}
+        run: |
+          if [ -z "$G_CLIENT_ID" ]; then echo "ERROR: G_CLIENT_ID secret not set"; exit 1; fi
+          # Replace placeholder in files that need the client id
+          sed -i "s/REPLACE_WITH_GOOGLE_CLIENT_ID.apps.googleusercontent.com/${G_CLIENT_ID}/g" site/script.js || true
+          sed -i "s/REPLACE_WITH_GOOGLE_CLIENT_ID.apps.googleusercontent.com/${G_CLIENT_ID}/g" site/play.html || true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1

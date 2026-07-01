@@ -54,6 +54,17 @@ const movies = [
 - Movie details page
 - Filter by genre, year, rating
 
+## Google Sign-In Setup (keeps client ID out of source)
+
+1. In the Google Cloud Console create an OAuth 2.0 Client ID (Web application). Add these Authorized JavaScript origins:
+    - https://seangritthy.github.io
+    - http://localhost:3000 (optional for local testing)
+2. In your GitHub repository go to Settings → Secrets and variables → Actions → New repository secret. Add a secret named `G_CLIENT_ID` with the Client ID value (the part ending in `.apps.googleusercontent.com`).
+3. The repository already includes a GitHub Actions workflow `.github/workflows/deploy-pages.yml` which will inject the client ID at deploy time. Just push to `main` and the workflow will run.
+4. Locally you can test by creating a file `local.env` and replacing the `GOOGLE_CLIENT_ID` placeholder in `script.js` (not recommended to commit).
+
+Security note: Do not commit your Client ID to the repository. Use the `G_CLIENT_ID` secret instead which the workflow injects during deploy.
+
 ## License
 
 Free to use and modify!
