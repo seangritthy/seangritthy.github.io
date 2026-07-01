@@ -10,8 +10,12 @@ permissions:
   id-token: write
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,22 +24,35 @@ jobs:
         run: |
           rm -rf site
           mkdir site
-          # copy all files except GitHub workflows to a clean folder
-          rsync -av --exclude='.git' --exclude='.github' ./ site/
+          rsync -av --exclude='.git' --exclude='.github' --exclude='.github/workflows' ./ site/
 
       - name: Inject Google Client ID
         env:
           G_CLIENT_ID: ${{ secrets.G_CLIENT_ID }}
         run: |
-          if [ -z "$G_CLIENT_ID" ]; then echo "ERROR: G_CLIENT_ID secret not set"; exit 1; fi
-          # Replace placeholder in files that need the client id
-          sed -i "s/REPLACE_WITH_GOOGLE_CLIENT_ID.apps.googleusercontent.com/${G_CLIENT_ID}/g" site/script.js || true
-          sed -i "s/REPLACE_WITH_GOOGLE_CLIENT_ID.apps.googleusercontent.com/${G_CLIENT_ID}/g" site/play.html || true
+          if [ -n "$G_CLIENT_ID" ]; then
+            echo "Injecting Google Client ID"
+            sed -i "s/REPLACE_WITH_GOOGLE_CLIENT_ID.apps.googleusercontent.com/${G_CLIENT_ID}/g" site/script.js || true
+            sed -i "s/REPLACE_WITH_GOOGLE_CLIENT_ID.apps.googleusercontent.com/${G_CLIENT_ID}/g" site/play.html || true
+          else
+            echo "G_CLIENT_ID not set; leaving placeholder in place"
+          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v1
+        id: deployment
+        uses: actions/deploy-pages@v4
