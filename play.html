@@ -11,6 +11,7 @@
     <meta property="og:type" content="video.movie">
 
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Exo+2:wght@300;400;600&family=Noto+Sans+SC:wght@400;500;700&family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
     :root {
         --primary: #00ff9d; --secondary: #7b61ff; --accent: #ff00e5; --dark-bg: #0a0a0f;
@@ -150,6 +151,11 @@
         </div>
         <div class="header-content">
             <div class="site-title">GITHUB MOVIES</div>
+                <div id="authInline" style="display:flex;align-items:center;gap:10px;">
+                    <div id="gSignInDiv"></div>
+                    <div id="userInfo" style="display:none;color:var(--primary);font-family:'Share Tech Mono',monospace;"></div>
+                    <button id="signOutBtn" class="quality-btn" style="display:none;">Sign out</button>
+                </div>
             <a href="index.html" class="nav-link" id="returnBtn">← RETURN TO MAINFRAME</a>
         </div>
     </header>
@@ -238,6 +244,41 @@
     </div>
 
     <script>
+        // --- Lightweight Google Sign-In placeholders for player page ---
+        function playHandleCredentialResponse(response) {
+            try {
+                const jwt = response.credential;
+                const payload = JSON.parse(atob(jwt.split('.')[1]));
+                localStorage.setItem('g_user', JSON.stringify(payload));
+                const name = payload.name || payload.email || 'User';
+                const ui = document.getElementById('userInfo'); if (ui) { ui.innerText = `Hello, ${name}`; ui.style.display = 'block'; }
+                const out = document.getElementById('signOutBtn'); if (out) out.style.display = 'inline-block';
+                const gdiv = document.getElementById('gSignInDiv'); if (gdiv) gdiv.style.display = 'none';
+            } catch (e) { console.warn(e); }
+        }
+        function playInitGoogle() {
+            if (!window.google || !google.accounts || !google.accounts.id) return;
+            const CLIENT_ID = 'REPLACE_WITH_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+            if (CLIENT_ID.startsWith('REPLACE_')) return;
+            google.accounts.id.initialize({ client_id: CLIENT_ID, callback: playHandleCredentialResponse });
+            google.accounts.id.renderButton(document.getElementById('gSignInDiv'), { theme: 'outline', size: 'medium' });
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            // Restore UI from localStorage
+            const stored = localStorage.getItem('g_user');
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    const name = parsed.name || parsed.email || 'User';
+                    const ui = document.getElementById('userInfo'); if (ui) { ui.innerText = `Hello, ${name}`; ui.style.display = 'block'; }
+                    const out = document.getElementById('signOutBtn'); if (out) out.style.display = 'inline-block';
+                    const gdiv = document.getElementById('gSignInDiv'); if (gdiv) gdiv.style.display = 'none';
+                } catch (e){}
+            }
+            const outBtn = document.getElementById('signOutBtn'); if (outBtn) outBtn.addEventListener('click', () => { localStorage.removeItem('g_user'); location.reload(); });
+            playInitGoogle();
+        });
+
         if (!localStorage.getItem('uiLang')) {
             const browserLang = navigator.language || navigator.userLanguage;
             if (browserLang.toLowerCase().includes('km')) localStorage.setItem('uiLang', 'km');

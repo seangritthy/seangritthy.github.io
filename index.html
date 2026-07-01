@@ -168,6 +168,11 @@
                 <input type="text" id="searchInput" placeholder="Search Database...">
                 <button id="searchBtn">🔍 SEARCH</button>
             </div>
+
+            <div style="display:flex;justify-content:center;gap:10px;margin-top:12px;">
+                <button id="menuLoginBtn" class="type-btn">🔐 Login</button>
+                <button id="menuProfileBtn" class="type-btn" style="display:none;">👤 Profile</button>
+            </div>
             
             <div class="type-selector">
                 <button id="movieBtn" class="type-btn active">🎥 MOVIES</button>
@@ -203,6 +208,16 @@
             <button id="nextBtn" class="page-btn">NEXT &#8594;</button>
         </div>
     </main>
+
+    <!-- Profile Modal -->
+    <div class="share-modal" id="profileModal">
+        <div class="share-modal-content">
+            <span class="share-close" id="profileClose">&times;</span>
+            <h2 class="share-title" id="profileName">Profile</h2>
+            <div id="profileEmail" style="color:var(--cyber-blue);margin-bottom:10px;"></div>
+            <button class="copy-btn" id="profileSignOut">Sign out</button>
+        </div>
+    </div>
 
     <script>
         // --- MENU TOGGLE LOGIC ---

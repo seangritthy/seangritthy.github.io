@@ -10,6 +10,38 @@ window.addEventListener('DOMContentLoaded', fetchPopularMovies);
 searchBtn.addEventListener('click', searchMovies);
 searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchMovies(); });
 
+// Menu buttons (login/profile)
+const menuLoginBtn = document.getElementById('menuLoginBtn');
+const menuProfileBtn = document.getElementById('menuProfileBtn');
+
+function openProfileModal() {
+    const stored = localStorage.getItem('g_user');
+    if (!stored) return alert('Not signed in');
+    const parsed = JSON.parse(stored);
+    document.getElementById('profileName').innerText = parsed.name || parsed.email || 'Profile';
+    document.getElementById('profileEmail').innerText = parsed.email || '';
+    document.getElementById('profileModal').classList.add('active');
+}
+
+// Wire menu buttons if present
+if (menuLoginBtn) {
+    menuLoginBtn.addEventListener('click', () => {
+        if (window.google && google.accounts && google.accounts.id) {
+            google.accounts.id.prompt();
+        } else {
+            // fallback: scroll to header sign-in UI
+            const s = document.getElementById('gSignInDiv'); if (s) s.scrollIntoView({behavior:'smooth'});
+        }
+    });
+}
+if (menuProfileBtn) menuProfileBtn.addEventListener('click', openProfileModal);
+
+// Profile modal listeners
+const profileClose = document.getElementById('profileClose');
+if (profileClose) profileClose.addEventListener('click', () => document.getElementById('profileModal').classList.remove('active'));
+const profileSignOut = document.getElementById('profileSignOut');
+if (profileSignOut) profileSignOut.addEventListener('click', () => { signOut(); document.getElementById('profileModal').classList.remove('active'); });
+
 function setGridMessage(message) {
     moviesGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--primary); font-family: 'Share Tech Mono', monospace; font-size: 1.2rem;">${message}</p>`;
 }
