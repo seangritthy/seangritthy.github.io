@@ -5,8 +5,8 @@
     --secondary: #7b61ff;
     --accent: #ff00e5;
     --dark-bg: #0a0a0f;
-    --cyber-blue: #00ccff;
-    --cyber-yellow: #fff200;
+    --info: #00ccff;
+    --warning: #fff200;
     --card-bg: #13131f;
 }
 
@@ -97,7 +97,7 @@ h1 {
 
 .wallet-modal-close {
     font-size: 1.8rem;
-    color: var(--cyber-blue);
+    color: var(--info);
     cursor: pointer;
     transition: color 0.3s;
 }
@@ -148,7 +148,7 @@ h1 {
 
 .wallet-desc {
     font-size: 0.8rem;
-    color: var(--cyber-blue);
+    color: var(--info);
     margin-top: 3px;
 }
 
@@ -293,7 +293,7 @@ h1 {
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--cyber-blue), var(--primary), var(--accent));
+    background: linear-gradient(90deg, var(--info), var(--primary), var(--accent));
     opacity: 0;
     transition: 0.3s;
     z-index: 2;
@@ -332,13 +332,13 @@ h1 {
 
 .movie-year, .movie-rating {
     font-family: 'Share Tech Mono', monospace;
-    color: var(--cyber-blue);
+    color: var(--info);
     font-size: 0.9rem;
     margin-bottom: 5px;
 }
 
 .movie-rating {
-    color: var(--cyber-yellow);
+    color: var(--warning);
 }
 
 /* RESPONSIVE DESIGN */

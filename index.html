@@ -8,138 +8,423 @@
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Exo+2:wght@300;400;600&family=Noto+Sans+SC:wght@400;500;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #00ff9d; --secondary: #7b61ff;
-            --dark-bg: #0a0a0f; --card-bg: #13131f;
-            --cyber-blue: #00ccff; --cyber-yellow: #fff200;
-            --accent: #ff00e5;
+            --primary: #15f5ba;
+            --secondary: #31a6ff;
+            --accent: #ff5478;
+            --dark-bg: #04060d;
+            --card-bg: #0c1322;
+            --panel-bg: rgba(6, 11, 22, 0.8);
+            --text-main: #f6fbff;
+            --muted: #8ca7c8;
+            --line-glow: rgba(49, 166, 255, 0.35);
         }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Exo 2', 'Noto Sans SC', 'Battambang', sans-serif; 
-            background: var(--dark-bg); color: white; min-height: 100vh;
-            background-image: linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(123, 97, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
+            font-family: 'Exo 2', 'Noto Sans SC', 'Battambang', sans-serif;
+            color: var(--text-main);
+            min-height: 100vh;
+            background-color: var(--dark-bg);
+            background-image:
+                radial-gradient(circle at 12% 8%, rgba(21, 245, 186, 0.18), transparent 34%),
+                radial-gradient(circle at 86% 12%, rgba(49, 166, 255, 0.16), transparent 36%),
+                radial-gradient(circle at 50% 110%, rgba(255, 84, 120, 0.15), transparent 42%),
+                linear-gradient(rgba(49, 166, 255, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(49, 166, 255, 0.05) 1px, transparent 1px);
+            background-size: auto, auto, auto, 44px 44px, 44px 44px;
+            background-attachment: fixed;
         }
-        
-        /* HEADER SCROLL LOGIC */
+
         header {
-            padding: 20px; 
-            background: rgba(10, 10, 15, 0.95); 
-            border-bottom: 2px solid var(--primary); 
-            box-shadow: 0 0 25px rgba(0, 255, 157, 0.3);
-            position: sticky; top: 0; z-index: 1000;
+            padding: 18px 20px;
+            background: linear-gradient(145deg, rgba(6, 10, 20, 0.95), rgba(8, 15, 30, 0.9));
+            border-bottom: 1px solid var(--line-glow);
+            box-shadow: 0 16px 32px rgba(2, 7, 20, 0.55), inset 0 -1px 0 rgba(21, 245, 186, 0.12);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
             transition: transform 0.4s cubic-bezier(0.3, 1, 0.2, 1);
             will-change: transform;
         }
-        
-        .header-hidden {
-            transform: translateY(-100%);
-        }
 
-        /* COMPACT TOP BAR */
+        .header-hidden { transform: translateY(-100%); }
+
         .top-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
             max-width: 1400px;
             margin: 0 auto;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            padding: 6px;
+            border: 1px solid rgba(49, 166, 255, 0.4);
+            border-radius: 10px;
+            background: rgba(10, 18, 34, 0.8);
+            box-shadow: inset 0 0 0 1px rgba(21, 245, 186, 0.16);
+        }
+
+        .site-logo {
+            height: 36px;
+            width: auto;
+            display: block;
+            filter: drop-shadow(0 0 8px rgba(21, 245, 186, 0.45));
         }
 
         h1 {
-            font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; 
-            color: var(--primary); 
-            font-size: 2rem; 
-            text-shadow: 0 0 15px rgba(0, 255, 157, 0.6); 
+            font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif;
+            color: var(--primary);
+            font-size: 1.9rem;
             letter-spacing: 2px;
-            margin: 0; /* Removed bottom margin */
+            margin: 0;
+            text-shadow: 0 0 18px rgba(21, 245, 186, 0.45);
         }
 
         .menu-toggle-btn {
-            padding: 8px 20px;
-            background: transparent; border: 1px solid var(--cyber-blue);
-            color: var(--cyber-blue); font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif;
-            font-weight: bold; cursor: pointer; transition: all 0.3s; letter-spacing: 2px;
-            border-radius: 4px;
-        }
-        .menu-toggle-btn:hover, .menu-toggle-btn.active {
-            background: var(--cyber-blue); color: #000; box-shadow: 0 0 15px var(--cyber-blue);
+            padding: 9px 18px;
+            border-radius: 999px;
+            border: 1px solid var(--secondary);
+            background: rgba(49, 166, 255, 0.08);
+            color: var(--secondary);
+            font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s;
         }
 
-        /* EXPANDABLE MENU CONTAINER */
-        .menu-container {
-            max-height: 0; overflow: hidden; opacity: 0;
-            transition: all 0.5s cubic-bezier(0.3, 1, 0.2, 1);
-            display: flex; flex-direction: column; gap: 20px;
-            max-width: 1400px; margin: 0 auto;
+        .menu-toggle-btn:hover,
+        .menu-toggle-btn.active {
+            color: #03131f;
+            background: var(--secondary);
+            border-color: var(--secondary);
+            box-shadow: 0 0 24px rgba(49, 166, 255, 0.55);
         }
+
+        .menu-container {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.3, 1, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
         .menu-container.active {
-            max-height: 800px; opacity: 1;
-            padding-top: 20px; margin-top: 20px;
-            border-top: 1px dashed rgba(123, 97, 255, 0.4);
+            max-height: 880px;
+            opacity: 1;
+            padding-top: 18px;
+            margin-top: 16px;
+            border-top: 1px dashed rgba(49, 166, 255, 0.45);
         }
 
         .ui-lang-wrapper { text-align: center; }
+
         .ui-lang-select {
-            background: rgba(0, 0, 0, 0.8); border: 1px solid var(--primary); color: var(--primary);
-            padding: 5px 10px; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; outline: none; cursor: pointer;
-            border-radius: 4px; transition: all 0.3s;
+            background: rgba(4, 10, 21, 0.9);
+            border: 1px solid rgba(21, 245, 186, 0.5);
+            color: var(--primary);
+            padding: 7px 12px;
+            font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
+            outline: none;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
         }
-        .ui-lang-select:hover { box-shadow: 0 0 10px var(--primary); }
-        .ui-lang-select option { background: var(--dark-bg); color: white; }
 
-        .search-container { display: flex; justify-content: center; gap: 15px; max-width: 600px; margin: 0 auto; width: 100%; flex-wrap: wrap; }
+        .ui-lang-select:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 14px rgba(21, 245, 186, 0.45);
+        }
+
+        .ui-lang-select option {
+            background: #081325;
+            color: var(--text-main);
+        }
+
+        .search-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            max-width: 700px;
+            margin: 0 auto;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
         #searchInput {
-            flex: 1; padding: 12px 15px; background: rgba(0, 0, 0, 0.8); border: 1px solid var(--secondary);
-            color: var(--primary); font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 1rem; outline: none;
+            flex: 1;
+            min-width: 260px;
+            padding: 12px 14px;
+            background: rgba(2, 7, 18, 0.9);
+            border: 1px solid rgba(49, 166, 255, 0.45);
+            border-radius: 10px;
+            color: var(--primary);
+            font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
+            font-size: 0.98rem;
+            outline: none;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
         }
-        #searchInput:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(0, 255, 157, 0.3); }
+
+        #searchInput:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 16px rgba(21, 245, 186, 0.35);
+        }
+
         #searchBtn {
-            padding: 12px 24px; border: 1px solid var(--primary); background: rgba(0, 255, 157, 0.1);
-            color: var(--primary); font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; font-weight: bold; cursor: pointer; transition: all 0.3s;
+            padding: 12px 22px;
+            border-radius: 10px;
+            border: 1px solid var(--primary);
+            background: linear-gradient(135deg, rgba(21, 245, 186, 0.25), rgba(21, 245, 186, 0.06));
+            color: var(--primary);
+            font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
         }
-        #searchBtn:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary); }
-        
-        .type-selector { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-        .type-btn { padding: 8px 20px; background: rgba(0, 255, 157, 0.05); border: 1px solid var(--secondary); color: var(--secondary); cursor: pointer; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; }
-        .type-btn.active { background: var(--primary); color: #000; border-color: var(--primary); }
-        .filter-alert { background: rgba(255,0,229,0.2); border: 1px solid var(--accent); color: #fff; display: none; }
-        
-        .category-selector { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
-        .cat-btn { padding: 6px 15px; background: transparent; border: 1px solid var(--cyber-blue); color: var(--cyber-blue); cursor: pointer; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.85rem; transition: all 0.3s; border-radius: 4px;}
-        .cat-btn.active, .cat-btn:hover { background: var(--cyber-blue); color: #000; box-shadow: 0 0 10px var(--cyber-blue); }
 
-        .lang-btn { padding: 6px 15px; background: transparent; border: 1px solid var(--accent); color: var(--accent); cursor: pointer; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.85rem; transition: all 0.3s; border-radius: 4px;}
-        .lang-btn.active, .lang-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 10px var(--accent); }
+        #searchBtn:hover {
+            transform: translateY(-1px);
+            background: var(--primary);
+            color: #04131f;
+            box-shadow: 0 0 22px rgba(21, 245, 186, 0.55);
+        }
 
-        .movies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 35px; padding: 40px 20px; max-width: 1400px; margin: 0 auto; }
-        .movie-card { background: var(--card-bg); border: 1px solid var(--secondary); overflow: hidden; cursor: pointer; transition: all 0.3s ease; position: relative; border-radius: 5px; }
-        .movie-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--cyber-blue), var(--primary), var(--accent)); opacity: 0; transition: 0.3s; z-index: 2; }
-        .movie-card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 0 25px rgba(0, 255, 157, 0.4); }
+        .type-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .type-btn {
+            padding: 8px 18px;
+            border-radius: 999px;
+            background: rgba(49, 166, 255, 0.08);
+            border: 1px solid rgba(49, 166, 255, 0.45);
+            color: var(--secondary);
+            cursor: pointer;
+            font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
+            transition: all 0.3s;
+        }
+
+        .type-btn:hover,
+        .type-btn.active {
+            color: #02131d;
+            background: var(--secondary);
+            border-color: var(--secondary);
+            box-shadow: 0 0 18px rgba(49, 166, 255, 0.5);
+        }
+
+        .filter-alert {
+            background: rgba(255, 84, 120, 0.18);
+            border-color: rgba(255, 84, 120, 0.75);
+            color: #ffcfda;
+        }
+
+        .category-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 13px;
+            flex-wrap: wrap;
+        }
+
+        .cat-btn,
+        .lang-btn {
+            padding: 7px 14px;
+            background: rgba(6, 14, 28, 0.82);
+            border-radius: 999px;
+            cursor: pointer;
+            font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
+            font-size: 0.82rem;
+            transition: all 0.3s;
+        }
+
+        .cat-btn {
+            border: 1px solid rgba(49, 166, 255, 0.5);
+            color: var(--secondary);
+        }
+
+        .cat-btn.active,
+        .cat-btn:hover {
+            background: var(--secondary);
+            color: #01121a;
+            box-shadow: 0 0 14px rgba(49, 166, 255, 0.55);
+        }
+
+        .lang-btn {
+            border: 1px solid rgba(255, 84, 120, 0.6);
+            color: var(--accent);
+        }
+
+        .lang-btn.active,
+        .lang-btn:hover {
+            background: var(--accent);
+            color: #260813;
+            box-shadow: 0 0 14px rgba(255, 84, 120, 0.5);
+        }
+
+        .movies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 28px;
+            padding: 34px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .movie-card {
+            background: linear-gradient(175deg, rgba(12, 20, 37, 0.95), rgba(10, 15, 28, 0.95));
+            border: 1px solid rgba(49, 166, 255, 0.35);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+            position: relative;
+            border-radius: 14px;
+            box-shadow: 0 18px 24px rgba(2, 8, 18, 0.38);
+        }
+
+        .movie-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 14px;
+            border: 1px solid transparent;
+            background: linear-gradient(130deg, rgba(21, 245, 186, 0.5), rgba(49, 166, 255, 0.45), rgba(255, 84, 120, 0.36)) border-box;
+            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(21, 245, 186, 0.55);
+            box-shadow: 0 24px 34px rgba(3, 13, 25, 0.58), 0 0 20px rgba(49, 166, 255, 0.25);
+        }
+
         .movie-card:hover::before { opacity: 1; }
-        .movie-poster { width: 100%; height: 330px; object-fit: cover; border-bottom: 1px solid rgba(123, 97, 255, 0.3); }
-        .movie-info { padding: 15px; }
-        .movie-title { font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; font-size: 1.1rem; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--primary); }
-        .movie-year, .movie-rating { font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; color: var(--cyber-blue); font-size: 0.9rem; margin-bottom: 5px; }
-        .movie-rating { color: var(--cyber-yellow); }
-        
-        .loading { text-align: center; padding: 60px; color: var(--primary); font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; grid-column: 1 / -1; font-size: 1.2rem; }
-        .spinner { width: 50px; height: 50px; border: 3px solid rgba(0, 255, 157, 0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
-        .pagination { display: none; justify-content: center; align-items: center; gap: 20px; padding: 20px; margin-bottom: 40px; }
-        .page-btn { padding: 10px 20px; background: rgba(0, 255, 157, 0.1); border: 1px solid var(--primary); color: var(--primary); cursor: pointer; font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; font-weight: bold; transition: all 0.3s; border-radius: 4px;}
-        .page-btn:hover:not(:disabled) { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
-        .page-btn:disabled { border-color: #555; color: #555; cursor: not-allowed; background: transparent; box-shadow: none; }
-        .page-info { font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; color: var(--cyber-yellow); font-size: 1.2rem; letter-spacing: 2px;}
 
-        @media (max-width: 768px) { 
-            h1 { font-size: 1.3rem; } 
-            .menu-toggle-btn { padding: 6px 12px; font-size: 0.9rem;}
-            .movies-grid { gap: 20px; padding: 20px 15px; } 
-            .movie-poster { height: 280px; } 
-            .search-container { flex-direction: column; } 
-            #searchBtn { width: 100%; } 
-            header { padding: 15px; }
+        .movie-poster {
+            width: 100%;
+            height: 330px;
+            object-fit: cover;
+            border-bottom: 1px solid rgba(49, 166, 255, 0.25);
+        }
+
+        .movie-info { padding: 14px; }
+
+        .movie-title {
+            font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif;
+            font-size: 1.02rem;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--primary);
+        }
+
+        .movie-year,
+        .movie-rating {
+            font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
+            font-size: 0.88rem;
+            margin-bottom: 4px;
+        }
+
+        .movie-year { color: var(--secondary); }
+        .movie-rating { color: #ffd166; }
+
+        .loading {
+            text-align: center;
+            padding: 62px;
+            color: var(--primary);
+            font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif;
+            grid-column: 1 / -1;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(49, 166, 255, 0.25);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.85s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .pagination {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            padding: 18px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            padding: 10px 18px;
+            border-radius: 10px;
+            background: rgba(49, 166, 255, 0.1);
+            border: 1px solid rgba(49, 166, 255, 0.55);
+            color: var(--secondary);
+            cursor: pointer;
+            font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif;
+            font-weight: 700;
+            transition: all 0.28s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: var(--secondary);
+            color: #02121c;
+            box-shadow: 0 0 16px rgba(49, 166, 255, 0.55);
+        }
+
+        .page-btn:disabled {
+            border-color: #304058;
+            color: #4d627f;
+            cursor: not-allowed;
+            background: rgba(7, 15, 30, 0.45);
+            box-shadow: none;
+        }
+
+        .page-info {
+            font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
+            color: #ffd166;
+            font-size: 1.02rem;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.3rem; }
+            .menu-toggle-btn { padding: 7px 13px; font-size: 0.85rem; }
+            .movies-grid { gap: 18px; padding: 22px 14px; }
+            .movie-poster { height: 280px; }
+            .search-container { flex-direction: column; }
+            #searchInput { min-width: unset; width: 100%; }
+            #searchBtn { width: 100%; }
+            header { padding: 14px; }
+            .top-bar { justify-content: center; }
+            .logo-container { order: 1; }
+            h1 { order: 2; width: 100%; text-align: center; }
         }
     </style>
 </head>
@@ -202,7 +487,7 @@
 
     <main>
         <div id="moviesGrid" class="movies-grid">
-            <div class="loading"><div class="spinner"></div><div id="initText">INITIALIZING SYSTEM...</div></div>
+            <div class="loading"><div class="spinner"></div><div id="initText">LOADING WEB3 MOVIES...</div></div>
         </div>
 
         <div class="pagination" id="pagination">
@@ -220,7 +505,7 @@
                 <span class="wallet-modal-close" id="walletModalClose">&times;</span>
             </div>
             <div class="wallet-modal-body">
-                <p style="color:var(--cyber-blue);margin-bottom:20px;text-align:center;font-family:'Share Tech Mono',monospace;">Select a wallet to connect</p>
+                <p style="color:var(--secondary);margin-bottom:20px;text-align:center;font-family:'Share Tech Mono',monospace;">Select a wallet to connect</p>
                 <button class="wallet-option" id="connectMetaMask">
                     <div class="wallet-icon">🦊</div>
                     <div class="wallet-name">MetaMask</div>
@@ -238,13 +523,13 @@
         <div class="share-modal-content">
             <span class="share-close" id="profileClose">&times;</span>
             <h2 class="share-title" id="profileName">Profile</h2>
-            <div id="profileEmail" style="color:var(--cyber-blue);margin-bottom:10px;"></div>
+            <div id="profileEmail" style="color:var(--secondary);margin-bottom:10px;"></div>
             
             <!-- Web3 Wallet Assets -->
             <div id="walletAssetsSection" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--secondary);">
                 <h3 style="color:var(--primary);margin-bottom:10px;font-size:0.9rem;">💰 Wallet Assets</h3>
-                <div id="walletAddress" style="color:var(--cyber-blue);font-family:'Share Tech Mono',monospace;font-size:0.8rem;margin-bottom:8px;"></div>
-                <div id="walletBalance" style="color:var(--cyber-yellow);font-family:'Share Tech Mono',monospace;font-size:1rem;margin-bottom:8px;"></div>
+                <div id="walletAddress" style="color:var(--secondary);font-family:'Share Tech Mono',monospace;font-size:0.8rem;margin-bottom:8px;"></div>
+                <div id="walletBalance" style="color:#ffd166;font-family:'Share Tech Mono',monospace;font-size:1rem;margin-bottom:8px;"></div>
                 <div id="walletChain" style="color:var(--primary);font-family:'Share Tech Mono',monospace;font-size:0.85rem;margin-bottom:10px;"></div>
                 <button class="copy-btn" id="walletRefresh" style="background:var(--primary);color:black;margin-bottom:10px;width:100%;">🔄 Refresh Balance</button>
             </div>
@@ -307,16 +592,16 @@
                 langChinese: "🇨🇳 CHINESE",
                 prevBtn: "&#8592; PREV",
                 nextBtn: "NEXT &#8594;",
-                initSystem: "INITIALIZING SYSTEM...",
-                fetchingDB: "FETCHING DATABASE...",
+                initSystem: "LOADING WEB3 MOVIES...",
+                fetchingDB: "FETCHING ON-CHAIN CATALOG...",
                 noResults: "🔍 NO RESULTS FOUND IN ARCHIVE",
                 networkError: "⚠️ NETWORK ERROR • PLEASE REFRESH",
                 pageOf: (cur, tot) => `PAGE ${cur} OF ${tot}`,
-                scanCast: (name) => `SCANNING FILES FEATURING: ${name}`,
+                scanCast: (name) => `SEARCHING TITLES FEATURING: ${name}`,
                 filterGenre: (name) => `FILTERING BY GENRE: ${name}`,
                 filterRegion: (name) => `FILTERING REGION: ${name}`,
                 filterLang: (name) => `FILTERING NATIVE LANGUAGE: ${name}`,
-                scanFor: (term) => `SCANNING FOR "${term}"...`
+                scanFor: (term) => `SEARCHING FOR "${term}"...`
             },
             km: {
                 siteTitle: "GITHUB MOVIES",
@@ -335,8 +620,8 @@
                 langChinese: "🇨🇳 ចិន",
                 prevBtn: "&#8592; ថយក្រោយ",
                 nextBtn: "បន្ទាប់ &#8594;",
-                initSystem: "កំពុងចាប់ផ្តើមប្រព័ន្ធ...",
-                fetchingDB: "កំពុងទាញយកទិន្នន័យ...",
+                initSystem: "កំពុងផ្ទុកភាពយន្ត Web3...",
+                fetchingDB: "កំពុងទាញយកកាតាឡុក Web3...",
                 noResults: "🔍 រកមិនឃើញលទ្ធផលទេ",
                 networkError: "⚠️ បញ្ហាបណ្តាញ • សូមព្យាយាមម្តងទៀត",
                 pageOf: (cur, tot) => `ទំព័រ ${cur} នៃ ${tot}`,
@@ -363,8 +648,8 @@
                 langChinese: "🇨🇳 中文",
                 prevBtn: "&#8592; 上一页",
                 nextBtn: "下一页 &#8594;",
-                initSystem: "正在初始化系统...",
-                fetchingDB: "正在获取数据库...",
+                initSystem: "正在加载 Web3 影视...",
+                fetchingDB: "正在获取 Web3 片库...",
                 noResults: "🔍 未找到结果",
                 networkError: "⚠️ 网络错误 • 请刷新",
                 pageOf: (cur, tot) => `第 ${cur} 页，共 ${tot} 页`,
