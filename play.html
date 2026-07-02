@@ -506,6 +506,14 @@
                     <div class="control-label" id="lblBuffer">BUFFER HEALTH</div>
                     <div class="control-value" id="bufferHealth">98%</div>
                 </div>
+                <div class="control-item">
+                    <div class="control-label" id="lblCrypto">CRYPTO MARKET</div>
+                    <div class="control-value" id="cryptoMarket">Loading...</div>
+                </div>
+                <div class="control-item">
+                    <div class="control-label" id="lblCryptoChange">24H CHANGE</div>
+                    <div class="control-value" id="cryptoChange">--</div>
+                </div>
             </div>
             <div class="quality-selector">
                 <button class="quality-btn active" data-quality="auto" id="btnAuto">AUTO (RECOMMENDED)</button>
@@ -625,6 +633,8 @@
                 streamQuality: "STREAM QUALITY",
                 bitrate: "BITRATE",
                 bufferHealth: "BUFFER HEALTH",
+                cryptoMarket: "CRYPTO MARKET",
+                cryptoChange: "24H CHANGE",
                 auto: "AUTO (RECOMMENDED)",
                 unknownRole: "Unknown Role",
                 na: "N/A",
@@ -654,6 +664,8 @@
                 streamQuality: "កម្រិតច្បាស់",
                 bitrate: "ល្បឿនអ៊ីនធឺណិត",
                 bufferHealth: "សុខភាពបណ្តាញ",
+                cryptoMarket: "ទីផ្សារគ្រីបតូ",
+                cryptoChange: "ការប្រែប្រួល ២៤ ម៉ោង",
                 auto: "ស្វ័យប្រវត្តិ",
                 unknownRole: "មិនស្គាល់តួអង្គ",
                 na: "មិនមាន",
@@ -683,6 +695,8 @@
                 streamQuality: "画质",
                 bitrate: "比特率",
                 bufferHealth: "缓冲健康度",
+                cryptoMarket: "加密市场",
+                cryptoChange: "24小时变化",
                 auto: "自动 (推荐)",
                 unknownRole: "未知角色",
                 na: "无",
@@ -747,6 +761,8 @@
             document.getElementById('lblQuality').innerText = t.streamQuality;
             document.getElementById('lblBitrate').innerText = t.bitrate;
             document.getElementById('lblBuffer').innerText = t.bufferHealth;
+            document.getElementById('lblCrypto').innerText = t.cryptoMarket;
+            document.getElementById('lblCryptoChange').innerText = t.cryptoChange;
             document.getElementById('btnAuto').innerText = t.auto;
             document.getElementById('ccNotice').innerHTML = t.ccNotice;
             
@@ -959,6 +975,51 @@
             setTimeout(dismissOverlay, 5000);
         }
 
+        function formatUsd(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: value >= 1000 ? 0 : 2
+            }).format(value);
+        }
+
+        async function refreshCryptoMarket() {
+            const marketEl = document.getElementById('cryptoMarket');
+            const changeEl = document.getElementById('cryptoChange');
+            if (!marketEl || !changeEl) return;
+
+            try {
+                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true');
+                if (!res.ok) throw new Error('price fetch failed');
+                const data = await res.json();
+
+                const btc = data?.bitcoin?.usd;
+                const eth = data?.ethereum?.usd;
+                const btcChange = data?.bitcoin?.usd_24h_change;
+                const ethChange = data?.ethereum?.usd_24h_change;
+
+                if (typeof btc === 'number' && typeof eth === 'number') {
+                    marketEl.innerText = `BTC ${formatUsd(btc)} | ETH ${formatUsd(eth)}`;
+                } else {
+                    marketEl.innerText = 'Price data unavailable';
+                }
+
+                if (typeof btcChange === 'number' && typeof ethChange === 'number') {
+                    const btcText = `${btcChange >= 0 ? '+' : ''}${btcChange.toFixed(2)}%`;
+                    const ethText = `${ethChange >= 0 ? '+' : ''}${ethChange.toFixed(2)}%`;
+                    changeEl.innerText = `BTC ${btcText} | ETH ${ethText}`;
+                    changeEl.style.color = btcChange >= 0 && ethChange >= 0 ? '#0f766e' : '#b91c1c';
+                } else {
+                    changeEl.innerText = '--';
+                    changeEl.style.color = '';
+                }
+            } catch (err) {
+                marketEl.innerText = 'Price data unavailable';
+                changeEl.innerText = '--';
+                changeEl.style.color = '';
+            }
+        }
+
         function handleDashboardLoops() {
             setInterval(() => {
                 const bitrates = ['8.5 MBPS', '9.2 MBPS', '7.8 MBPS', '8.1 MBPS'];
@@ -968,6 +1029,9 @@
                 if (brEl) brEl.innerText = bitrates[Math.floor(Math.random() * bitrates.length)];
                 if (bhEl) bhEl.innerText = bufferLevels[Math.floor(Math.random() * bufferLevels.length)];
             }, 3000);
+
+            refreshCryptoMarket();
+            setInterval(refreshCryptoMarket, 60000);
 
             document.querySelectorAll('.quality-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
