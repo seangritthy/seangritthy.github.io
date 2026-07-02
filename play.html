@@ -488,38 +488,24 @@
         </div>
 
         <div class="control-panel">
-            <h2 class="control-title" id="cpTitle">STREAM CONTROL PANEL</h2>
-            <div class="control-grid">
-                <div class="control-item">
-                    <div class="control-label" id="lblServer">SERVER STATUS</div>
-                    <div class="control-value" id="valServer" style="color:var(--primary)">CONNECTED</div>
-                </div>
-                <div class="control-item">
-                    <div class="control-label" id="lblQuality">STREAM QUALITY</div>
-                    <div class="control-value" id="streamQuality">1080P</div>
-                </div>
-                <div class="control-item">
-                    <div class="control-label" id="lblBitrate">BITRATE</div>
-                    <div class="control-value" id="bitrate">8.5 MBPS</div>
-                </div>
-                <div class="control-item">
-                    <div class="control-label" id="lblBuffer">BUFFER HEALTH</div>
-                    <div class="control-value" id="bufferHealth">98%</div>
-                </div>
-                <div class="control-item">
-                    <div class="control-label" id="lblCrypto">MARKET CAP</div>
-                    <div class="control-value" id="cryptoMarket">Loading...</div>
-                </div>
-                <div class="control-item">
-                    <div class="control-label" id="lblCryptoChange">MCAP 24H CHANGE</div>
-                    <div class="control-value" id="cryptoChange">--</div>
-                </div>
+            <h2 class="control-title" id="cpTitle">MARKET CAP BOARD</h2>
+            <div class="control-item" style="margin-bottom:12px;">
+                <div class="control-value" id="marketSummary">Loading market data...</div>
             </div>
-            <div class="quality-selector">
-                <button class="quality-btn active" data-quality="auto" id="btnAuto">AUTO (RECOMMENDED)</button>
-                <button class="quality-btn" data-quality="1080">1080P</button>
-                <button class="quality-btn" data-quality="720">720P</button>
-                <button class="quality-btn" data-quality="480">480P</button>
+            <div style="overflow-x:auto;">
+                <table id="marketTable" style="width:100%;border-collapse:collapse;min-width:560px;">
+                    <thead>
+                        <tr>
+                            <th id="lblMarketCoin" style="text-align:left;padding:10px;border-bottom:1px solid rgba(77, 124, 255, 0.2);">COIN</th>
+                            <th id="lblMarketPrice" style="text-align:right;padding:10px;border-bottom:1px solid rgba(77, 124, 255, 0.2);">PRICE</th>
+                            <th id="lblMarketCap" style="text-align:right;padding:10px;border-bottom:1px solid rgba(77, 124, 255, 0.2);">MARKET CAP</th>
+                            <th id="lblMarketChange" style="text-align:right;padding:10px;border-bottom:1px solid rgba(77, 124, 255, 0.2);">24H</th>
+                        </tr>
+                    </thead>
+                    <tbody id="marketTableBody">
+                        <tr><td colspan="4" style="padding:12px;text-align:center;color:var(--muted);">Loading...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -627,15 +613,13 @@
                 personnel: "KEY PERSONNEL",
                 originGuard: "🛡️ WEB3 GATEWAY: SECURE PLAYER ACTIVE",
                 tmdbConnected: "🎬 TMDB: CONNECTED",
-                controlPanel: "STREAM CONTROL PANEL",
-                serverStatus: "SERVER STATUS",
-                connected: "CONNECTED",
-                streamQuality: "STREAM QUALITY",
-                bitrate: "BITRATE",
-                bufferHealth: "BUFFER HEALTH",
-                cryptoMarket: "MARKET CAP",
-                cryptoChange: "MCAP 24H CHANGE",
-                auto: "AUTO (RECOMMENDED)",
+                controlPanel: "MARKET CAP BOARD",
+                marketCoin: "COIN",
+                marketPrice: "PRICE",
+                marketCap: "MARKET CAP",
+                marketChange: "24H",
+                marketLoading: "Loading market data...",
+                marketError: "Market data unavailable",
                 unknownRole: "Unknown Role",
                 na: "N/A",
                 ccNotice: "💡 <b>SUBTITLES (CC):</b> Click the 'CC' icon inside the video player to enable Khmer, English, or Chinese subtitles.",
@@ -658,15 +642,13 @@
                 personnel: "តួសម្តែង",
                 originGuard: "🛡️ WEB3 GATEWAY: កម្មវិធីចាក់វីដេអូមានសុវត្ថិភាព",
                 tmdbConnected: "🎬 TMDB: បានភ្ជាប់",
-                controlPanel: "ផ្ទាំងគ្រប់គ្រងការចាក់ផ្សាយ",
-                serverStatus: "ស្ថានភាពម៉ាស៊ីនមេ",
-                connected: "បានភ្ជាប់",
-                streamQuality: "កម្រិតច្បាស់",
-                bitrate: "ល្បឿនអ៊ីនធឺណិត",
-                bufferHealth: "សុខភាពបណ្តាញ",
-                cryptoMarket: "មូលធនទីផ្សារ",
-                cryptoChange: "ការផ្លាស់ប្តូរ MCAP ២៤ ម៉ោង",
-                auto: "ស្វ័យប្រវត្តិ",
+                controlPanel: "ផ្ទាំងមូលធនទីផ្សារ",
+                marketCoin: "កាក់",
+                marketPrice: "តម្លៃ",
+                marketCap: "មូលធនទីផ្សារ",
+                marketChange: "២៤ ម៉ោង",
+                marketLoading: "កំពុងទាញទិន្នន័យទីផ្សារ...",
+                marketError: "មិនអាចទាញទិន្នន័យទីផ្សារ",
                 unknownRole: "មិនស្គាល់តួអង្គ",
                 na: "មិនមាន",
                 ccNotice: "💡 <b>ចំណងជើងរង (CC):</b> ចុចលើរូបតំណាង 'CC' នៅក្នុងផ្ទាំងវីដេអូដើម្បីជ្រើសរើសចំណងជើងរងជាភាសាខ្មែរ អង់គ្លេស ឬចិន។",
@@ -689,15 +671,13 @@
                 personnel: "演职人员",
                 originGuard: "🛡️ WEB3 GATEWAY: 安全播放器已启用",
                 tmdbConnected: "🎬 TMDB: 已连接",
-                controlPanel: "流媒体控制面板",
-                serverStatus: "服务器状态",
-                connected: "已连接",
-                streamQuality: "画质",
-                bitrate: "比特率",
-                bufferHealth: "缓冲健康度",
-                cryptoMarket: "市值",
-                cryptoChange: "市值24小时变化",
-                auto: "自动 (推荐)",
+                controlPanel: "市值看板",
+                marketCoin: "币种",
+                marketPrice: "价格",
+                marketCap: "市值",
+                marketChange: "24小时",
+                marketLoading: "正在加载市场数据...",
+                marketError: "市场数据不可用",
                 unknownRole: "未知角色",
                 na: "无",
                 ccNotice: "💡 <b>字幕 (CC):</b> 点击视频播放器内的 'CC' 图标以启用高棉语、英语或中文字幕。",
@@ -756,14 +736,12 @@
             document.getElementById('originGuardBadge').innerText = t.originGuard;
             document.getElementById('tmdbBadgeLabel').innerText = t.tmdbConnected;
             document.getElementById('cpTitle').innerText = t.controlPanel;
-            document.getElementById('lblServer').innerText = t.serverStatus;
-            document.getElementById('valServer').innerText = t.connected;
-            document.getElementById('lblQuality').innerText = t.streamQuality;
-            document.getElementById('lblBitrate').innerText = t.bitrate;
-            document.getElementById('lblBuffer').innerText = t.bufferHealth;
-            document.getElementById('lblCrypto').innerText = t.cryptoMarket;
-            document.getElementById('lblCryptoChange').innerText = t.cryptoChange;
-            document.getElementById('btnAuto').innerText = t.auto;
+            document.getElementById('lblMarketCoin').innerText = t.marketCoin;
+            document.getElementById('lblMarketPrice').innerText = t.marketPrice;
+            document.getElementById('lblMarketCap').innerText = t.marketCap;
+            document.getElementById('lblMarketChange').innerText = t.marketChange;
+            const ms = document.getElementById('marketSummary');
+            if (ms && (!ms.dataset.ready || ms.dataset.ready === '0')) ms.innerText = t.marketLoading;
             document.getElementById('ccNotice').innerHTML = t.ccNotice;
             
             aiSpeechBtn.innerText = isSpeaking ? t.aiStopBtn : t.aiReadBtn;
@@ -994,68 +972,46 @@
         }
 
         async function refreshCryptoMarket() {
-            const marketEl = document.getElementById('cryptoMarket');
-            const changeEl = document.getElementById('cryptoChange');
-            if (!marketEl || !changeEl) return;
+            const marketSummary = document.getElementById('marketSummary');
+            const marketBody = document.getElementById('marketTableBody');
+            if (!marketSummary || !marketBody) return;
+            const t = getT();
 
             try {
-                const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum&price_change_percentage=24h');
+                const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=12&page=1&sparkline=false&price_change_percentage=24h');
                 if (!res.ok) throw new Error('price fetch failed');
                 const data = await res.json();
 
-                const btc = Array.isArray(data) ? data.find(c => c.id === 'bitcoin') : null;
-                const eth = Array.isArray(data) ? data.find(c => c.id === 'ethereum') : null;
+                if (!Array.isArray(data) || data.length === 0) throw new Error('empty market list');
 
-                const btcMcap = btc?.market_cap;
-                const ethMcap = eth?.market_cap;
-                const btcMcapChange = btc?.market_cap_change_percentage_24h;
-                const ethMcapChange = eth?.market_cap_change_percentage_24h;
+                const totalMcap = data.reduce((sum, coin) => sum + (coin.market_cap || 0), 0);
+                const leaders = data.slice(0, 3).map(c => c.symbol.toUpperCase()).join(', ');
+                marketSummary.innerText = `Top caps: ${leaders} | Total: ${formatCompactUsd(totalMcap)}`;
+                marketSummary.dataset.ready = '1';
 
-                if (typeof btcMcap === 'number' && typeof ethMcap === 'number') {
-                    marketEl.innerText = `BTC ${formatCompactUsd(btcMcap)} | ETH ${formatCompactUsd(ethMcap)}`;
-                } else {
-                    marketEl.innerText = 'Price data unavailable';
-                }
-
-                if (typeof btcMcapChange === 'number' && typeof ethMcapChange === 'number') {
-                    const btcText = `${btcMcapChange >= 0 ? '+' : ''}${btcMcapChange.toFixed(2)}%`;
-                    const ethText = `${ethMcapChange >= 0 ? '+' : ''}${ethMcapChange.toFixed(2)}%`;
-                    changeEl.innerText = `BTC ${btcText} | ETH ${ethText}`;
-                    changeEl.style.color = btcMcapChange >= 0 && ethMcapChange >= 0 ? '#0f766e' : '#b91c1c';
-                } else {
-                    changeEl.innerText = '--';
-                    changeEl.style.color = '';
-                }
+                marketBody.innerHTML = data.map(coin => {
+                    const ch = typeof coin.market_cap_change_percentage_24h === 'number' ? coin.market_cap_change_percentage_24h : null;
+                    const chText = ch === null ? '--' : `${ch >= 0 ? '+' : ''}${ch.toFixed(2)}%`;
+                    const chColor = ch === null ? 'var(--muted)' : (ch >= 0 ? '#0f766e' : '#b91c1c');
+                    return `
+                        <tr>
+                            <td style="padding:10px;border-bottom:1px solid rgba(77,124,255,0.12);font-weight:600;">${coin.symbol.toUpperCase()}</td>
+                            <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);">${formatUsd(coin.current_price || 0)}</td>
+                            <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);">${formatCompactUsd(coin.market_cap || 0)}</td>
+                            <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);color:${chColor};font-weight:600;">${chText}</td>
+                        </tr>
+                    `;
+                }).join('');
             } catch (err) {
-                marketEl.innerText = 'Price data unavailable';
-                changeEl.innerText = '--';
-                changeEl.style.color = '';
+                marketSummary.innerText = t.marketError;
+                marketSummary.dataset.ready = '0';
+                marketBody.innerHTML = `<tr><td colspan="4" style="padding:12px;text-align:center;color:var(--muted);">${t.marketError}</td></tr>`;
             }
         }
 
         function handleDashboardLoops() {
-            setInterval(() => {
-                const bitrates = ['8.5 MBPS', '9.2 MBPS', '7.8 MBPS', '8.1 MBPS'];
-                const bufferLevels = ['98%', '95%', '99%', '97%'];
-                const brEl = document.getElementById('bitrate');
-                const bhEl = document.getElementById('bufferHealth');
-                if (brEl) brEl.innerText = bitrates[Math.floor(Math.random() * bitrates.length)];
-                if (bhEl) bhEl.innerText = bufferLevels[Math.floor(Math.random() * bufferLevels.length)];
-            }, 3000);
-
             refreshCryptoMarket();
             setInterval(refreshCryptoMarket, 60000);
-
-            document.querySelectorAll('.quality-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    const value = this.getAttribute('data-quality');
-                    const t = getT();
-                    const sqEl = document.getElementById('streamQuality');
-                    if (sqEl) sqEl.innerText = value === 'auto' ? t.auto : value + 'P';
-                });
-            });
         }
 
         // AUTO TRANSLATE WHEN DROPDOWN CHANGES
