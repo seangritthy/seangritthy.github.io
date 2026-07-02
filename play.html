@@ -713,18 +713,6 @@
         const mediaType = urlParams.get('type') || 'movie';
         let currentMovieTitle = "Unknown"; 
 
-        function getApiBaseUrl() {
-            const queryOrigin = urlParams.get('apiOrigin');
-            if (queryOrigin) {
-                localStorage.setItem('streamApiOrigin', queryOrigin);
-            }
-
-            const configured = queryOrigin || window.STREAM_API_ORIGIN || localStorage.getItem('streamApiOrigin') || '';
-            return configured ? configured.replace(/\/$/, '') : '';
-        }
-
-        const STREAM_API_BASE = getApiBaseUrl();
-
         const uiLangSelect = document.getElementById('uiLangSelect');
         const aiSpeechBtn = document.getElementById('aiSpeechBtn');
         const shareMovieBtn = document.getElementById('shareMovieBtn');
@@ -955,45 +943,20 @@
             const notice = document.getElementById('streamNotice');
             if (!frame) return dismissOverlay();
 
-            if (!STREAM_API_BASE) {
-                frame.style.display = 'none';
-                if (notice) {
-                    notice.style.display = 'block';
-                    notice.innerText = getT().streamUnavailable;
-                }
-                dismissOverlay();
-                return;
-            }
+            const targetEmbed = mediaType === 'tv'
+                ? `https://vsembed.ru/embed/tv/${tmdbId}/1/1`
+                : `https://vsembed.ru/embed/movie/${tmdbId}`;
 
-            try {
-                const endpoint = `${STREAM_API_BASE || ''}/api/extract?tmdb=${encodeURIComponent(tmdbId)}&type=${encodeURIComponent(mediaType)}`;
-                const response = await fetch(endpoint);
-                const data = await response.json();
-                if (data?.success && data.url) {
-                    frame.style.display = 'block';
-                    if (notice) {
-                        notice.style.display = 'none';
-                        notice.innerText = '';
-                    }
-                    frame.src = data.url;
-                } else {
-                    frame.style.display = 'none';
-                    if (notice) {
-                        notice.style.display = 'block';
-                        notice.innerText = getT().streamUnavailable;
-                    }
-                    dismissOverlay();
-                }
-            } catch (err) {
-                frame.style.display = 'none';
-                if (notice) {
-                    notice.style.display = 'block';
-                    notice.innerText = getT().streamUnavailable;
-                }
-                dismissOverlay();
+            frame.style.display = 'block';
+            if (notice) {
+                notice.style.display = 'none';
+                notice.innerText = '';
             }
-
+            frame.src = targetEmbed;
             frame.onload = dismissOverlay;
+
+            // Failsafe in case iframe load event is delayed or blocked
+            setTimeout(dismissOverlay, 5000);
         }
 
         function handleDashboardLoops() {
