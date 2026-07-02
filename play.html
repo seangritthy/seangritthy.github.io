@@ -633,28 +633,106 @@
             return null;
         }
 
+        function loadScriptOnce(src) {
+            return new Promise((resolve, reject) => {
+                const existing = document.querySelector(`script[data-loader="${src}"]`);
+                if (existing) {
+                    if (existing.dataset.ready === '1') return resolve();
+                    existing.addEventListener('load', () => resolve(), { once: true });
+                    existing.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)), { once: true });
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = src;
+                script.async = true;
+                script.dataset.loader = src;
+                script.addEventListener('load', () => {
+                    script.dataset.ready = '1';
+                    resolve();
+                }, { once: true });
+                script.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)), { once: true });
+                document.head.appendChild(script);
+            });
+        }
+
+        async function ensureWeb3AuthLoaded() {
+            let auth = getAuth();
+            if (auth) return auth;
+
+            try {
+                await loadScriptOnce('web3-auth.js?v=20260702');
+            } catch (error) {
+                console.error('Primary web3 auth load failed:', error);
+            }
+
+            auth = getAuth();
+            return auth;
+        }
+
+        function persistWalletSession(walletData, providerLabel) {
+            if (!walletData || !walletData.address) return;
+            localStorage.setItem('g_user', JSON.stringify({
+                type: 'web3',
+                verified: true,
+                provider: providerLabel || walletData.provider || 'Web3 Wallet',
+                address: walletData.address,
+                shortAddress: walletData.shortAddress,
+                balance: walletData.balance,
+                chainId: walletData.chainId,
+                chainName: walletData.chainName,
+                signature: walletData.signature || null,
+                signatureMessage: walletData.signatureMessage || null,
+                signedAt: walletData.signedAt || null
+            }));
+        }
+
+        async function restoreWalletSession() {
+            const auth = await ensureWeb3AuthLoaded();
+            if (!auth) return null;
+
+            const raw = localStorage.getItem('g_user');
+            if (!raw) return null;
+
+            try {
+                const stored = JSON.parse(raw);
+                if (stored?.type !== 'web3' || !stored?.verified || !stored?.address) {
+                    localStorage.removeItem('g_user');
+                    return null;
+                }
+
+                const walletData = await auth.restoreSession(stored.address);
+                if (!walletData) {
+                    localStorage.removeItem('g_user');
+                    return null;
+                }
+
+                walletData.provider = stored.provider || walletData.provider;
+                persistWalletSession(walletData, walletData.provider);
+                return walletData;
+            } catch (error) {
+                console.error('Wallet session restore failed:', error);
+                localStorage.removeItem('g_user');
+                return null;
+            }
+        }
+
         // --- Web3 Wallet Login for Player Page ---
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             // Show Web3 buttons
             const metamaskBtn = document.getElementById('metamaskBtn');
             const trustwalletBtn = document.getElementById('trustwalletBtn');
             if (metamaskBtn) metamaskBtn.style.display = 'inline-block';
             if (trustwalletBtn) trustwalletBtn.style.display = 'inline-block';
 
-            // Restore UI from localStorage
-            const stored = localStorage.getItem('g_user');
-            if (stored) {
-                try {
-                    const parsed = JSON.parse(stored);
-                    if (parsed.type === 'web3') {
-                        const ui = document.getElementById('userInfo');
-                        if (ui) { ui.innerText = parsed.shortAddress; ui.style.display = 'block'; }
-                        const out = document.getElementById('signOutBtn');
-                        if (out) out.style.display = 'inline-block';
-                        if (metamaskBtn) metamaskBtn.style.display = 'none';
-                        if (trustwalletBtn) trustwalletBtn.style.display = 'none';
-                    }
-                } catch (e){}
+            const restored = await restoreWalletSession();
+            if (restored) {
+                const ui = document.getElementById('userInfo');
+                if (ui) { ui.innerText = restored.shortAddress; ui.style.display = 'block'; }
+                const out = document.getElementById('signOutBtn');
+                if (out) out.style.display = 'inline-block';
+                if (metamaskBtn) metamaskBtn.style.display = 'none';
+                if (trustwalletBtn) trustwalletBtn.style.display = 'none';
             }
             const outBtn = document.getElementById('signOutBtn');
             if (outBtn) outBtn.addEventListener('click', () => { 
@@ -667,22 +745,14 @@
 
         // Web3 button handlers
         document.getElementById('metamaskBtn')?.addEventListener('click', async () => {
-            const auth = getAuth();
+            const auth = await ensureWeb3AuthLoaded();
             if (!auth) {
                 alert('Web3 module not loaded. Please refresh the page.');
                 return;
             }
             const result = await auth.connectMetaMask();
             if (result) {
-                localStorage.setItem('g_user', JSON.stringify({
-                    type: 'web3',
-                    provider: 'MetaMask',
-                    address: result.address,
-                    shortAddress: result.shortAddress,
-                    balance: result.balance,
-                    chainId: result.chainId,
-                    chainName: result.chainName
-                }));
+                persistWalletSession(result, 'MetaMask');
                 const ui = document.getElementById('userInfo');
                 if (ui) { ui.innerText = result.shortAddress; ui.style.display = 'block'; }
                 const out = document.getElementById('signOutBtn');
@@ -695,22 +765,14 @@
         });
 
         document.getElementById('trustwalletBtn')?.addEventListener('click', async () => {
-            const auth = getAuth();
+            const auth = await ensureWeb3AuthLoaded();
             if (!auth) {
                 alert('Web3 module not loaded. Please refresh the page.');
                 return;
             }
             const result = await auth.connectTrustWallet();
             if (result) {
-                localStorage.setItem('g_user', JSON.stringify({
-                    type: 'web3',
-                    provider: 'Trust Wallet',
-                    address: result.address,
-                    shortAddress: result.shortAddress,
-                    balance: result.balance,
-                    chainId: result.chainId,
-                    chainName: result.chainName
-                }));
+                persistWalletSession(result, 'Trust Wallet');
                 const ui = document.getElementById('userInfo');
                 if (ui) { ui.innerText = result.shortAddress; ui.style.display = 'block'; }
                 const out = document.getElementById('signOutBtn');

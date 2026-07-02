@@ -9,11 +9,70 @@ class Web3Auth {
         this.balance = null;
         this.chainId = null;
         this.chainName = null;
+        this.signature = null;
+        this.signatureMessage = null;
+        this.signedAt = null;
+        this._listenersAttached = false;
     }
 
     // Check if wallet is available
     isMetaMaskAvailable() {
         return typeof window.ethereum !== 'undefined';
+    }
+
+    async requestSignature(address) {
+        if (!window.ethereum || !address) return null;
+        const issuedAt = new Date().toISOString();
+        const message = [
+            'GitHub Movies Wallet Login',
+            `Address: ${address}`,
+            `Domain: ${window.location.host}`,
+            `Issued At: ${issuedAt}`
+        ].join('\n');
+
+        try {
+            const signature = await window.ethereum.request({
+                method: 'personal_sign',
+                params: [message, address]
+            });
+            this.signature = signature;
+            this.signatureMessage = message;
+            this.signedAt = issuedAt;
+            return signature;
+        } catch (error) {
+            console.error('Signature request failed:', error);
+            return null;
+        }
+    }
+
+    async syncWalletState(address, providerName) {
+        this.address = address;
+        this.provider = providerName || this.provider || 'Web3 Wallet';
+
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        this.chainId = parseInt(chainId, 16);
+        this.chainName = this.getChainName(this.chainId);
+
+        const balanceWei = await window.ethereum.request({
+            method: 'eth_getBalance',
+            params: [this.address, 'latest']
+        });
+        this.balance = (parseInt(balanceWei, 16) / 1e18).toFixed(4);
+        this.setupEventListeners();
+    }
+
+    buildWalletData() {
+        return {
+            address: this.address,
+            balance: this.balance,
+            chainId: this.chainId,
+            chainName: this.chainName,
+            provider: this.provider,
+            signature: this.signature,
+            signatureMessage: this.signatureMessage,
+            signedAt: this.signedAt,
+            shortAddress: this.getShortAddress()
+        };
     }
 
     // Connect to MetaMask
@@ -29,33 +88,19 @@ class Web3Auth {
             const accounts = await window.ethereum.request({
                 method: 'eth_requestAccounts'
             });
+            if (!accounts || !accounts.length) return null;
 
-            this.address = accounts[0];
+            await this.syncWalletState(accounts[0], 'MetaMask');
 
-            // Get network info
-            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-            this.chainId = parseInt(chainId, 16);
-            this.chainName = this.getChainName(this.chainId);
+            // Require a signature so login proves wallet ownership.
+            const signature = await this.requestSignature(this.address);
+            if (!signature) {
+                alert('Wallet signature is required to log in.');
+                this.disconnect();
+                return null;
+            }
 
-            // Get balance
-            const balanceWei = await window.ethereum.request({
-                method: 'eth_getBalance',
-                params: [this.address, 'latest']
-            });
-
-            // Convert Wei to ETH (1 ETH = 10^18 Wei)
-            this.balance = (parseInt(balanceWei, 16) / 1e18).toFixed(4);
-
-            // Set up event listeners
-            this.setupEventListeners();
-
-            return {
-                address: this.address,
-                balance: this.balance,
-                chainId: this.chainId,
-                chainName: this.chainName,
-                provider: 'MetaMask'
-            };
+            return this.buildWalletData();
         } catch (error) {
             console.error('MetaMask connection error:', error);
             alert('Failed to connect MetaMask: ' + error.message);
@@ -75,33 +120,41 @@ class Web3Auth {
             const accounts = await window.ethereum.request({
                 method: 'eth_requestAccounts'
             });
+            if (!accounts || !accounts.length) return null;
 
-            this.address = accounts[0];
+            await this.syncWalletState(accounts[0], 'Trust Wallet');
 
-            // Get network info
-            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-            this.chainId = parseInt(chainId, 16);
-            this.chainName = this.getChainName(this.chainId);
+            const signature = await this.requestSignature(this.address);
+            if (!signature) {
+                alert('Wallet signature is required to log in.');
+                this.disconnect();
+                return null;
+            }
 
-            // Get balance
-            const balanceWei = await window.ethereum.request({
-                method: 'eth_getBalance',
-                params: [this.address, 'latest']
-            });
-
-            this.balance = (parseInt(balanceWei, 16) / 1e18).toFixed(4);
-            this.setupEventListeners();
-
-            return {
-                address: this.address,
-                balance: this.balance,
-                chainId: this.chainId,
-                chainName: this.chainName,
-                provider: 'Trust Wallet'
-            };
+            return this.buildWalletData();
         } catch (error) {
             console.error('Trust Wallet connection error:', error);
             alert('Failed to connect Trust Wallet: ' + error.message);
+            return null;
+        }
+    }
+
+    async restoreSession(expectedAddress = null) {
+        if (!window.ethereum) return null;
+
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            if (!accounts || !accounts.length) return null;
+
+            const connectedAddress = accounts[0];
+            if (expectedAddress && connectedAddress.toLowerCase() !== String(expectedAddress).toLowerCase()) {
+                return null;
+            }
+
+            await this.syncWalletState(connectedAddress, this.provider || 'Web3 Wallet');
+            return this.buildWalletData();
+        } catch (error) {
+            console.error('Restore session failed:', error);
             return null;
         }
     }
@@ -127,6 +180,7 @@ class Web3Auth {
     // Set up wallet event listeners
     setupEventListeners() {
         if (window.ethereum) {
+            if (this._listenersAttached) return;
             // Account change
             window.ethereum.on('accountsChanged', (accounts) => {
                 console.log('Account changed:', accounts);
@@ -153,6 +207,8 @@ class Web3Auth {
                 console.log('Wallet disconnected');
                 this.disconnect();
             });
+
+            this._listenersAttached = true;
         }
     }
 
@@ -180,6 +236,9 @@ class Web3Auth {
         this.balance = null;
         this.chainId = null;
         this.chainName = null;
+        this.signature = null;
+        this.signatureMessage = null;
+        this.signedAt = null;
     }
 
     // Get short address (0x1234...5678)
@@ -195,13 +254,7 @@ class Web3Auth {
 
     // Get wallet data
     getWalletData() {
-        return {
-            address: this.address,
-            balance: this.balance,
-            chainId: this.chainId,
-            chainName: this.chainName,
-            shortAddress: this.getShortAddress()
-        };
+        return this.buildWalletData();
     }
 }
 

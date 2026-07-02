@@ -1013,6 +1013,43 @@
             return null;
         }
 
+        function loadScriptOnce(src) {
+            return new Promise((resolve, reject) => {
+                const existing = document.querySelector(`script[data-loader="${src}"]`);
+                if (existing) {
+                    if (existing.dataset.ready === '1') return resolve();
+                    existing.addEventListener('load', () => resolve(), { once: true });
+                    existing.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)), { once: true });
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = src;
+                script.async = true;
+                script.dataset.loader = src;
+                script.addEventListener('load', () => {
+                    script.dataset.ready = '1';
+                    resolve();
+                }, { once: true });
+                script.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)), { once: true });
+                document.head.appendChild(script);
+            });
+        }
+
+        async function ensureWeb3AuthLoaded() {
+            let auth = getAuth();
+            if (auth) return auth;
+
+            try {
+                await loadScriptOnce('web3-auth.js?v=20260702');
+            } catch (error) {
+                console.error('Primary web3 auth load failed:', error);
+            }
+
+            auth = getAuth();
+            return auth;
+        }
+
         function openWalletModal() {
             if (!walletModal || !walletModalOverlay) return;
             walletModal.style.display = 'flex';
@@ -1053,8 +1090,55 @@
             if (menuProfileBtn) menuProfileBtn.style.display = 'inline-block';
         }
 
+        function persistWalletSession(walletData, providerLabel) {
+            if (!walletData || !walletData.address) return;
+            localStorage.setItem('g_user', JSON.stringify({
+                type: 'web3',
+                verified: true,
+                provider: providerLabel || walletData.provider || 'Web3 Wallet',
+                address: walletData.address,
+                shortAddress: walletData.shortAddress,
+                balance: walletData.balance,
+                chainId: walletData.chainId,
+                chainName: walletData.chainName,
+                signature: walletData.signature || null,
+                signatureMessage: walletData.signatureMessage || null,
+                signedAt: walletData.signedAt || null
+            }));
+        }
+
+        async function restoreWalletSession() {
+            const auth = await ensureWeb3AuthLoaded();
+            if (!auth) return;
+
+            const raw = localStorage.getItem('g_user');
+            if (!raw) return;
+
+            try {
+                const stored = JSON.parse(raw);
+                if (stored?.type !== 'web3' || !stored?.verified || !stored?.address) {
+                    localStorage.removeItem('g_user');
+                    return;
+                }
+
+                const walletData = await auth.restoreSession(stored.address);
+                if (!walletData) {
+                    localStorage.removeItem('g_user');
+                    signOutWallet();
+                    return;
+                }
+
+                walletData.provider = stored.provider || walletData.provider;
+                updateWalletUI(walletData);
+                persistWalletSession(walletData, walletData.provider);
+            } catch (error) {
+                console.error('Wallet session restore failed:', error);
+                localStorage.removeItem('g_user');
+            }
+        }
+
         async function connectMetaMaskWallet() {
-            const auth = getAuth();
+            const auth = await ensureWeb3AuthLoaded();
             if (!auth) {
                 alert('Web3 module not loaded. Please refresh the page.');
                 return;
@@ -1062,12 +1146,13 @@
             const walletData = await auth.connectMetaMask();
             if (walletData) {
                 updateWalletUI(walletData);
+                persistWalletSession(walletData, 'MetaMask');
                 closeWalletModal();
             }
         }
 
         async function connectTrustWalletProvider() {
-            const auth = getAuth();
+            const auth = await ensureWeb3AuthLoaded();
             if (!auth) {
                 alert('Web3 module not loaded. Please refresh the page.');
                 return;
@@ -1075,6 +1160,7 @@
             const walletData = await auth.connectTrustWallet();
             if (walletData) {
                 updateWalletUI(walletData);
+                persistWalletSession(walletData, 'Trust Wallet');
                 closeWalletModal();
             }
         }
@@ -1082,6 +1168,7 @@
         function signOutWallet() {
             const auth = getAuth();
             if (auth) auth.disconnect();
+            localStorage.removeItem('g_user');
             if (walletInfo) {
                 walletInfo.style.display = 'none';
                 walletInfo.innerText = '';
@@ -1094,7 +1181,7 @@
         if (menuLoginBtn) {
             menuLoginBtn.addEventListener('click', async () => {
                 // MetaMask-first UX: connect directly when available, else show options
-                const auth = getAuth();
+                const auth = await ensureWeb3AuthLoaded();
                 if (auth && auth.isMetaMaskAvailable()) {
                     await connectMetaMaskWallet();
                 } else {
@@ -1131,6 +1218,7 @@
 
         updateUI();
         fetchDashboardData();
+        restoreWalletSession();
     </script>
 </body>
 </html>
