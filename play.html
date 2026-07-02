@@ -1001,6 +1001,52 @@
             }).format(value);
         }
 
+        async function fetchJsonWithTimeout(url, timeoutMs = 12000) {
+            const ctrl = new AbortController();
+            const timeout = setTimeout(() => ctrl.abort(), timeoutMs);
+            try {
+                const res = await fetch(url, {
+                    signal: ctrl.signal,
+                    headers: { 'accept': 'application/json' }
+                });
+                if (!res.ok) throw new Error(`http ${res.status}`);
+                return await res.json();
+            } finally {
+                clearTimeout(timeout);
+            }
+        }
+
+        async function fetchMarketFromCoinGecko() {
+            const data = await fetchJsonWithTimeout('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=12&page=1&sparkline=false&price_change_percentage=24h');
+            if (!Array.isArray(data) || data.length === 0) throw new Error('coingecko empty');
+
+            return data.map((coin) => ({
+                id: coin.id,
+                symbol: (coin.symbol || '').toUpperCase(),
+                current_price: Number(coin.current_price) || 0,
+                market_cap: Number(coin.market_cap) || 0,
+                market_cap_change_percentage_24h: typeof coin.market_cap_change_percentage_24h === 'number'
+                    ? coin.market_cap_change_percentage_24h
+                    : null
+            }));
+        }
+
+        async function fetchMarketFromCoinCap() {
+            const payload = await fetchJsonWithTimeout('https://api.coincap.io/v2/assets?limit=12');
+            const list = payload?.data;
+            if (!Array.isArray(list) || list.length === 0) throw new Error('coincap empty');
+
+            return list.map((coin) => ({
+                id: coin.id,
+                symbol: (coin.symbol || '').toUpperCase(),
+                current_price: Number(coin.priceUsd) || 0,
+                market_cap: Number(coin.marketCapUsd) || 0,
+                market_cap_change_percentage_24h: Number.isFinite(Number(coin.changePercent24Hr))
+                    ? Number(coin.changePercent24Hr)
+                    : null
+            }));
+        }
+
         function closeCoinChartModal() {
             if (coinChartModal) coinChartModal.classList.remove('active');
             if (coinChartRefreshTimer) {
@@ -1093,15 +1139,18 @@
             const t = getT();
 
             try {
-                const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=12&page=1&sparkline=false&price_change_percentage=24h');
-                if (!res.ok) throw new Error('price fetch failed');
-                const data = await res.json();
-
-                if (!Array.isArray(data) || data.length === 0) throw new Error('empty market list');
+                let data = [];
+                let sourceLabel = 'CoinGecko';
+                try {
+                    data = await fetchMarketFromCoinGecko();
+                } catch (primaryErr) {
+                    data = await fetchMarketFromCoinCap();
+                    sourceLabel = 'CoinCap';
+                }
 
                 const totalMcap = data.reduce((sum, coin) => sum + (coin.market_cap || 0), 0);
                 const leaders = data.slice(0, 3).map(c => c.symbol.toUpperCase()).join(', ');
-                marketSummary.innerText = `Top caps: ${leaders} | Total: ${formatCompactUsd(totalMcap)}`;
+                marketSummary.innerText = `Top caps: ${leaders} | Total: ${formatCompactUsd(totalMcap)} | ${sourceLabel}`;
                 marketSummary.dataset.ready = '1';
 
                 marketBody.innerHTML = data.map(coin => {
