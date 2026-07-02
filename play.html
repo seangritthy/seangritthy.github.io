@@ -626,8 +626,10 @@
         // --- Web3 Wallet Login for Player Page ---
         window.addEventListener('DOMContentLoaded', () => {
             // Show Web3 buttons
-            document.getElementById('metamaskBtn').style.display = 'inline-block';
-            document.getElementById('trustwalletBtn').style.display = 'inline-block';
+            const metamaskBtn = document.getElementById('metamaskBtn');
+            const trustwalletBtn = document.getElementById('trustwalletBtn');
+            if (metamaskBtn) metamaskBtn.style.display = 'inline-block';
+            if (trustwalletBtn) trustwalletBtn.style.display = 'inline-block';
 
             // Restore UI from localStorage
             const stored = localStorage.getItem('g_user');
@@ -639,8 +641,8 @@
                         if (ui) { ui.innerText = parsed.shortAddress; ui.style.display = 'block'; }
                         const out = document.getElementById('signOutBtn');
                         if (out) out.style.display = 'inline-block';
-                        document.getElementById('metamaskBtn').style.display = 'none';
-                        document.getElementById('trustwalletBtn').style.display = 'none';
+                        if (metamaskBtn) metamaskBtn.style.display = 'none';
+                        if (trustwalletBtn) trustwalletBtn.style.display = 'none';
                     }
                 } catch (e){}
             }
@@ -669,8 +671,10 @@
                 if (ui) { ui.innerText = result.shortAddress; ui.style.display = 'block'; }
                 const out = document.getElementById('signOutBtn');
                 if (out) out.style.display = 'inline-block';
-                document.getElementById('metamaskBtn').style.display = 'none';
-                document.getElementById('trustwalletBtn').style.display = 'none';
+                const metamaskBtn = document.getElementById('metamaskBtn');
+                const trustwalletBtn = document.getElementById('trustwalletBtn');
+                if (metamaskBtn) metamaskBtn.style.display = 'none';
+                if (trustwalletBtn) trustwalletBtn.style.display = 'none';
             }
         });
 
@@ -690,8 +694,10 @@
                 if (ui) { ui.innerText = result.shortAddress; ui.style.display = 'block'; }
                 const out = document.getElementById('signOutBtn');
                 if (out) out.style.display = 'inline-block';
-                document.getElementById('metamaskBtn').style.display = 'none';
-                document.getElementById('trustwalletBtn').style.display = 'none';
+                const metamaskBtn = document.getElementById('metamaskBtn');
+                const trustwalletBtn = document.getElementById('trustwalletBtn');
+                if (metamaskBtn) metamaskBtn.style.display = 'none';
+                if (trustwalletBtn) trustwalletBtn.style.display = 'none';
             }
         });
 
@@ -1130,22 +1136,21 @@
             }));
         }
 
-        async function fetchMarketFromCoinCap() {
-            const payload = await fetchJsonWithTimeout('https://api.coincap.io/v2/assets?limit=12');
-            const list = payload?.data;
-            if (!Array.isArray(list) || list.length === 0) throw new Error('coincap empty');
+        async function fetchMarketFromCoinPaprika() {
+            const list = await fetchJsonWithTimeout('https://api.coinpaprika.com/v1/tickers?quotes=USD&limit=12');
+            if (!Array.isArray(list) || list.length === 0) throw new Error('coinpaprika empty');
 
             return list.map((coin) => ({
                 id: coin.id,
                 name: coin.name || coin.symbol || coin.id,
                 symbol: (coin.symbol || '').toUpperCase(),
-                image: `https://assets.coincap.io/assets/icons/${String(coin.symbol || '').toLowerCase()}@2x.png`,
+                image: coin?.logo || '',
                 market_cap_rank: Number(coin.rank) || 0,
-                current_price: Number(coin.priceUsd) || 0,
-                market_cap: Number(coin.marketCapUsd) || 0,
-                total_volume: Number(coin.volumeUsd24Hr) || 0,
-                price_change_percentage_24h: Number.isFinite(Number(coin.changePercent24Hr))
-                    ? Number(coin.changePercent24Hr)
+                current_price: Number(coin?.quotes?.USD?.price) || 0,
+                market_cap: Number(coin?.quotes?.USD?.market_cap) || 0,
+                total_volume: Number(coin?.quotes?.USD?.volume_24h) || 0,
+                price_change_percentage_24h: Number.isFinite(Number(coin?.quotes?.USD?.percent_change_24h))
+                    ? Number(coin?.quotes?.USD?.percent_change_24h)
                     : null
             }));
         }
@@ -1247,14 +1252,20 @@
                         }
                     });
 
-                    coinCandleSeries = coinChartInstance.addCandlestickSeries({
+                    const candleStyle = {
                         upColor: '#16c784',
                         downColor: '#ea3943',
                         borderDownColor: '#ea3943',
                         borderUpColor: '#16c784',
                         wickDownColor: '#ea3943',
                         wickUpColor: '#16c784'
-                    });
+                    };
+
+                    if (typeof coinChartInstance.addCandlestickSeries === 'function') {
+                        coinCandleSeries = coinChartInstance.addCandlestickSeries(candleStyle);
+                    } else {
+                        coinCandleSeries = coinChartInstance.addSeries(LightweightCharts.CandlestickSeries, candleStyle);
+                    }
                 } else {
                     coinChartInstance.resize(chartWidth, chartHeight);
                 }
@@ -1293,8 +1304,8 @@
                 try {
                     data = await fetchMarketFromCoinGecko();
                 } catch (primaryErr) {
-                    data = await fetchMarketFromCoinCap();
-                    sourceLabel = 'CoinCap';
+                    data = await fetchMarketFromCoinPaprika();
+                    sourceLabel = 'CoinPaprika';
                 }
 
                 const totalMcap = data.reduce((sum, coin) => sum + (coin.market_cap || 0), 0);
