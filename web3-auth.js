@@ -138,19 +138,45 @@ class Web3Auth {
             `Issued At: ${issuedAt}`
         ].join('\n');
 
-        try {
-            const signature = await eth.request({
-                method: 'personal_sign',
-                params: [message, address]
-            });
-            this.signature = signature;
-            this.signatureMessage = message;
-            this.signedAt = issuedAt;
-            return signature;
-        } catch (error) {
-            console.error('Signature request failed:', error);
-            return null;
+        const messageHex = `0x${Array.from(new TextEncoder().encode(message))
+            .map((b) => b.toString(16).padStart(2, '0'))
+            .join('')}`;
+
+        const attempts = [
+            [messageHex, address],
+            [message, address],
+            [address, messageHex],
+            [address, message]
+        ];
+
+        for (const params of attempts) {
+            try {
+                const signature = await eth.request({
+                    method: 'personal_sign',
+                    params
+                });
+                this.signature = signature;
+                this.signatureMessage = message;
+                this.signedAt = issuedAt;
+                return signature;
+            } catch (error) {
+                // Try next variant if wallet/provider is strict about param shape.
+            }
         }
+
+        console.error('Signature request failed after retries.');
+        return null;
+    }
+
+    getErrorMessage(error, fallback) {
+        const message =
+            error?.data?.originalError?.message ||
+            error?.data?.message ||
+            error?.message ||
+            fallback;
+
+        if (error?.code === 4001) return 'Request was rejected in wallet.';
+        return String(message || fallback);
     }
 
     async syncWalletState(address, providerName, provider) {
@@ -222,7 +248,7 @@ class Web3Auth {
             return this.buildWalletData();
         } catch (error) {
             console.error('MetaMask connection error:', error);
-            alert('Failed to connect MetaMask: ' + error.message);
+            alert('Failed to connect MetaMask: ' + this.getErrorMessage(error, 'Unknown wallet error'));
             return null;
         }
     }
@@ -254,7 +280,7 @@ class Web3Auth {
             return this.buildWalletData();
         } catch (error) {
             console.error('Trust Wallet connection error:', error);
-            alert('Failed to connect Trust Wallet: ' + error.message);
+            alert('Failed to connect Trust Wallet: ' + this.getErrorMessage(error, 'Unknown wallet error'));
             return null;
         }
     }
