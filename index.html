@@ -528,21 +528,22 @@
         </div>
     </div>
     <div class="wallet-modal-overlay" id="walletModalOverlay" style="display:none;"></div>
-        <div class="share-modal-content">
-            <span class="share-close" id="profileClose">&times;</span>
-            <h2 class="share-title" id="profileName">Profile</h2>
-            <div id="profileEmail" style="color:var(--secondary);margin-bottom:10px;"></div>
-            
-            <!-- Web3 Wallet Assets -->
-            <div id="walletAssetsSection" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--secondary);">
+
+    <div id="profileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:2100;align-items:center;justify-content:center;padding:20px;">
+        <div style="max-width:420px;width:100%;background:var(--card-bg);border:1px solid var(--secondary);border-radius:10px;padding:18px;box-shadow:0 0 24px rgba(0,0,0,0.45);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h2 id="profileName" style="font-family:'Orbitron',sans-serif;font-size:1.05rem;color:var(--primary);">Wallet Profile</h2>
+                <button id="profileClose" class="type-btn" style="padding:6px 10px;">✕</button>
+            </div>
+            <div id="profileEmail" style="color:var(--secondary);margin-bottom:10px;font-family:'Share Tech Mono',monospace;"></div>
+            <div id="walletAssetsSection" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--secondary);">
                 <h3 style="color:var(--primary);margin-bottom:10px;font-size:0.9rem;">💰 Wallet Assets</h3>
                 <div id="walletAddress" style="color:var(--secondary);font-family:'Share Tech Mono',monospace;font-size:0.8rem;margin-bottom:8px;"></div>
                 <div id="walletBalance" style="color:#ffd166;font-family:'Share Tech Mono',monospace;font-size:1rem;margin-bottom:8px;"></div>
                 <div id="walletChain" style="color:var(--primary);font-family:'Share Tech Mono',monospace;font-size:0.85rem;margin-bottom:10px;"></div>
-                <button class="copy-btn" id="walletRefresh" style="background:var(--primary);color:black;margin-bottom:10px;width:100%;">🔄 Refresh Balance</button>
+                <button class="type-btn" id="walletRefresh" style="margin-bottom:10px;width:100%;">🔄 Refresh Balance</button>
             </div>
-            
-            <button class="copy-btn" id="profileSignOut">Sign out</button>
+            <button class="type-btn" id="profileSignOut" style="width:100%;">Sign out</button>
         </div>
     </div>
 
@@ -886,6 +887,119 @@
         });
         document.getElementById('nextBtn').addEventListener('click', () => {
             if (currentPage < totalPages) { currentPage++; fetchDashboardData(); window.scrollTo({top: 0, behavior: 'smooth'}); }
+        });
+
+        // --- Web3 Wallet Login (MetaMask / Trust Wallet) ---
+        const menuLoginBtn = document.getElementById('menuLoginBtn');
+        const menuProfileBtn = document.getElementById('menuProfileBtn');
+        const walletInfo = document.getElementById('walletInfo');
+        const walletModal = document.getElementById('walletModal');
+        const walletModalOverlay = document.getElementById('walletModalOverlay');
+        const profileModal = document.getElementById('profileModal');
+        const profileName = document.getElementById('profileName');
+        const profileEmail = document.getElementById('profileEmail');
+        const walletAssetsSection = document.getElementById('walletAssetsSection');
+        const walletAddress = document.getElementById('walletAddress');
+        const walletBalance = document.getElementById('walletBalance');
+        const walletChain = document.getElementById('walletChain');
+
+        function openWalletModal() {
+            if (!walletModal || !walletModalOverlay) return;
+            walletModal.style.display = 'flex';
+            walletModalOverlay.style.display = 'block';
+        }
+
+        function closeWalletModal() {
+            if (!walletModal || !walletModalOverlay) return;
+            walletModal.style.display = 'none';
+            walletModalOverlay.style.display = 'none';
+        }
+
+        function showProfileModal() {
+            if (!profileModal || !window.web3Auth || !web3Auth.isConnected()) return;
+            const data = web3Auth.getWalletData();
+            if (profileName) profileName.innerText = `Wallet Profile (${data.shortAddress})`;
+            if (profileEmail) profileEmail.innerText = `Connected with ${web3Auth.provider || 'Web3 Wallet'}`;
+            if (walletAddress) walletAddress.innerText = `Address: ${data.address || 'N/A'}`;
+            if (walletBalance) walletBalance.innerText = `Balance: ${data.balance || '0.0000'} ETH`;
+            if (walletChain) walletChain.innerText = `Network: ${data.chainName || 'Unknown'}`;
+            if (walletAssetsSection) walletAssetsSection.style.display = 'block';
+            profileModal.style.display = 'flex';
+        }
+
+        function hideProfileModal() {
+            if (profileModal) profileModal.style.display = 'none';
+        }
+
+        function updateWalletUI(walletData) {
+            if (!walletData) return;
+            const short = `${walletData.address.slice(0, 6)}...${walletData.address.slice(-4)}`;
+            if (walletInfo) {
+                walletInfo.style.display = 'inline-block';
+                walletInfo.innerText = `🦊 ${short}`;
+            }
+            if (menuLoginBtn) menuLoginBtn.style.display = 'none';
+            if (menuProfileBtn) menuProfileBtn.style.display = 'inline-block';
+        }
+
+        async function connectMetaMaskWallet() {
+            if (!window.web3Auth) {
+                alert('Web3 module not loaded. Please refresh the page.');
+                return;
+            }
+            const walletData = await web3Auth.connectMetaMask();
+            if (walletData) {
+                updateWalletUI(walletData);
+                closeWalletModal();
+            }
+        }
+
+        async function connectTrustWalletProvider() {
+            if (!window.web3Auth) {
+                alert('Web3 module not loaded. Please refresh the page.');
+                return;
+            }
+            const walletData = await web3Auth.connectTrustWallet();
+            if (walletData) {
+                updateWalletUI(walletData);
+                closeWalletModal();
+            }
+        }
+
+        function signOutWallet() {
+            if (window.web3Auth) web3Auth.disconnect();
+            if (walletInfo) {
+                walletInfo.style.display = 'none';
+                walletInfo.innerText = '';
+            }
+            if (menuLoginBtn) menuLoginBtn.style.display = 'inline-block';
+            if (menuProfileBtn) menuProfileBtn.style.display = 'none';
+            hideProfileModal();
+        }
+
+        if (menuLoginBtn) menuLoginBtn.addEventListener('click', openWalletModal);
+        if (menuProfileBtn) menuProfileBtn.addEventListener('click', showProfileModal);
+        if (walletInfo) walletInfo.addEventListener('click', showProfileModal);
+        document.getElementById('walletModalClose')?.addEventListener('click', closeWalletModal);
+        if (walletModalOverlay) walletModalOverlay.addEventListener('click', closeWalletModal);
+        document.getElementById('connectMetaMask')?.addEventListener('click', connectMetaMaskWallet);
+        document.getElementById('connectTrustWallet')?.addEventListener('click', connectTrustWalletProvider);
+        document.getElementById('profileClose')?.addEventListener('click', hideProfileModal);
+        document.getElementById('profileSignOut')?.addEventListener('click', signOutWallet);
+        document.getElementById('walletRefresh')?.addEventListener('click', async () => {
+            if (!window.web3Auth || !web3Auth.isConnected()) return;
+            await web3Auth.refreshBalance();
+            showProfileModal();
+        });
+
+        // Keep UI synced with wallet events
+        window.addEventListener('walletAccountChanged', () => {
+            if (!window.web3Auth || !web3Auth.isConnected()) return signOutWallet();
+            updateWalletUI(web3Auth.getWalletData());
+        });
+        window.addEventListener('walletChainChanged', () => {
+            if (!window.web3Auth || !web3Auth.isConnected()) return;
+            updateWalletUI(web3Auth.getWalletData());
         });
 
         updateUI();
