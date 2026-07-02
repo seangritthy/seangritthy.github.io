@@ -121,6 +121,36 @@ class Web3Auth {
         return injected;
     }
 
+    getProviderCandidates(preferred = 'any') {
+        const candidates = [];
+        const pushUnique = (provider) => {
+            if (!provider) return;
+            if (!candidates.includes(provider)) candidates.push(provider);
+        };
+
+        const injected = window.ethereum;
+        const discovered = this.discoveredProviders.map((entry) => entry.provider);
+
+        if (preferred === 'metamask') {
+            pushUnique(this.getMetaMaskProvider(injected));
+            discovered.forEach((p) => { if (p?.isMetaMask) pushUnique(p); });
+            if (Array.isArray(injected?.providers)) {
+                injected.providers.forEach((p) => { if (p?.isMetaMask) pushUnique(p); });
+            }
+        } else if (preferred === 'trust') {
+            pushUnique(this.getTrustWalletProvider(injected));
+            discovered.forEach((p) => { if (p?.isTrust || p?.isTrustWallet) pushUnique(p); });
+            if (Array.isArray(injected?.providers)) {
+                injected.providers.forEach((p) => { if (p?.isTrust || p?.isTrustWallet) pushUnique(p); });
+            }
+        }
+
+        discovered.forEach(pushUnique);
+        if (Array.isArray(injected?.providers)) injected.providers.forEach(pushUnique);
+        pushUnique(injected);
+        return candidates;
+    }
+
     getMetaMaskDeepLink() {
         const currentUrl = window.location.href;
         const normalized = currentUrl.replace(/^https?:\/\//, '');
@@ -216,11 +246,30 @@ class Web3Auth {
     // Connect to MetaMask
     async connectMetaMask() {
         try {
+            await this.waitForEthereum();
             let eth = await this.resolveProvider('metamask');
-            if (!eth) {
-                // Fallback for browsers/extensions that do not expose MetaMask flags reliably.
-                eth = await this.resolveProvider('any');
+            const providerCandidates = this.getProviderCandidates('metamask');
+            if (eth && !providerCandidates.includes(eth)) providerCandidates.unshift(eth);
+            if (!providerCandidates.length) {
+                const anyProvider = await this.resolveProvider('any');
+                if (anyProvider) providerCandidates.push(anyProvider);
             }
+
+            let accounts = null;
+            let lastError = null;
+            for (const provider of providerCandidates) {
+                try {
+                    const nextAccounts = await provider.request({ method: 'eth_requestAccounts' });
+                    if (Array.isArray(nextAccounts) && nextAccounts.length) {
+                        eth = provider;
+                        accounts = nextAccounts;
+                        break;
+                    }
+                } catch (error) {
+                    lastError = error;
+                }
+            }
+
             if (!eth) {
                 const deepLink = this.getMetaMaskDeepLink();
                 alert('MetaMask is not available in this browser context. Opening MetaMask app browser now.');
@@ -228,11 +277,9 @@ class Web3Auth {
                 return null;
             }
 
-            // Request account access
-            const accounts = await eth.request({
-                method: 'eth_requestAccounts'
-            });
-            if (!accounts || !accounts.length) return null;
+            if (!accounts || !accounts.length) {
+                throw lastError || new Error('No wallet account returned');
+            }
 
             const providerName = eth.isMetaMask ? 'MetaMask' : 'Injected Wallet';
             await this.syncWalletState(accounts[0], providerName, eth);
