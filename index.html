@@ -750,39 +750,37 @@
             let displayContext = "";
             
             const uiLangCode = localStorage.getItem('uiLang') || 'en';
-            const tmdbLang = uiLangCode === 'km' ? 'km-KH' : (uiLangCode === 'zh' ? 'zh-CN' : 'en-US');
+            const params = new URLSearchParams({
+                page: String(currentPage),
+                type: currentType,
+                category: currentCategory,
+                uiLang: uiLangCode
+            });
 
             try {
                 if (targetActorId) {
                     displayContext = t.scanCast(targetActorName.toUpperCase());
-                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_cast=${targetActorId}&sort_by=popularity.desc&page=${currentPage}&language=${tmdbLang}`;
+                    params.set('actor', targetActorId);
                 } else if (targetGenreId) {
                     displayContext = t.filterGenre(targetGenreName.toUpperCase());
-                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_genres=${targetGenreId}&sort_by=popularity.desc&page=${currentPage}&language=${tmdbLang}`;
+                    params.set('genre', targetGenreId);
                 } else if (targetCountryId) {
                     displayContext = t.filterRegion(targetCountryName.toUpperCase());
-                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_origin_country=${targetCountryId}&sort_by=popularity.desc&page=${currentPage}&language=${tmdbLang}`;
+                    params.set('country', targetCountryId);
                 } else if (targetLangId) {
                     displayContext = t.filterLang(targetLangName.toUpperCase());
-                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_original_language=${targetLangId}&sort_by=popularity.desc&page=${currentPage}&language=${tmdbLang}`;
+                    params.set('lang', targetLangId);
                 } else if (targetSearch) {
                     displayContext = t.scanFor(targetSearch.toUpperCase());
-                    url = `https://api.themoviedb.org/3/search/${currentType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(targetSearch)}&page=${currentPage}&language=${tmdbLang}`;
+                    params.set('search', targetSearch);
                     searchInput.value = targetSearch;
                 } else {
                     if (currentLanguage) {
-                        let sortType = currentCategory === 'top_rated' ? 'vote_average.desc&vote_count.gte=200' : 'popularity.desc';
-                        url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_original_language=${currentLanguage}&sort_by=${sortType}&page=${currentPage}&language=${tmdbLang}`;
-                    } else {
-                        if (currentCategory === 'trending') {
-                            url = `https://api.themoviedb.org/3/trending/${currentType}/week?api_key=${TMDB_API_KEY}&page=${currentPage}&language=${tmdbLang}`;
-                        } else if (currentCategory === 'top_rated') {
-                            url = `https://api.themoviedb.org/3/${currentType}/top_rated?api_key=${TMDB_API_KEY}&page=${currentPage}&language=${tmdbLang}`;
-                        } else {
-                            url = `https://api.themoviedb.org/3/${currentType}/popular?api_key=${TMDB_API_KEY}&page=${currentPage}&language=${tmdbLang}`;
-                        }
+                        params.set('languageFilter', currentLanguage);
                     }
                 }
+
+                url = `/api/movies?${params.toString()}`;
 
                 if (displayContext && currentPage === 1) setGridMessage(displayContext, true);
 
