@@ -616,12 +616,12 @@
             <span class="share-close" id="coinChartClose">&times;</span>
             <h2 class="share-title" id="coinChartTitle">LIVE CHART</h2>
             <div style="width:100%;height:360px;">
-                <canvas id="coinChartCanvas" style="width:100%;height:100%;"></canvas>
+                <div id="coinChartCanvas" style="width:100%;height:100%;"></div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <script>
         // --- Web3 Wallet Login for Player Page ---
         window.addEventListener('DOMContentLoaded', () => {
@@ -835,6 +835,7 @@
         let isSpeaking = false;
         let currentPosterUrl = "";
         let coinChartInstance = null;
+        let coinCandleSeries = null;
         let activeChartCoin = null;
         let coinChartRefreshTimer = null;
         const previousMarketSnapshot = new Map();
@@ -1188,58 +1189,78 @@
             if (!coinChartCanvas) return;
             const t = getT();
             try {
-                const res = await fetch(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(coinId)}/market_chart?vs_currency=usd&days=1&interval=hourly`);
-                if (!res.ok) throw new Error('chart fetch failed');
-                const data = await res.json();
-                const points = data?.prices || [];
-                if (!points.length) throw new Error('no chart points');
+                const ohlcRes = await fetch(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(coinId)}/ohlc?vs_currency=usd&days=1`);
+                let candles = [];
 
-                const labels = points.map(([ts]) => {
-                    const d = new Date(ts);
-                    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-                });
-                const values = points.map(([, price]) => price);
+                if (ohlcRes.ok) {
+                    const ohlcData = await ohlcRes.json();
+                    candles = Array.isArray(ohlcData)
+                        ? ohlcData.map((row) => ({
+                            time: Math.floor((row[0] || 0) / 1000),
+                            open: Number(row[1]) || 0,
+                            high: Number(row[2]) || 0,
+                            low: Number(row[3]) || 0,
+                            close: Number(row[4]) || 0
+                        })).filter((row) => row.time > 0)
+                        : [];
+                }
 
-                if (coinChartInstance) coinChartInstance.destroy();
-                coinChartInstance = new Chart(coinChartCanvas.getContext('2d'), {
-                    type: 'line',
-                    data: {
-                        labels,
-                        datasets: [{
-                            label: `${symbol.toUpperCase()} / USD`,
-                            data: values,
-                            borderColor: '#4d7cff',
-                            backgroundColor: 'rgba(77,124,255,0.14)',
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            tension: 0.25,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        interaction: { intersect: false, mode: 'index' },
-                        plugins: {
-                            legend: { display: true },
-                            tooltip: {
-                                callbacks: {
-                                    label: (ctx) => `${formatUsd(ctx.parsed.y)}`
-                                }
-                            }
+                if (!candles.length) {
+                    const fallbackRes = await fetch(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(coinId)}/market_chart?vs_currency=usd&days=1&interval=hourly`);
+                    if (!fallbackRes.ok) throw new Error('chart fetch failed');
+                    const fallbackData = await fallbackRes.json();
+                    const prices = fallbackData?.prices || [];
+                    candles = prices.map(([ts, price]) => ({
+                        time: Math.floor((ts || 0) / 1000),
+                        open: Number(price) || 0,
+                        high: Number(price) || 0,
+                        low: Number(price) || 0,
+                        close: Number(price) || 0
+                    })).filter((row) => row.time > 0);
+                }
+
+                if (!candles.length) throw new Error('no chart points');
+
+                const chartWidth = coinChartCanvas.clientWidth || 700;
+                const chartHeight = coinChartCanvas.clientHeight || 340;
+
+                if (!coinChartInstance) {
+                    coinChartInstance = LightweightCharts.createChart(coinChartCanvas, {
+                        width: chartWidth,
+                        height: chartHeight,
+                        layout: {
+                            background: { color: '#ffffff' },
+                            textColor: '#334155'
                         },
-                        scales: {
-                            x: { ticks: { maxTicksLimit: 8, color: '#64748b' }, grid: { color: 'rgba(77,124,255,0.08)' } },
-                            y: {
-                                ticks: {
-                                    color: '#64748b',
-                                    callback: (v) => formatCompactUsd(v)
-                                },
-                                grid: { color: 'rgba(77,124,255,0.08)' }
-                            }
+                        grid: {
+                            vertLines: { color: 'rgba(148, 163, 184, 0.2)' },
+                            horzLines: { color: 'rgba(148, 163, 184, 0.2)' }
+                        },
+                        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+                        rightPriceScale: {
+                            borderColor: 'rgba(100, 116, 139, 0.35)'
+                        },
+                        timeScale: {
+                            borderColor: 'rgba(100, 116, 139, 0.35)',
+                            timeVisible: true,
+                            secondsVisible: false
                         }
-                    }
-                });
+                    });
+
+                    coinCandleSeries = coinChartInstance.addCandlestickSeries({
+                        upColor: '#16c784',
+                        downColor: '#ea3943',
+                        borderDownColor: '#ea3943',
+                        borderUpColor: '#16c784',
+                        wickDownColor: '#ea3943',
+                        wickUpColor: '#16c784'
+                    });
+                } else {
+                    coinChartInstance.resize(chartWidth, chartHeight);
+                }
+
+                coinCandleSeries.setData(candles);
+                coinChartInstance.timeScale().fitContent();
             } catch (err) {
                 if (coinChartTitle) coinChartTitle.innerText = `${symbol.toUpperCase()} • ${t.chartError}`;
             }
