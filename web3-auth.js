@@ -18,15 +18,10 @@ class Web3Auth {
 
     // Check if wallet is available
     isMetaMaskAvailable() {
-        if (typeof window.ethereum === 'undefined') return false;
-        if (window.ethereum.isMetaMask) return true;
-        if (Array.isArray(window.ethereum.providers)) {
-            return window.ethereum.providers.some((p) => !!p?.isMetaMask);
-        }
-        return false;
+        return typeof window.ethereum !== 'undefined';
     }
 
-    async waitForEthereum(timeoutMs = 1800) {
+    async waitForEthereum(timeoutMs = 6000) {
         if (window.ethereum) return window.ethereum;
 
         return new Promise((resolve) => {
@@ -137,7 +132,11 @@ class Web3Auth {
     // Connect to MetaMask
     async connectMetaMask() {
         try {
-            const eth = await this.resolveProvider('metamask');
+            let eth = await this.resolveProvider('metamask');
+            if (!eth) {
+                // Fallback for browsers/extensions that do not expose MetaMask flags reliably.
+                eth = await this.resolveProvider('any');
+            }
             if (!eth) {
                 alert('MetaMask provider not detected. If MetaMask is installed, enable this site in MetaMask settings and refresh.');
                 window.open('https://metamask.io', '_blank');
@@ -150,7 +149,8 @@ class Web3Auth {
             });
             if (!accounts || !accounts.length) return null;
 
-            await this.syncWalletState(accounts[0], 'MetaMask', eth);
+            const providerName = eth.isMetaMask ? 'MetaMask' : 'Injected Wallet';
+            await this.syncWalletState(accounts[0], providerName, eth);
 
             // Require a signature so login proves wallet ownership.
             const signature = await this.requestSignature(this.address, eth);
@@ -202,7 +202,7 @@ class Web3Auth {
 
     async restoreSession(expectedAddress = null) {
         const preferred = this.provider === 'MetaMask' ? 'metamask' : 'any';
-        const eth = await this.resolveProvider(preferred);
+        const eth = (await this.resolveProvider(preferred)) || (await this.resolveProvider('any'));
         if (!eth) return null;
 
         try {
