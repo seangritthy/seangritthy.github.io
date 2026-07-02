@@ -842,6 +842,7 @@
         let currentPosterUrl = "";
         let coinChartInstance = null;
         let coinCandleSeries = null;
+        let coinMaSeries = null;
         let activeChartCoin = null;
         let coinChartRefreshTimer = null;
         const previousMarketSnapshot = new Map();
@@ -1181,6 +1182,49 @@
             `;
         }
 
+        function buildSmaData(candles, period) {
+            const series = [];
+            let rolling = 0;
+            for (let i = 0; i < candles.length; i += 1) {
+                rolling += candles[i].close;
+                if (i >= period) rolling -= candles[i - period].close;
+                if (i >= period - 1) {
+                    series.push({
+                        time: candles[i].time,
+                        value: rolling / period
+                    });
+                }
+            }
+            return series;
+        }
+
+        function calcSmaAt(candles, period, offset = 0) {
+            const end = candles.length - offset;
+            const start = end - period;
+            if (start < 0) return null;
+            let sum = 0;
+            for (let i = start; i < end; i += 1) sum += candles[i].close;
+            return sum / period;
+        }
+
+        function getAiTrendSignal(candles) {
+            const fastNow = calcSmaAt(candles, 9, 0);
+            const fastPrev = calcSmaAt(candles, 9, 1);
+            const slowNow = calcSmaAt(candles, 21, 0);
+            const slowPrev = calcSmaAt(candles, 21, 1);
+
+            if (fastNow === null || fastPrev === null || slowNow === null || slowPrev === null) {
+                return { trend: 'NEUTRAL', period: 14, color: '#f59e0b' };
+            }
+
+            const isBull = fastNow > slowNow && fastNow >= fastPrev;
+            const isBear = fastNow < slowNow && fastNow <= slowPrev;
+
+            if (isBull) return { trend: 'BULL', period: 9, color: '#16c784' };
+            if (isBear) return { trend: 'BEAR', period: 21, color: '#ea3943' };
+            return { trend: 'NEUTRAL', period: 14, color: '#f59e0b' };
+        }
+
         function closeCoinChartModal() {
             if (coinChartModal) coinChartModal.classList.remove('active');
             if (coinChartRefreshTimer) {
@@ -1266,11 +1310,34 @@
                     } else {
                         coinCandleSeries = coinChartInstance.addSeries(LightweightCharts.CandlestickSeries, candleStyle);
                     }
+
+                    const maStyle = {
+                        color: '#16c784',
+                        lineWidth: 2,
+                        lineStyle: LightweightCharts.LineStyle.Solid,
+                        crosshairMarkerVisible: false,
+                        priceLineVisible: false,
+                        lastValueVisible: true
+                    };
+                    if (typeof coinChartInstance.addLineSeries === 'function') {
+                        coinMaSeries = coinChartInstance.addLineSeries(maStyle);
+                    } else {
+                        coinMaSeries = coinChartInstance.addSeries(LightweightCharts.LineSeries, maStyle);
+                    }
                 } else {
                     coinChartInstance.resize(chartWidth, chartHeight);
                 }
 
                 coinCandleSeries.setData(candles);
+                const aiSignal = getAiTrendSignal(candles);
+                const maData = buildSmaData(candles, aiSignal.period);
+                if (coinMaSeries) {
+                    coinMaSeries.applyOptions({ color: aiSignal.color });
+                    coinMaSeries.setData(maData);
+                }
+                if (coinChartTitle) {
+                    coinChartTitle.innerText = `${symbol.toUpperCase()} • ${t.chartTitle} • AI BOT ${aiSignal.trend} MA(${aiSignal.period})`;
+                }
                 coinChartInstance.timeScale().fitContent();
             } catch (err) {
                 if (coinChartTitle) coinChartTitle.innerText = `${symbol.toUpperCase()} • ${t.chartError}`;
@@ -1284,7 +1351,6 @@
             coinChartTitle.innerText = `${symbol.toUpperCase()} • ${t.chartLoading}`;
             coinChartModal.classList.add('active');
             await renderCoinChart(coinId, symbol);
-            coinChartTitle.innerText = `${symbol.toUpperCase()} • ${t.chartTitle}`;
 
             if (coinChartRefreshTimer) clearInterval(coinChartRefreshTimer);
             coinChartRefreshTimer = setInterval(() => {
