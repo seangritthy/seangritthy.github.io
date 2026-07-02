@@ -507,11 +507,11 @@
                     <div class="control-value" id="bufferHealth">98%</div>
                 </div>
                 <div class="control-item">
-                    <div class="control-label" id="lblCrypto">CRYPTO MARKET</div>
+                    <div class="control-label" id="lblCrypto">MARKET CAP</div>
                     <div class="control-value" id="cryptoMarket">Loading...</div>
                 </div>
                 <div class="control-item">
-                    <div class="control-label" id="lblCryptoChange">24H CHANGE</div>
+                    <div class="control-label" id="lblCryptoChange">MCAP 24H CHANGE</div>
                     <div class="control-value" id="cryptoChange">--</div>
                 </div>
             </div>
@@ -633,8 +633,8 @@
                 streamQuality: "STREAM QUALITY",
                 bitrate: "BITRATE",
                 bufferHealth: "BUFFER HEALTH",
-                cryptoMarket: "CRYPTO MARKET",
-                cryptoChange: "24H CHANGE",
+                cryptoMarket: "MARKET CAP",
+                cryptoChange: "MCAP 24H CHANGE",
                 auto: "AUTO (RECOMMENDED)",
                 unknownRole: "Unknown Role",
                 na: "N/A",
@@ -664,8 +664,8 @@
                 streamQuality: "កម្រិតច្បាស់",
                 bitrate: "ល្បឿនអ៊ីនធឺណិត",
                 bufferHealth: "សុខភាពបណ្តាញ",
-                cryptoMarket: "ទីផ្សារគ្រីបតូ",
-                cryptoChange: "ការប្រែប្រួល ២៤ ម៉ោង",
+                cryptoMarket: "មូលធនទីផ្សារ",
+                cryptoChange: "ការផ្លាស់ប្តូរ MCAP ២៤ ម៉ោង",
                 auto: "ស្វ័យប្រវត្តិ",
                 unknownRole: "មិនស្គាល់តួអង្គ",
                 na: "មិនមាន",
@@ -695,8 +695,8 @@
                 streamQuality: "画质",
                 bitrate: "比特率",
                 bufferHealth: "缓冲健康度",
-                cryptoMarket: "加密市场",
-                cryptoChange: "24小时变化",
+                cryptoMarket: "市值",
+                cryptoChange: "市值24小时变化",
                 auto: "自动 (推荐)",
                 unknownRole: "未知角色",
                 na: "无",
@@ -983,32 +983,45 @@
             }).format(value);
         }
 
+        function formatCompactUsd(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                notation: 'compact',
+                compactDisplay: 'short',
+                maximumFractionDigits: 2
+            }).format(value);
+        }
+
         async function refreshCryptoMarket() {
             const marketEl = document.getElementById('cryptoMarket');
             const changeEl = document.getElementById('cryptoChange');
             if (!marketEl || !changeEl) return;
 
             try {
-                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true');
+                const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum&price_change_percentage=24h');
                 if (!res.ok) throw new Error('price fetch failed');
                 const data = await res.json();
 
-                const btc = data?.bitcoin?.usd;
-                const eth = data?.ethereum?.usd;
-                const btcChange = data?.bitcoin?.usd_24h_change;
-                const ethChange = data?.ethereum?.usd_24h_change;
+                const btc = Array.isArray(data) ? data.find(c => c.id === 'bitcoin') : null;
+                const eth = Array.isArray(data) ? data.find(c => c.id === 'ethereum') : null;
 
-                if (typeof btc === 'number' && typeof eth === 'number') {
-                    marketEl.innerText = `BTC ${formatUsd(btc)} | ETH ${formatUsd(eth)}`;
+                const btcMcap = btc?.market_cap;
+                const ethMcap = eth?.market_cap;
+                const btcMcapChange = btc?.market_cap_change_percentage_24h;
+                const ethMcapChange = eth?.market_cap_change_percentage_24h;
+
+                if (typeof btcMcap === 'number' && typeof ethMcap === 'number') {
+                    marketEl.innerText = `BTC ${formatCompactUsd(btcMcap)} | ETH ${formatCompactUsd(ethMcap)}`;
                 } else {
                     marketEl.innerText = 'Price data unavailable';
                 }
 
-                if (typeof btcChange === 'number' && typeof ethChange === 'number') {
-                    const btcText = `${btcChange >= 0 ? '+' : ''}${btcChange.toFixed(2)}%`;
-                    const ethText = `${ethChange >= 0 ? '+' : ''}${ethChange.toFixed(2)}%`;
+                if (typeof btcMcapChange === 'number' && typeof ethMcapChange === 'number') {
+                    const btcText = `${btcMcapChange >= 0 ? '+' : ''}${btcMcapChange.toFixed(2)}%`;
+                    const ethText = `${ethMcapChange >= 0 ? '+' : ''}${ethMcapChange.toFixed(2)}%`;
                     changeEl.innerText = `BTC ${btcText} | ETH ${ethText}`;
-                    changeEl.style.color = btcChange >= 0 && ethChange >= 0 ? '#0f766e' : '#b91c1c';
+                    changeEl.style.color = btcMcapChange >= 0 && ethMcapChange >= 0 ? '#0f766e' : '#b91c1c';
                 } else {
                     changeEl.innerText = '--';
                     changeEl.style.color = '';
