@@ -641,11 +641,40 @@
                 <div id="walletAddress" style="color:var(--secondary);font-family:'JetBrains Mono',monospace;font-size:0.8rem;margin-bottom:8px;"></div>
                 <div id="walletBalance" style="color:#ffd166;font-family:'JetBrains Mono',monospace;font-size:1rem;margin-bottom:8px;"></div>
                 <div id="walletChain" style="color:var(--primary);font-family:'JetBrains Mono',monospace;font-size:0.85rem;margin-bottom:10px;"></div>
+                <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px;">
+                    <button class="type-btn" id="walletBuyBtn" style="padding:8px 6px;">🛒 Buy</button>
+                    <button class="type-btn" id="walletSendBtn" style="padding:8px 6px;">📤 Send</button>
+                    <button class="type-btn" id="walletReceiveBtn" style="padding:8px 6px;">📥 Receive</button>
+                    <button class="type-btn" id="walletScanBtn" style="padding:8px 6px;">📷 Scan</button>
+                </div>
+                <div id="walletActionStatus" style="display:none;color:var(--secondary);font-family:'JetBrains Mono',monospace;font-size:0.78rem;margin-bottom:10px;"></div>
+                <div id="walletSendPanel" style="display:none;background:rgba(77,124,255,0.08);border:1px solid rgba(77,124,255,0.32);border-radius:10px;padding:10px;margin-bottom:10px;">
+                    <div style="color:var(--primary);font-family:'Sora',sans-serif;font-size:0.84rem;margin-bottom:8px;">Send Native Token</div>
+                    <label for="walletSendTo" style="display:block;color:var(--secondary);font-family:'JetBrains Mono',monospace;font-size:0.75rem;margin-bottom:6px;">Recipient Address</label>
+                    <input id="walletSendTo" type="text" placeholder="0x..." style="width:100%;margin-bottom:8px;padding:9px 10px;background:rgba(255,255,255,0.96);border:1px solid rgba(111,92,255,0.28);border-radius:8px;color:#1b1f3b;font-family:'JetBrains Mono',monospace;font-size:0.78rem;outline:none;" />
+                    <label for="walletSendAmount" style="display:block;color:var(--secondary);font-family:'JetBrains Mono',monospace;font-size:0.75rem;margin-bottom:6px;">Amount</label>
+                    <div style="display:flex;gap:8px;margin-bottom:8px;">
+                        <input id="walletSendAmount" type="text" inputmode="decimal" placeholder="0.001" style="flex:1;padding:9px 10px;background:rgba(255,255,255,0.96);border:1px solid rgba(111,92,255,0.28);border-radius:8px;color:#1b1f3b;font-family:'JetBrains Mono',monospace;font-size:0.78rem;outline:none;" />
+                        <div id="walletSendSymbol" style="min-width:58px;padding:9px 10px;background:rgba(111,92,255,0.12);border:1px solid rgba(111,92,255,0.24);border-radius:8px;color:var(--primary);font-family:'JetBrains Mono',monospace;font-size:0.76rem;text-align:center;">ETH</div>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="type-btn" id="walletSendSubmit" style="flex:1;">✅ Confirm Send</button>
+                        <button class="type-btn" id="walletSendCancel" style="flex:1;">✖ Cancel</button>
+                    </div>
+                </div>
+                <div id="walletReceivePanel" style="display:none;background:rgba(111,92,255,0.08);border:1px solid rgba(111,92,255,0.32);border-radius:10px;padding:10px;margin-bottom:10px;">
+                    <div style="display:flex;justify-content:center;margin-bottom:8px;">
+                        <img id="walletQrImage" alt="Wallet QR" style="width:140px;height:140px;border-radius:8px;border:1px solid rgba(111,92,255,0.35);background:#fff;" />
+                    </div>
+                    <div id="walletReceiveAddress" style="color:var(--primary);font-family:'JetBrains Mono',monospace;font-size:0.76rem;word-break:break-all;margin-bottom:8px;"></div>
+                    <button class="type-btn" id="walletCopyAddress" style="width:100%;">📋 Copy Address</button>
+                </div>
                 <button class="type-btn" id="walletRefresh" style="margin-bottom:10px;width:100%;">🔄 Refresh Balance</button>
             </div>
             <button class="type-btn" id="profileSignOut" style="width:100%;">Sign out</button>
         </div>
     </div>
+    <input id="walletScanInput" type="file" accept="image/*" capture="environment" style="display:none;" />
 
     <script src="web3-auth.js"></script>
     <script>
@@ -1003,6 +1032,15 @@
         const walletAddress = document.getElementById('walletAddress');
         const walletBalance = document.getElementById('walletBalance');
         const walletChain = document.getElementById('walletChain');
+        const walletActionStatus = document.getElementById('walletActionStatus');
+        const walletSendPanel = document.getElementById('walletSendPanel');
+        const walletSendTo = document.getElementById('walletSendTo');
+        const walletSendAmount = document.getElementById('walletSendAmount');
+        const walletSendSymbol = document.getElementById('walletSendSymbol');
+        const walletReceivePanel = document.getElementById('walletReceivePanel');
+        const walletQrImage = document.getElementById('walletQrImage');
+        const walletReceiveAddress = document.getElementById('walletReceiveAddress');
+        const walletScanInput = document.getElementById('walletScanInput');
 
         function getAuth() {
             if (window.web3Auth) return window.web3Auth;
@@ -1021,9 +1059,53 @@
                 chainId: null,
                 chainName: null,
                 isMetaMaskAvailable() { return typeof window.ethereum !== 'undefined'; },
+                isInsideMetaMaskApp() {
+                    const ua = String(navigator?.userAgent || '').toLowerCase();
+                    return ua.includes('metamaskmobile');
+                },
                 isConnected() { return !!this.address; },
                 getShortAddress(addr = this.address) { return addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : ''; },
                 getChainName(chainId) { return chainId ? `Network ${chainId}` : 'Unknown'; },
+                getMetaMaskDeepLinks(targetUrl = null) {
+                    const url = new URL(targetUrl || window.location.href, window.location.origin);
+                    const dappPath = `${url.host}${url.pathname}${url.search}${url.hash}`;
+                    return {
+                        native: `metamask://dapp/${dappPath}`,
+                        universal: `https://metamask.app.link/dapp/${dappPath}`,
+                        universalEncoded: `https://metamask.app.link/dapp/${encodeURIComponent(dappPath)}`
+                    };
+                },
+                getMetaMaskDeepLink() {
+                    return this.getMetaMaskDeepLinks().universal;
+                },
+                openMetaMaskApp(targetUrl = null) {
+                    if (window.ethereum?.isMetaMask) return;
+
+                    const target = targetUrl || window.location.href;
+                    const links = this.getMetaMaskDeepLinks(target);
+                    let hidden = document.visibilityState === 'hidden';
+                    const onVisibilityChange = () => {
+                        if (document.visibilityState === 'hidden') hidden = true;
+                    };
+                    document.addEventListener('visibilitychange', onVisibilityChange, { once: true });
+
+                    window.location.href = links.native;
+                    setTimeout(() => {
+                        if (!hidden) window.location.href = links.universal;
+                    }, 700);
+                    setTimeout(() => {
+                        if (!hidden) window.location.href = links.universalEncoded;
+                    }, 1600);
+                },
+                isMetaMaskInternalError(error) {
+                    const message = String(
+                        error?.data?.originalError?.message ||
+                        error?.data?.message ||
+                        error?.message ||
+                        ''
+                    ).toLowerCase();
+                    return error?.code === -32603 || message.includes('internal error');
+                },
                 getWalletData() {
                     return {
                         address: this.address,
@@ -1054,9 +1136,37 @@
                     return this.getWalletData();
                 },
                 async connectMetaMask() {
-                    if (!window.ethereum) return null;
+                    if (!this.isInsideMetaMaskApp()) {
+                        this.openMetaMaskApp();
+                        return null;
+                    }
+
+                    if (!window.ethereum) {
+                        this.openMetaMaskApp();
+                        return null;
+                    }
                     this.provider = 'MetaMask';
-                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    let accounts = null;
+                    try {
+                        accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    } catch (error) {
+                        if (this.isMetaMaskInternalError(error)) {
+                            try {
+                                const existing = await window.ethereum.request({ method: 'eth_accounts' });
+                                if (Array.isArray(existing) && existing.length) {
+                                    accounts = existing;
+                                } else {
+                                    this.openMetaMaskApp();
+                                    return null;
+                                }
+                            } catch (_) {
+                                this.openMetaMaskApp();
+                                return null;
+                            }
+                        } else {
+                            throw error;
+                        }
+                    }
                     if (!accounts || !accounts.length) return null;
                     this.address = accounts[0];
                     const chainHex = await window.ethereum.request({ method: 'eth_chainId' });
@@ -1108,7 +1218,7 @@
             if (auth) return auth;
 
             try {
-                await loadScriptOnce('web3-auth.js?v=20260702');
+                await loadScriptOnce('web3-auth.js?v=20260707');
             } catch (error) {
                 console.error('Primary web3 auth load failed:', error);
             }
@@ -1124,6 +1234,28 @@
             walletModalOverlay.style.display = 'block';
         }
 
+        function shouldAutoMetaMaskLogin() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('mm_login') === '1';
+        }
+
+        function getIndexLoginUrl() {
+            const target = new URL(window.location.href);
+            target.pathname = target.pathname.replace(/[^/]*$/, 'index.html');
+            target.search = '';
+            target.hash = '';
+            target.searchParams.set('mm_login', '1');
+            return target.toString();
+        }
+
+        function redirectToCleanIndex() {
+            const target = new URL(window.location.href);
+            target.pathname = target.pathname.replace(/[^/]*$/, 'index.html');
+            target.search = '';
+            target.hash = '';
+            window.location.replace(target.toString());
+        }
+
         function closeWalletModal() {
             if (!walletModal || !walletModalOverlay) return;
             walletModal.style.display = 'none';
@@ -1134,17 +1266,242 @@
             const auth = getAuth();
             if (!profileModal || !auth || !auth.isConnected()) return;
             const data = auth.getWalletData();
+            const symbol = getNativeTokenSymbol(data.chainName);
             if (profileName) profileName.innerText = `Wallet Profile (${data.shortAddress})`;
             if (profileEmail) profileEmail.innerText = `Connected with ${auth.provider || 'Web3 Wallet'}`;
             if (walletAddress) walletAddress.innerText = `Address: ${data.address || 'N/A'}`;
-            if (walletBalance) walletBalance.innerText = `Balance: ${data.balance || '0.0000'} ETH`;
+            if (walletBalance) walletBalance.innerText = `Balance: ${data.balance || '0.0000'} ${symbol}`;
             if (walletChain) walletChain.innerText = `Network: ${data.chainName || 'Unknown'}`;
+            if (walletSendSymbol) walletSendSymbol.innerText = symbol;
             if (walletAssetsSection) walletAssetsSection.style.display = 'block';
+            hideWalletActionPanels();
+            if (walletSendTo) walletSendTo.value = '';
+            if (walletSendAmount) walletSendAmount.value = '';
+            setWalletActionStatus('');
             profileModal.style.display = 'flex';
         }
 
         function hideProfileModal() {
+            hideWalletActionPanels();
+            setWalletActionStatus('');
             if (profileModal) profileModal.style.display = 'none';
+        }
+
+        function setWalletActionStatus(message, isError = false) {
+            if (!walletActionStatus) return;
+            if (!message) {
+                walletActionStatus.style.display = 'none';
+                walletActionStatus.innerText = '';
+                return;
+            }
+
+            walletActionStatus.style.display = 'block';
+            walletActionStatus.style.color = isError ? '#ef4444' : 'var(--secondary)';
+            walletActionStatus.innerText = message;
+        }
+
+        function getNativeTokenSymbol(chainName = '') {
+            const value = String(chainName || '').toLowerCase();
+            if (value.includes('polygon')) return 'MATIC';
+            if (value.includes('binance') || value.includes('bsc')) return 'BNB';
+            if (value.includes('avalanche')) return 'AVAX';
+            if (value.includes('fantom')) return 'FTM';
+            return 'ETH';
+        }
+
+        function hideWalletActionPanels() {
+            if (walletSendPanel) walletSendPanel.style.display = 'none';
+            if (walletReceivePanel) walletReceivePanel.style.display = 'none';
+        }
+
+        function openSendPanel(prefilledAddress = '') {
+            hideWalletActionPanels();
+            if (!walletSendPanel) return;
+
+            walletSendPanel.style.display = 'block';
+            if (walletSendTo && prefilledAddress) walletSendTo.value = prefilledAddress;
+            if (walletSendTo && !walletSendTo.value) walletSendTo.focus();
+            setWalletActionStatus('Fill recipient and amount, then confirm in MetaMask app.');
+        }
+
+        function formatAddressCompact(address) {
+            if (!address || address.length < 12) return address || '';
+            return `${address.slice(0, 8)}...${address.slice(-6)}`;
+        }
+
+        function parseAddressFromScannedValue(rawValue) {
+            if (!rawValue) return null;
+            const raw = String(rawValue).trim();
+            let candidate = raw;
+
+            if (raw.toLowerCase().startsWith('ethereum:')) {
+                const payload = raw.slice(9);
+                candidate = payload.split(/[/?@]/)[0] || '';
+            }
+
+            if (/^0x[a-fA-F0-9]{40}$/.test(candidate)) return candidate;
+            return null;
+        }
+
+        function toWeiHex(ethAmountInput) {
+            const amount = String(ethAmountInput || '').trim();
+            if (!/^\d+(\.\d+)?$/.test(amount)) {
+                throw new Error('Amount must be a valid number.');
+            }
+
+            const [wholePart, fractionRaw = ''] = amount.split('.');
+            if (fractionRaw.length > 18) {
+                throw new Error('Amount supports up to 18 decimals.');
+            }
+
+            const fractionPart = fractionRaw.padEnd(18, '0');
+            const wei = (BigInt(wholePart) * (10n ** 18n)) + BigInt(fractionPart || '0');
+            if (wei <= 0n) {
+                throw new Error('Amount must be greater than zero.');
+            }
+
+            return `0x${wei.toString(16)}`;
+        }
+
+        function updateReceivePanel(address) {
+            if (!walletReceivePanel || !walletReceiveAddress || !walletQrImage) return;
+            if (!address) {
+                walletReceivePanel.style.display = 'none';
+                return;
+            }
+
+            if (walletSendPanel) walletSendPanel.style.display = 'none';
+            const qrPayload = `ethereum:${address}`;
+            walletReceiveAddress.innerText = address;
+            walletQrImage.src = `https://quickchart.io/qr?size=220&text=${encodeURIComponent(qrPayload)}`;
+            walletReceivePanel.style.display = 'block';
+        }
+
+        async function handleWalletBuy() {
+            window.location.href = 'https://portfolio.metamask.io/buy';
+        }
+
+        async function handleWalletSend(prefilledAddress = '') {
+            const auth = getAuth();
+            if (!auth || !auth.isConnected()) {
+                setWalletActionStatus('Connect your wallet first.', true);
+                return;
+            }
+
+            openSendPanel(prefilledAddress);
+        }
+
+        async function submitWalletSend() {
+            const auth = getAuth();
+            if (!auth || !auth.isConnected()) {
+                setWalletActionStatus('Connect your wallet first.', true);
+                return;
+            }
+
+            if (!window.ethereum) {
+                setWalletActionStatus('Ethereum provider not available in this context.', true);
+                return;
+            }
+
+            const senderAddress = auth.getWalletData()?.address;
+            if (!senderAddress) {
+                setWalletActionStatus('Wallet address is missing.', true);
+                return;
+            }
+
+            const cleanTo = String(walletSendTo?.value || '').trim();
+            if (!/^0x[a-fA-F0-9]{40}$/.test(cleanTo)) {
+                setWalletActionStatus('Invalid recipient address.', true);
+                return;
+            }
+
+            const amountEth = String(walletSendAmount?.value || '').trim();
+            if (!amountEth) {
+                setWalletActionStatus('Enter amount to send.', true);
+                return;
+            }
+
+            let valueHex;
+            try {
+                valueHex = toWeiHex(amountEth);
+            } catch (error) {
+                setWalletActionStatus(error.message || 'Invalid amount.', true);
+                return;
+            }
+
+            try {
+                setWalletActionStatus('Submitting transaction to MetaMask...');
+                const txHash = await window.ethereum.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: senderAddress,
+                        to: cleanTo,
+                        value: valueHex
+                    }]
+                });
+                setWalletActionStatus(`Sent. TX: ${formatAddressCompact(txHash)}`);
+                if (walletSendAmount) walletSendAmount.value = '';
+            } catch (error) {
+                const message = error?.message || 'Transaction failed.';
+                setWalletActionStatus(message, true);
+            }
+        }
+
+        async function handleWalletReceive() {
+            const auth = getAuth();
+            if (!auth || !auth.isConnected()) {
+                setWalletActionStatus('Connect your wallet first.', true);
+                return;
+            }
+
+            const address = auth.getWalletData()?.address;
+            if (!address) {
+                setWalletActionStatus('Wallet address not available.', true);
+                return;
+            }
+
+            updateReceivePanel(address);
+            setWalletActionStatus('Receive wallet QR is ready.');
+        }
+
+        async function handleWalletScan() {
+            if (!walletScanInput) return;
+            setWalletActionStatus('Pick a QR image to scan.');
+            walletScanInput.value = '';
+            walletScanInput.click();
+        }
+
+        async function processWalletScanFile(file) {
+            if (!file) return;
+
+            if (!('BarcodeDetector' in window) || typeof createImageBitmap !== 'function') {
+                setWalletActionStatus('QR scan is not supported on this browser. Paste address manually in Send.', true);
+                return;
+            }
+
+            try {
+                const bitmap = await createImageBitmap(file);
+                const detector = new BarcodeDetector({ formats: ['qr_code'] });
+                const results = await detector.detect(bitmap);
+                if (typeof bitmap.close === 'function') bitmap.close();
+
+                if (!results || !results.length) {
+                    setWalletActionStatus('No QR code detected. Try another image.', true);
+                    return;
+                }
+
+                const rawValue = results[0]?.rawValue || '';
+                const recipientAddress = parseAddressFromScannedValue(rawValue);
+                if (!recipientAddress) {
+                    setWalletActionStatus('QR detected, but no valid Ethereum address found.', true);
+                    return;
+                }
+
+                setWalletActionStatus(`Scanned recipient: ${formatAddressCompact(recipientAddress)}`);
+                openSendPanel(recipientAddress);
+            } catch (_) {
+                setWalletActionStatus('Failed to scan QR image.', true);
+            }
         }
 
         function updateWalletUI(walletData) {
@@ -1211,11 +1568,25 @@
                 alert('Web3 module not loaded. Please refresh the page.');
                 return;
             }
+
+            const loginUrl = getIndexLoginUrl();
+            if (!auth.isInsideMetaMaskApp?.()) {
+                if (typeof auth.openMetaMaskApp === 'function') {
+                    auth.openMetaMaskApp(loginUrl);
+                }
+                return;
+            }
+
             const walletData = await auth.connectMetaMask();
             if (walletData) {
                 updateWalletUI(walletData);
                 persistWalletSession(walletData, 'MetaMask');
                 closeWalletModal();
+
+                if (shouldAutoMetaMaskLogin()) {
+                    redirectToCleanIndex();
+                    return;
+                }
             }
         }
 
@@ -1248,13 +1619,8 @@
 
         if (menuLoginBtn) {
             menuLoginBtn.addEventListener('click', async () => {
-                // MetaMask-first UX: connect directly when available, else show options
-                const auth = await ensureWeb3AuthLoaded();
-                if (auth && auth.isMetaMaskAvailable()) {
-                    await connectMetaMaskWallet();
-                } else {
-                    openWalletModal();
-                }
+                // App-first login flow always starts MetaMask handoff when outside app.
+                await connectMetaMaskWallet();
             });
         }
         if (menuProfileBtn) menuProfileBtn.addEventListener('click', showProfileModal);
@@ -1265,6 +1631,34 @@
         document.getElementById('connectTrustWallet')?.addEventListener('click', connectTrustWalletProvider);
         document.getElementById('profileClose')?.addEventListener('click', hideProfileModal);
         document.getElementById('profileSignOut')?.addEventListener('click', signOutWallet);
+        document.getElementById('walletBuyBtn')?.addEventListener('click', handleWalletBuy);
+        document.getElementById('walletSendBtn')?.addEventListener('click', () => handleWalletSend());
+        document.getElementById('walletReceiveBtn')?.addEventListener('click', handleWalletReceive);
+        document.getElementById('walletScanBtn')?.addEventListener('click', handleWalletScan);
+        document.getElementById('walletSendSubmit')?.addEventListener('click', submitWalletSend);
+        document.getElementById('walletSendCancel')?.addEventListener('click', () => {
+            if (walletSendPanel) walletSendPanel.style.display = 'none';
+            setWalletActionStatus('');
+        });
+        document.getElementById('walletCopyAddress')?.addEventListener('click', async () => {
+            const auth = getAuth();
+            const address = auth?.getWalletData?.()?.address;
+            if (!address) {
+                setWalletActionStatus('Wallet address not available.', true);
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(address);
+                setWalletActionStatus('Address copied to clipboard.');
+            } catch (_) {
+                setWalletActionStatus('Could not copy automatically. Copy from the address text.', true);
+            }
+        });
+        walletScanInput?.addEventListener('change', async (event) => {
+            const file = event.target?.files?.[0] || null;
+            await processWalletScanFile(file);
+        });
         document.getElementById('walletRefresh')?.addEventListener('click', async () => {
             const auth = getAuth();
             if (!auth || !auth.isConnected()) return;
@@ -1287,6 +1681,7 @@
         updateUI();
         fetchDashboardData();
         restoreWalletSession();
+        if (shouldAutoMetaMaskLogin()) connectMetaMaskWallet();
     </script>
 </body>
 </html>

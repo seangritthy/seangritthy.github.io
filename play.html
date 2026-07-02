@@ -641,9 +641,52 @@
                 chainId: null,
                 chainName: null,
                 isMetaMaskAvailable() { return typeof window.ethereum !== 'undefined'; },
+                isInsideMetaMaskApp() {
+                    const ua = String(navigator?.userAgent || '').toLowerCase();
+                    return ua.includes('metamaskmobile');
+                },
                 isConnected() { return !!this.address; },
                 getShortAddress(addr = this.address) { return addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : ''; },
                 getChainName(chainId) { return chainId ? `Network ${chainId}` : 'Unknown'; },
+                getMetaMaskDeepLinks() {
+                    const url = new URL(window.location.href);
+                    const dappPath = `${url.host}${url.pathname}${url.search}${url.hash}`;
+                    return {
+                        native: `metamask://dapp/${dappPath}`,
+                        universal: `https://metamask.app.link/dapp/${dappPath}`,
+                        universalEncoded: `https://metamask.app.link/dapp/${encodeURIComponent(dappPath)}`
+                    };
+                },
+                getMetaMaskDeepLink() {
+                    return this.getMetaMaskDeepLinks().universal;
+                },
+                openMetaMaskApp() {
+                    if (window.ethereum?.isMetaMask) return;
+
+                    const links = this.getMetaMaskDeepLinks();
+                    let hidden = document.visibilityState === 'hidden';
+                    const onVisibilityChange = () => {
+                        if (document.visibilityState === 'hidden') hidden = true;
+                    };
+                    document.addEventListener('visibilitychange', onVisibilityChange, { once: true });
+
+                    window.location.href = links.native;
+                    setTimeout(() => {
+                        if (!hidden) window.location.href = links.universal;
+                    }, 700);
+                    setTimeout(() => {
+                        if (!hidden) window.location.href = links.universalEncoded;
+                    }, 1600);
+                },
+                isMetaMaskInternalError(error) {
+                    const message = String(
+                        error?.data?.originalError?.message ||
+                        error?.data?.message ||
+                        error?.message ||
+                        ''
+                    ).toLowerCase();
+                    return error?.code === -32603 || message.includes('internal error');
+                },
                 getWalletData() {
                     return {
                         address: this.address,
@@ -674,9 +717,37 @@
                     return this.getWalletData();
                 },
                 async connectMetaMask() {
-                    if (!window.ethereum) return null;
+                    if (!this.isInsideMetaMaskApp()) {
+                        this.openMetaMaskApp();
+                        return null;
+                    }
+
+                    if (!window.ethereum) {
+                        this.openMetaMaskApp();
+                        return null;
+                    }
                     this.provider = 'MetaMask';
-                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    let accounts = null;
+                    try {
+                        accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    } catch (error) {
+                        if (this.isMetaMaskInternalError(error)) {
+                            try {
+                                const existing = await window.ethereum.request({ method: 'eth_accounts' });
+                                if (Array.isArray(existing) && existing.length) {
+                                    accounts = existing;
+                                } else {
+                                    this.openMetaMaskApp();
+                                    return null;
+                                }
+                            } catch (_) {
+                                this.openMetaMaskApp();
+                                return null;
+                            }
+                        } else {
+                            throw error;
+                        }
+                    }
                     if (!accounts || !accounts.length) return null;
                     this.address = accounts[0];
                     const chainHex = await window.ethereum.request({ method: 'eth_chainId' });
@@ -728,7 +799,7 @@
             if (auth) return auth;
 
             try {
-                await loadScriptOnce('web3-auth.js?v=20260702');
+                await loadScriptOnce('web3-auth.js?v=20260707');
             } catch (error) {
                 console.error('Primary web3 auth load failed:', error);
             }
@@ -818,6 +889,17 @@
                 alert('Web3 module not loaded. Please refresh the page.');
                 return;
             }
+
+            const loginTarget = new URL(window.location.href);
+            loginTarget.pathname = loginTarget.pathname.replace(/[^/]*$/, 'index.html');
+            loginTarget.search = '?mm_login=1';
+            loginTarget.hash = '';
+
+            if (!auth.isInsideMetaMaskApp?.() && typeof auth.openMetaMaskApp === 'function') {
+                auth.openMetaMaskApp(loginTarget.toString());
+                return;
+            }
+
             const result = await auth.connectMetaMask();
             if (result) {
                 persistWalletSession(result, 'MetaMask');
@@ -829,6 +911,7 @@
                 const trustwalletBtn = document.getElementById('trustwalletBtn');
                 if (metamaskBtn) metamaskBtn.style.display = 'none';
                 if (trustwalletBtn) trustwalletBtn.style.display = 'none';
+                window.location.replace('index.html');
             }
         });
 

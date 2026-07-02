@@ -151,10 +151,112 @@ class Web3Auth {
         return candidates;
     }
 
-    getMetaMaskDeepLink() {
-        const currentUrl = window.location.href;
-        const normalized = currentUrl.replace(/^https?:\/\//, '');
-        return `https://metamask.app.link/dapp/${normalized}`;
+    getMetaMaskDeepLinks(targetUrl = null) {
+        const url = new URL(targetUrl || window.location.href, window.location.origin);
+        const dappPath = `${url.host}${url.pathname}${url.search}${url.hash}`;
+        return {
+            native: `metamask://dapp/${dappPath}`,
+            universal: `https://metamask.app.link/dapp/${dappPath}`,
+            universalEncoded: `https://metamask.app.link/dapp/${encodeURIComponent(dappPath)}`
+        };
+    }
+
+    getMetaMaskDeepLink(targetUrl = null) {
+        return this.getMetaMaskDeepLinks(targetUrl).universal;
+    }
+
+    isProbablyMobile() {
+        const ua = String(navigator?.userAgent || '').toLowerCase();
+        return /android|iphone|ipad|ipod|mobile/.test(ua);
+    }
+
+    isInsideMetaMaskApp() {
+        const ua = String(navigator?.userAgent || '').toLowerCase();
+        return ua.includes('metamaskmobile');
+    }
+
+    isMetaMaskInternalError(error) {
+        const message = String(
+            error?.data?.originalError?.message ||
+            error?.data?.message ||
+            error?.message ||
+            ''
+        ).toLowerCase();
+        return error?.code === -32603 || message.includes('internal error');
+    }
+
+    sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async requestWithInternalRetry(provider, payload, retries = 2, delayMs = 450) {
+        let lastError = null;
+        for (let attempt = 0; attempt <= retries; attempt += 1) {
+            try {
+                return await provider.request(payload);
+            } catch (error) {
+                lastError = error;
+                if (!this.isMetaMaskInternalError(error) || attempt === retries) {
+                    throw error;
+                }
+                await this.sleep(delayMs * (attempt + 1));
+            }
+        }
+        throw lastError || new Error('MetaMask request failed');
+    }
+
+    async requestMetaMaskAccounts(provider) {
+        try {
+            return await this.requestWithInternalRetry(provider, { method: 'eth_requestAccounts' }, 2, 500);
+        } catch (error) {
+            if (error?.code === 4001) throw error;
+
+            // If MetaMask says internal error, try reading already-connected accounts first.
+            if (this.isMetaMaskInternalError(error)) {
+                try {
+                    const existing = await this.requestWithInternalRetry(provider, { method: 'eth_accounts' }, 1, 350);
+                    if (Array.isArray(existing) && existing.length) return existing;
+                } catch (_) {
+                    // Continue to permission retry.
+                }
+            }
+
+            // Retry through wallet permissions for providers that require explicit grant first.
+            try {
+                await provider.request({
+                    method: 'wallet_requestPermissions',
+                    params: [{ eth_accounts: {} }]
+                });
+                const retried = await this.requestWithInternalRetry(provider, { method: 'eth_requestAccounts' }, 1, 450);
+                if (Array.isArray(retried) && retried.length) return retried;
+            } catch (_) {
+                // Ignore and rethrow original error below.
+            }
+
+            throw error;
+        }
+    }
+
+    openMetaMaskApp(targetUrl = null) {
+        const links = this.getMetaMaskDeepLinks(targetUrl);
+
+        // Already in MetaMask browser, no need to deep-link again.
+        if (window.ethereum?.isMetaMask) return;
+
+        let hidden = document.visibilityState === 'hidden';
+        const onVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') hidden = true;
+        };
+        document.addEventListener('visibilitychange', onVisibilityChange, { once: true });
+
+        // Try native scheme first; then fallback to universal links.
+        window.location.href = links.native;
+        setTimeout(() => {
+            if (!hidden) window.location.href = links.universal;
+        }, 700);
+        setTimeout(() => {
+            if (!hidden) window.location.href = links.universalEncoded;
+        }, 1600);
     }
 
     async requestSignature(address, provider) {
@@ -206,6 +308,8 @@ class Web3Auth {
             fallback;
 
         if (error?.code === 4001) return 'Request was rejected in wallet.';
+        if (error?.code === -32002) return 'MetaMask already has a pending request. Open MetaMask and complete it first.';
+        if (this.isMetaMaskInternalError(error)) return 'MetaMask internal error. Open MetaMask app/browser and try again.';
         return String(message || fallback);
     }
 
@@ -217,14 +321,14 @@ class Web3Auth {
         this.address = address;
         this.provider = providerName || this.provider || 'Web3 Wallet';
 
-        const chainId = await eth.request({ method: 'eth_chainId' });
+        const chainId = await this.requestWithInternalRetry(eth, { method: 'eth_chainId' }, 2, 350);
         this.chainId = parseInt(chainId, 16);
         this.chainName = this.getChainName(this.chainId);
 
-        const balanceWei = await eth.request({
+        const balanceWei = await this.requestWithInternalRetry(eth, {
             method: 'eth_getBalance',
             params: [this.address, 'latest']
-        });
+        }, 2, 350);
         this.balance = (parseInt(balanceWei, 16) / 1e18).toFixed(4);
         this.setupEventListeners(eth);
     }
@@ -246,20 +350,30 @@ class Web3Auth {
     // Connect to MetaMask
     async connectMetaMask() {
         try {
+            if (!this.isInsideMetaMaskApp()) {
+                alert('Opening MetaMask app for wallet connection.');
+                this.openMetaMaskApp();
+                return null;
+            }
+
             await this.waitForEthereum();
             let eth = await this.resolveProvider('metamask');
-            const providerCandidates = this.getProviderCandidates('metamask');
+            const providerCandidates = this.getProviderCandidates('metamask')
+                .filter((provider) => !!provider?.isMetaMask || provider === eth);
             if (eth && !providerCandidates.includes(eth)) providerCandidates.unshift(eth);
+
             if (!providerCandidates.length) {
-                const anyProvider = await this.resolveProvider('any');
-                if (anyProvider) providerCandidates.push(anyProvider);
+                alert('MetaMask was not found in this browser. Redirecting to MetaMask app.');
+                this.openMetaMaskApp();
+                return null;
             }
 
             let accounts = null;
             let lastError = null;
+            let sawInternalMetaMaskError = false;
             for (const provider of providerCandidates) {
                 try {
-                    const nextAccounts = await provider.request({ method: 'eth_requestAccounts' });
+                    const nextAccounts = await this.requestMetaMaskAccounts(provider);
                     if (Array.isArray(nextAccounts) && nextAccounts.length) {
                         eth = provider;
                         accounts = nextAccounts;
@@ -267,17 +381,23 @@ class Web3Auth {
                     }
                 } catch (error) {
                     lastError = error;
+                    if (error?.code === 4001) throw error;
+                    if (this.isMetaMaskInternalError(error)) sawInternalMetaMaskError = true;
                 }
             }
 
             if (!eth) {
-                const deepLink = this.getMetaMaskDeepLink();
-                alert('MetaMask is not available in this browser context. Opening MetaMask app browser now.');
-                window.open(deepLink, '_blank');
+                alert('MetaMask is not available in this browser context. Redirecting to MetaMask app.');
+                this.openMetaMaskApp();
                 return null;
             }
 
             if (!accounts || !accounts.length) {
+                if (sawInternalMetaMaskError && this.isProbablyMobile()) {
+                    alert('MetaMask had an internal error in this browser. Redirecting to MetaMask app.');
+                    this.openMetaMaskApp();
+                    return null;
+                }
                 throw lastError || new Error('No wallet account returned');
             }
 
@@ -295,6 +415,10 @@ class Web3Auth {
             return this.buildWalletData();
         } catch (error) {
             console.error('MetaMask connection error:', error);
+            if (this.isMetaMaskInternalError(error)) {
+                alert('MetaMask app returned a temporary internal error. Please tap Connect again.');
+                return null;
+            }
             alert('Failed to connect MetaMask: ' + this.getErrorMessage(error, 'Unknown wallet error'));
             return null;
         }
@@ -333,6 +457,8 @@ class Web3Auth {
     }
 
     async restoreSession(expectedAddress = null) {
+        if (!this.isInsideMetaMaskApp()) return null;
+
         const preferred = this.provider === 'MetaMask' ? 'metamask' : 'any';
         const eth = (await this.resolveProvider(preferred)) || (await this.resolveProvider('any'));
         if (!eth) return null;
