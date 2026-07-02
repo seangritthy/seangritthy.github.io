@@ -636,7 +636,9 @@
                 copyBtn: "COPY",
                 copiedBtn: "COPIED!"
                 ,
-                streamUnavailable: "Licensed stream is not configured. Set LICENSED_STREAM_ORIGIN on your API host."
+                streamUnavailable: "Licensed stream is not configured. Set LICENSED_STREAM_ORIGIN or CLOUDNESTRA_ORIGIN on your API host.",
+                trailerFallback: "No API configured. Playing official trailer from TMDB.",
+                trailerUnavailable: "No licensed stream or trailer is available for this title."
             },
             km: {
                 returnBtn: "← ត្រឡប់ទៅទំព័រដើម",
@@ -665,7 +667,9 @@
                 copyBtn: "ចម្លង",
                 copiedBtn: "បានចម្លង!"
                 ,
-                streamUnavailable: "មិនទាន់កំណត់ Licensed Stream ទេ។ សូមកំណត់ LICENSED_STREAM_ORIGIN នៅម៉ាស៊ីន API របស់អ្នក។"
+                streamUnavailable: "មិនទាន់កំណត់ Licensed Stream ទេ។ សូមកំណត់ LICENSED_STREAM_ORIGIN ឬ CLOUDNESTRA_ORIGIN នៅម៉ាស៊ីន API របស់អ្នក។",
+                trailerFallback: "មិនមាន API ទេ។ កំពុងបើក Trailer ផ្លូវការពី TMDB។",
+                trailerUnavailable: "មិនមាន Licensed Stream ឬ Trailer សម្រាប់ចំណងជើងនេះទេ។"
             },
             zh: {
                 returnBtn: "← 返回主页",
@@ -694,7 +698,9 @@
                 copyBtn: "复制",
                 copiedBtn: "已复制!"
                 ,
-                streamUnavailable: "尚未配置授权播放源。请在 API 主机中设置 LICENSED_STREAM_ORIGIN。"
+                streamUnavailable: "尚未配置授权播放源。请在 API 主机中设置 LICENSED_STREAM_ORIGIN 或 CLOUDNESTRA_ORIGIN。",
+                trailerFallback: "未配置 API，正在播放 TMDB 官方预告片。",
+                trailerUnavailable: "该内容暂无授权播放源或预告片。"
             }
         };
 
@@ -712,6 +718,18 @@
         const tmdbId = urlParams.get('tmdb');
         const mediaType = urlParams.get('type') || 'movie';
         let currentMovieTitle = "Unknown"; 
+
+        function getApiBaseUrl() {
+            const queryOrigin = urlParams.get('apiOrigin');
+            if (queryOrigin) {
+                localStorage.setItem('streamApiOrigin', queryOrigin);
+            }
+
+            const configured = queryOrigin || window.STREAM_API_ORIGIN || localStorage.getItem('streamApiOrigin') || '';
+            return configured ? configured.replace(/\/$/, '') : '';
+        }
+
+        const STREAM_API_BASE = getApiBaseUrl();
 
         const uiLangSelect = document.getElementById('uiLangSelect');
         const aiSpeechBtn = document.getElementById('aiSpeechBtn');
@@ -937,14 +955,62 @@
 
         window.addEventListener('beforeunload', () => window.speechSynthesis.cancel());
 
+        async function loadTrailerFallback(frame, notice) {
+            const lang = localStorage.getItem('uiLang') || 'en';
+            const tmdbLang = lang === 'km' ? 'km-KH' : (lang === 'zh' ? 'zh-CN' : 'en-US');
+            try {
+                let res = await fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}/videos?api_key=${TMDB_API_KEY}&language=${tmdbLang}`);
+                let data = await res.json();
+
+                let videos = Array.isArray(data?.results) ? data.results : [];
+                if (!videos.length && tmdbLang !== 'en-US') {
+                    res = await fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}/videos?api_key=${TMDB_API_KEY}&language=en-US`);
+                    data = await res.json();
+                    videos = Array.isArray(data?.results) ? data.results : [];
+                }
+
+                const youtubeVideos = videos.filter(v => v.site === 'YouTube' && v.key);
+                const preferred = youtubeVideos.find(v => v.type === 'Trailer')
+                    || youtubeVideos.find(v => v.type === 'Teaser')
+                    || youtubeVideos[0];
+
+                if (!preferred) return false;
+
+                frame.style.display = 'block';
+                frame.src = `https://www.youtube-nocookie.com/embed/${preferred.key}?autoplay=1&rel=0&modestbranding=1`;
+                if (notice) {
+                    notice.style.display = 'block';
+                    notice.innerText = getT().trailerFallback;
+                }
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
         async function loadLicensedFrame() {
             if (!tmdbId) return dismissOverlay();
             const frame = document.getElementById('stream-frame');
             const notice = document.getElementById('streamNotice');
             if (!frame) return dismissOverlay();
 
+            if (!STREAM_API_BASE) {
+                const ok = await loadTrailerFallback(frame, notice);
+                if (!ok) {
+                    frame.style.display = 'none';
+                    if (notice) {
+                        notice.style.display = 'block';
+                        notice.innerText = getT().trailerUnavailable;
+                    }
+                    dismissOverlay();
+                }
+                frame.onload = dismissOverlay;
+                return;
+            }
+
             try {
-                const response = await fetch(`/api/extract?tmdb=${encodeURIComponent(tmdbId)}&type=${encodeURIComponent(mediaType)}`);
+                const endpoint = `${STREAM_API_BASE || ''}/api/extract?tmdb=${encodeURIComponent(tmdbId)}&type=${encodeURIComponent(mediaType)}`;
+                const response = await fetch(endpoint);
                 const data = await response.json();
                 if (data?.success && data.url) {
                     frame.style.display = 'block';
@@ -954,20 +1020,26 @@
                     }
                     frame.src = data.url;
                 } else {
+                    const ok = await loadTrailerFallback(frame, notice);
+                    if (!ok) {
+                        frame.style.display = 'none';
+                        if (notice) {
+                            notice.style.display = 'block';
+                            notice.innerText = getT().trailerUnavailable;
+                        }
+                        dismissOverlay();
+                    }
+                }
+            } catch (err) {
+                const ok = await loadTrailerFallback(frame, notice);
+                if (!ok) {
                     frame.style.display = 'none';
                     if (notice) {
                         notice.style.display = 'block';
-                        notice.innerText = getT().streamUnavailable;
+                        notice.innerText = getT().trailerUnavailable;
                     }
                     dismissOverlay();
                 }
-            } catch (err) {
-                frame.style.display = 'none';
-                if (notice) {
-                    notice.style.display = 'block';
-                    notice.innerText = getT().streamUnavailable;
-                }
-                dismissOverlay();
             }
 
             frame.onload = dismissOverlay;

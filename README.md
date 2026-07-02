@@ -76,6 +76,18 @@ The player now requests stream URLs from `/api/extract` which resolves a license
 
 If `LICENSED_STREAM_ORIGIN` is missing, the player shows a setup notice instead of loading a third-party embed.
 
+### Cloudnestra Provider Mode
+
+If you want to use Cloudnestra directly through the same API endpoint:
+
+1. Set `STREAM_PROVIDER=cloudnestra`
+2. Set `CLOUDNESTRA_ORIGIN=https://your-cloudnestra-host.example.com`
+3. Optional: set `CLOUDNESTRA_PATH_TEMPLATE` (default is `/embed/{type}/{tmdb}`)
+
+Supported template tokens:
+- `{type}` -> `movie` or `tv`
+- `{tmdb}` -> TMDB content id
+
 ## License
 
 Free to use and modify!
