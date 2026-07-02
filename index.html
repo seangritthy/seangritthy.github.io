@@ -1013,6 +1013,73 @@
             return null;
         }
 
+        function createEmergencyAuthAdapter() {
+            const adapter = {
+                provider: 'Web3 Wallet',
+                address: null,
+                balance: null,
+                chainId: null,
+                chainName: null,
+                isMetaMaskAvailable() { return typeof window.ethereum !== 'undefined'; },
+                isConnected() { return !!this.address; },
+                getShortAddress(addr = this.address) { return addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : ''; },
+                getChainName(chainId) { return chainId ? `Network ${chainId}` : 'Unknown'; },
+                getWalletData() {
+                    return {
+                        address: this.address,
+                        balance: this.balance,
+                        chainId: this.chainId,
+                        chainName: this.chainName,
+                        provider: this.provider,
+                        shortAddress: this.getShortAddress()
+                    };
+                },
+                async refreshBalance() {
+                    if (!this.address || !window.ethereum) return null;
+                    const wei = await window.ethereum.request({ method: 'eth_getBalance', params: [this.address, 'latest'] });
+                    this.balance = (parseInt(wei, 16) / 1e18).toFixed(4);
+                    return this.balance;
+                },
+                async restoreSession(expectedAddress = null) {
+                    if (!window.ethereum) return null;
+                    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                    if (!accounts || !accounts.length) return null;
+                    const address = accounts[0];
+                    if (expectedAddress && address.toLowerCase() !== String(expectedAddress).toLowerCase()) return null;
+                    this.address = address;
+                    const chainHex = await window.ethereum.request({ method: 'eth_chainId' });
+                    this.chainId = parseInt(chainHex, 16);
+                    this.chainName = this.getChainName(this.chainId);
+                    await this.refreshBalance();
+                    return this.getWalletData();
+                },
+                async connectMetaMask() {
+                    if (!window.ethereum) return null;
+                    this.provider = 'MetaMask';
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    if (!accounts || !accounts.length) return null;
+                    this.address = accounts[0];
+                    const chainHex = await window.ethereum.request({ method: 'eth_chainId' });
+                    this.chainId = parseInt(chainHex, 16);
+                    this.chainName = this.getChainName(this.chainId);
+                    await this.refreshBalance();
+                    return this.getWalletData();
+                },
+                async connectTrustWallet() {
+                    this.provider = 'Trust Wallet';
+                    return this.connectMetaMask();
+                },
+                disconnect() {
+                    this.address = null;
+                    this.balance = null;
+                    this.chainId = null;
+                    this.chainName = null;
+                }
+            };
+            window.web3Auth = adapter;
+            return adapter;
+        }
+
         function loadScriptOnce(src) {
             return new Promise((resolve, reject) => {
                 const existing = document.querySelector(`script[data-loader="${src}"]`);
@@ -1047,7 +1114,8 @@
             }
 
             auth = getAuth();
-            return auth;
+            if (auth) return auth;
+            return createEmergencyAuthAdapter();
         }
 
         function openWalletModal() {
