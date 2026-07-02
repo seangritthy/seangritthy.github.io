@@ -74,7 +74,7 @@ The player now requests stream URLs from `/api/extract` which resolves a license
     - `GET {LICENSED_STREAM_ORIGIN}/play?tmdb=<id>&type=<movie|tv>`
 3. The response must be embeddable in an iframe.
 
-If `LICENSED_STREAM_ORIGIN` is missing, the player shows a setup notice instead of loading a third-party embed.
+If the provider environment variables are missing, the player shows a setup notice and does not attempt a trailer fallback.
 
 ### Cloudnestra Provider Mode
 
