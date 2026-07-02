@@ -717,11 +717,6 @@
                     return this.getWalletData();
                 },
                 async connectMetaMask() {
-                    if (!this.isInsideMetaMaskApp()) {
-                        this.openMetaMaskApp();
-                        return null;
-                    }
-
                     if (!window.ethereum) {
                         this.openMetaMaskApp();
                         return null;
@@ -895,7 +890,7 @@
             loginTarget.search = '?mm_login=1';
             loginTarget.hash = '';
 
-            if (!auth.isInsideMetaMaskApp?.() && typeof auth.openMetaMaskApp === 'function') {
+            if (!auth.isMetaMaskAvailable?.() && typeof auth.openMetaMaskApp === 'function') {
                 auth.openMetaMaskApp(loginTarget.toString());
                 return;
             }

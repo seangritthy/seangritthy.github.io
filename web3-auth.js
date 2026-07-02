@@ -350,12 +350,6 @@ class Web3Auth {
     // Connect to MetaMask
     async connectMetaMask() {
         try {
-            if (!this.isInsideMetaMaskApp()) {
-                alert('Opening MetaMask app for wallet connection.');
-                this.openMetaMaskApp();
-                return null;
-            }
-
             await this.waitForEthereum();
             let eth = await this.resolveProvider('metamask');
             const providerCandidates = this.getProviderCandidates('metamask')
@@ -457,8 +451,6 @@ class Web3Auth {
     }
 
     async restoreSession(expectedAddress = null) {
-        if (!this.isInsideMetaMaskApp()) return null;
-
         const preferred = this.provider === 'MetaMask' ? 'metamask' : 'any';
         const eth = (await this.resolveProvider(preferred)) || (await this.resolveProvider('any'));
         if (!eth) return null;
