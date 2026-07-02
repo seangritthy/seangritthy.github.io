@@ -11,19 +11,19 @@
     <meta property="og:url" id="ogUrl" content="">
     <meta property="og:type" content="video.movie">
 
-    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Exo+2:wght@300;400;600&family=Noto+Sans+SC:wght@400;500;700&family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&family=Sora:wght@500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
     :root {
-        --primary: #b3a9d9;
-        --secondary: #7f95bf;
-        --accent: #d9a786;
-        --dark-bg: #040711;
-        --card-bg: #0b1425;
-        --card-strong: #0f1b31;
-        --muted: #89a3c5;
-        --ok: #8ea1d4;
-        --warn: #ffcf5a;
-        --player-bg: #020308;
+        --primary: #6f5cff;
+        --secondary: #4d7cff;
+        --accent: #14b8a6;
+        --dark-bg: #f4f6ff;
+        --card-bg: #ffffff;
+        --card-strong: #f7f9ff;
+        --muted: #64748b;
+        --ok: #0f766e;
+        --warn: #f59e0b;
+        --player-bg: #0b1021;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,17 +31,17 @@
     body {
         margin: 0;
         padding: 0;
-        color: #f4fbff;
-        font-family: 'Exo 2', 'Noto Sans SC', 'Battambang', sans-serif;
+        color: #1b1f3b;
+        font-family: 'Space Grotesk', 'Noto Sans SC', 'Battambang', sans-serif;
         min-height: 100vh;
         overflow-x: hidden;
         background-color: var(--dark-bg);
         background-image:
-            radial-gradient(circle at 10% 5%, rgba(179, 169, 217, 0.18), transparent 34%),
-            radial-gradient(circle at 85% 10%, rgba(127, 149, 191, 0.16), transparent 36%),
-            radial-gradient(circle at 50% 100%, rgba(217, 167, 134, 0.14), transparent 42%),
-            linear-gradient(rgba(127, 149, 191, 0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(127, 149, 191, 0.04) 1px, transparent 1px);
+            radial-gradient(circle at 10% 4%, rgba(111, 92, 255, 0.16), transparent 34%),
+            radial-gradient(circle at 88% 9%, rgba(77, 124, 255, 0.14), transparent 36%),
+            radial-gradient(circle at 50% 100%, rgba(20, 184, 166, 0.12), transparent 45%),
+            linear-gradient(rgba(111, 92, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(77, 124, 255, 0.04) 1px, transparent 1px);
         background-size: auto, auto, auto, 46px 46px, 46px 46px;
         background-attachment: fixed;
     }
@@ -59,23 +59,23 @@
         position: fixed;
         top: 0;
         width: 100%;
-        background: linear-gradient(140deg, rgba(8, 14, 27, 0.94), rgba(10, 19, 36, 0.9));
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(246, 248, 255, 0.92));
         backdrop-filter: blur(12px);
         padding: 38px 20px 20px;
         z-index: 1000;
-        border-bottom: 1px solid rgba(127, 149, 191, 0.4);
-        box-shadow: 0 16px 28px rgba(2, 9, 21, 0.56);
-        font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
+        border-bottom: 1px solid rgba(111, 92, 255, 0.2);
+        box-shadow: 0 12px 26px rgba(36, 53, 90, 0.12);
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
     }
 
     .ui-lang-wrapper { position: absolute; top: 14px; right: 20px; }
 
     .ui-lang-select {
-        background: rgba(5, 10, 21, 0.9);
-        border: 1px solid rgba(179, 169, 217, 0.55);
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(111, 92, 255, 0.35);
         color: var(--primary);
         padding: 6px 11px;
-        font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
         outline: none;
         cursor: pointer;
         border-radius: 8px;
@@ -83,7 +83,7 @@
     }
 
     .ui-lang-select:hover { box-shadow: 0 0 12px rgba(179, 169, 217, 0.45); }
-    .ui-lang-select option { background: var(--dark-bg); color: #fff; }
+    .ui-lang-select option { background: #ffffff; color: #1b1f3b; }
 
     .header-content {
         max-width: 1400px;
@@ -97,10 +97,10 @@
     }
 
     .site-title {
-        font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif;
+        font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif;
         color: var(--primary);
         font-size: 1.45rem;
-        text-shadow: 0 0 14px rgba(179, 169, 217, 0.45);
+        text-shadow: 0 0 10px rgba(111, 92, 255, 0.2);
         font-weight: 700;
     }
 
@@ -109,29 +109,29 @@
         text-decoration: none;
         padding: 9px 14px;
         border-radius: 999px;
-        border: 1px solid rgba(127, 149, 191, 0.55);
-        font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
+        border: 1px solid rgba(77, 124, 255, 0.35);
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
         font-size: 0.88rem;
         transition: all 0.25s ease;
-        background: rgba(127, 149, 191, 0.08);
+        background: rgba(77, 124, 255, 0.08);
     }
 
     .nav-link:hover {
-        color: #00131f;
+        color: #ffffff;
         background: var(--secondary);
-        box-shadow: 0 0 14px rgba(127, 149, 191, 0.45);
+        box-shadow: 0 0 12px rgba(77, 124, 255, 0.28);
     }
 
     .main-container { max-width: 1400px; margin: 0 auto; padding: 120px 20px 40px; }
 
     .movie-info-panel {
-        background: rgba(11, 20, 37, 0.86);
+        background: rgba(255, 255, 255, 0.92);
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(127, 149, 191, 0.34);
+        border: 1px solid rgba(111, 92, 255, 0.2);
         border-radius: 18px;
         padding: 25px;
         margin-bottom: 30px;
-        box-shadow: 0 22px 30px rgba(3, 10, 22, 0.45);
+        box-shadow: 0 14px 24px rgba(36, 53, 90, 0.12);
         position: relative;
         display: flex;
         gap: 30px;
@@ -154,11 +154,11 @@
     .movie-details { flex: 1; min-width: 300px; position: relative; }
 
     .movie-title {
-        font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif;
+        font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif;
         font-size: 2.1rem;
         color: var(--primary);
         margin-bottom: 15px;
-        text-shadow: 0 0 14px rgba(179, 169, 217, 0.35);
+        text-shadow: 0 0 8px rgba(111, 92, 255, 0.18);
         line-height: 1.2;
     }
 
@@ -167,17 +167,17 @@
         flex-wrap: wrap;
         gap: 12px 22px;
         margin-bottom: 20px;
-        font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
         color: var(--secondary);
-        background: rgba(3, 9, 20, 0.45);
+        background: rgba(248, 250, 255, 0.95);
         padding: 14px;
         border-radius: 10px;
-        border: 1px solid rgba(127, 149, 191, 0.28);
+        border: 1px solid rgba(77, 124, 255, 0.18);
     }
 
     .meta-item { display: flex; align-items: center; gap: 8px; }
     .meta-link { color: var(--warn); text-decoration: none; border-bottom: 1px dashed transparent; transition: all 0.25s; }
-    .meta-link:hover { color: #fff; border-color: #fff; }
+    .meta-link:hover { color: #1e293b; border-color: #1e293b; }
 
     .btn-group { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; }
 
@@ -187,7 +187,7 @@
         align-items: center;
         gap: 8px;
         padding: 8px 13px;
-        font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
         font-size: 0.84rem;
         cursor: pointer;
         border-radius: 999px;
@@ -208,7 +208,7 @@
 
     .ai-audio-btn.playing {
         background: var(--accent);
-        color: #fff;
+        color: #ffffff;
         border-color: var(--accent);
         box-shadow: 0 0 14px rgba(217, 167, 134, 0.52);
         animation: pulseAudio 1.4s infinite;
@@ -228,14 +228,14 @@
 
     @keyframes pulseAudio { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
 
-    .overview { margin: 10px 0 20px; line-height: 1.7; color: rgba(255, 255, 255, 0.92); font-size: 1.02rem; }
+    .overview { margin: 10px 0 20px; line-height: 1.7; color: #334155; font-size: 1.02rem; }
 
     .tags-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
 
     .section-label {
         width: 100%;
         color: var(--primary);
-        font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif;
+        font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif;
         font-size: 0.96rem;
         margin-top: 22px;
         margin-bottom: 10px;
@@ -247,10 +247,10 @@
     .genre-tag {
         padding: 6px 15px;
         background: rgba(127, 149, 191, 0.1);
-        border: 1px solid rgba(127, 149, 191, 0.55);
-        font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
+        border: 1px solid rgba(77, 124, 255, 0.3);
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
         font-size: 0.88rem;
-        color: #f5fbff;
+        color: #1f2937;
         text-decoration: none;
         transition: all 0.25s;
         cursor: pointer;
@@ -259,8 +259,8 @@
 
     .genre-tag:hover {
         background: var(--secondary);
-        color: #00121d;
-        box-shadow: 0 0 13px rgba(127, 149, 191, 0.46);
+        color: #ffffff;
+        box-shadow: 0 0 10px rgba(77, 124, 255, 0.24);
         transform: translateY(-2px);
     }
 
@@ -270,11 +270,11 @@
 
     .cast-card {
         flex: 0 0 130px;
-        background: rgba(127, 149, 191, 0.08);
-        border: 1px solid rgba(127, 149, 191, 0.28);
+        background: rgba(248, 250, 255, 0.95);
+        border: 1px solid rgba(77, 124, 255, 0.2);
         border-radius: 10px;
         text-decoration: none;
-        color: white;
+        color: #1f2937;
         transition: all 0.25s;
         display: flex;
         flex-direction: column;
@@ -291,7 +291,7 @@
     }
 
     .cast-photo { width: 85px; height: 85px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(127, 149, 191, 0.65); margin-bottom: 12px; box-shadow: 0 0 10px rgba(127, 149, 191, 0.35); }
-    .cast-name { font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.86rem; text-align: center; color: var(--secondary); line-height: 1.2; margin-bottom: 5px; font-weight: bold; }
+    .cast-name { font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.86rem; text-align: center; color: var(--secondary); line-height: 1.2; margin-bottom: 5px; font-weight: bold; }
     .cast-character { font-size: 0.74rem; text-align: center; color: #a0b2cb; line-height: 1.2; font-style: italic; }
 
     .player-container {
@@ -322,70 +322,70 @@
         margin: 12px;
         padding: 16px;
         border-radius: 10px;
-        border: 1px solid rgba(217, 167, 134, 0.55);
-        background: rgba(217, 167, 134, 0.1);
-        color: #f7e5d8;
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        background: rgba(245, 158, 11, 0.08);
+        color: #92400e;
         text-align: center;
-        font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
         line-height: 1.6;
     }
 
     .cc-notice {
-        background: rgba(127, 149, 191, 0.1);
-        border: 1px solid rgba(127, 149, 191, 0.4);
-        color: #b8daff;
+        background: rgba(77, 124, 255, 0.08);
+        border: 1px solid rgba(77, 124, 255, 0.25);
+        color: #1e3a8a;
         padding: 14px;
         border-radius: 10px;
-        font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
         text-align: center;
         margin-bottom: 28px;
         font-size: 0.93rem;
     }
 
-    .cc-notice b { color: #fff; }
+    .cc-notice b { color: #0f172a; }
 
     .status-badges { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 20px; }
-    .status-badge { padding: 11px 16px; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px; }
+    .status-badge { padding: 11px 16px; font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px; }
     .badge-primary { background: rgba(179, 169, 217, 0.1); border: 1px solid rgba(179, 169, 217, 0.55); color: var(--primary); border-radius: 999px; }
     .badge-success { background: rgba(142, 161, 212, 0.1); border: 1px solid rgba(142, 161, 212, 0.55); color: var(--ok); border-radius: 999px; }
 
     .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 6, 12, 0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s; }
-    .loading-text { font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; font-size: 3rem; color: var(--primary); text-shadow: 0 0 16px rgba(179, 169, 217, 0.5); margin-bottom: 0; animation: btcPulse 1s ease-in-out infinite; }
+    .loading-text { font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif; font-size: 3rem; color: var(--primary); text-shadow: 0 0 16px rgba(111, 92, 255, 0.35); margin-bottom: 0; animation: btcPulse 1s ease-in-out infinite; }
 
     .control-panel {
-        background: rgba(11, 20, 37, 0.86);
-        border: 1px solid rgba(127, 149, 191, 0.35);
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(111, 92, 255, 0.2);
         border-radius: 16px;
         padding: 24px;
         margin-top: 30px;
-        box-shadow: 0 18px 28px rgba(2, 10, 20, 0.45);
+        box-shadow: 0 14px 24px rgba(36, 53, 90, 0.12);
     }
 
-    .control-title { font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; font-size: 1.35rem; color: var(--primary); margin-bottom: 18px; text-align: center; }
+    .control-title { font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif; font-size: 1.35rem; color: var(--primary); margin-bottom: 18px; text-align: center; }
     .control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .control-item { background: rgba(6, 13, 26, 0.75); padding: 17px; border: 1px solid rgba(127, 149, 191, 0.3); border-radius: 10px; }
-    .control-label { color: var(--warn); font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.85rem; margin-bottom: 8px; }
-    .control-value { color: white; font-size: 1.05rem; font-family: 'Orbitron', sans-serif; }
+    .control-item { background: rgba(248, 250, 255, 0.95); padding: 17px; border: 1px solid rgba(77, 124, 255, 0.18); border-radius: 10px; }
+    .control-label { color: var(--warn); font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.85rem; margin-bottom: 8px; }
+    .control-value { color: #1f2937; font-size: 1.05rem; font-family: 'Sora', sans-serif; }
     .quality-selector { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
 
     .quality-btn {
         padding: 9px 16px;
-        background: rgba(127, 149, 191, 0.1);
-        border: 1px solid rgba(127, 149, 191, 0.5);
-        color: #d9ecff;
-        font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
+        background: rgba(77, 124, 255, 0.08);
+        border: 1px solid rgba(77, 124, 255, 0.28);
+        color: var(--secondary);
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
         cursor: pointer;
         border-radius: 999px;
     }
 
-    .quality-btn.active { background: var(--primary); color: #141724; border-color: var(--primary); box-shadow: 0 0 12px rgba(179, 169, 217, 0.45); }
+    .quality-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); box-shadow: 0 0 12px rgba(111, 92, 255, 0.32); }
 
     .share-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 7, 14, 0.88); backdrop-filter: blur(5px); z-index: 10000; justify-content: center; align-items: center; }
     .share-modal.active { display: flex; animation: fadeIn 0.3s ease; }
 
     .share-modal-content {
         background: var(--card-strong);
-        border: 1px solid rgba(127, 149, 191, 0.5);
+        border: 1px solid rgba(111, 92, 255, 0.28);
         padding: 26px;
         border-radius: 14px;
         max-width: 400px;
@@ -395,13 +395,13 @@
         position: relative;
     }
 
-    .share-close { position: absolute; top: 10px; right: 15px; color: white; font-size: 1.8rem; cursor: pointer; transition: color 0.3s; }
+    .share-close { position: absolute; top: 10px; right: 15px; color: #334155; font-size: 1.8rem; cursor: pointer; transition: color 0.3s; }
     .share-close:hover { color: var(--accent); }
     .share-poster-img { width: 100%; max-width: 180px; border-radius: 8px; border: 1px solid rgba(179, 169, 217, 0.45); margin-bottom: 15px; box-shadow: 0 0 12px rgba(179, 169, 217, 0.2); }
-    .share-title { font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; color: var(--secondary); margin-bottom: 15px; font-size: 1.1rem; }
+    .share-title { font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif; color: var(--secondary); margin-bottom: 15px; font-size: 1.1rem; }
     .copy-container { display: flex; gap: 10px; margin-top: 15px; }
-    .copy-input { flex: 1; padding: 10px; background: rgba(4, 9, 20, 0.8); border: 1px solid rgba(127, 149, 191, 0.5); color: var(--secondary); font-family: 'Share Tech Mono', monospace; border-radius: 8px; outline: none; }
-    .copy-btn { padding: 10px 14px; background: var(--secondary); color: #00111b; border: none; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-weight: bold; cursor: pointer; border-radius: 8px; transition: all 0.25s; }
+    .copy-input { flex: 1; padding: 10px; background: rgba(255, 255, 255, 0.96); border: 1px solid rgba(77, 124, 255, 0.3); color: var(--secondary); font-family: 'JetBrains Mono', monospace; border-radius: 8px; outline: none; }
+    .copy-btn { padding: 10px 14px; background: var(--secondary); color: #ffffff; border: none; font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace; font-weight: bold; cursor: pointer; border-radius: 8px; transition: all 0.25s; }
     .copy-btn:hover { box-shadow: 0 0 13px rgba(127, 149, 191, 0.45); background: #8ec8ff; }
 
     @keyframes fadeIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
@@ -436,8 +436,8 @@
         <div class="header-content">
             <div class="site-title">GITHUB MOVIES</div>
                 <div id="authInline" style="display:flex;align-items:center;gap:10px;">
-                    <div id="userInfo" style="display:none;color:var(--primary);font-family:'Share Tech Mono',monospace;cursor:pointer;"></div>
-                    <div id="walletInfo" style="display:none;color:var(--primary);font-family:'Share Tech Mono',monospace;font-size:0.9rem;cursor:pointer;"></div>
+                    <div id="userInfo" style="display:none;color:var(--primary);font-family:'JetBrains Mono',monospace;cursor:pointer;"></div>
+                    <div id="walletInfo" style="display:none;color:var(--primary);font-family:'JetBrains Mono',monospace;font-size:0.9rem;cursor:pointer;"></div>
                     <button id="signOutBtn" class="quality-btn" style="display:none;">Sign out</button>
                 </div>
             <a href="index.html" class="nav-link" id="returnBtn">← BACK TO HOME</a>
