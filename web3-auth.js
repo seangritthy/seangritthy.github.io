@@ -13,15 +13,70 @@ class Web3Auth {
         this.signatureMessage = null;
         this.signedAt = null;
         this._listenersAttached = false;
+        this.ethereum = null;
     }
 
     // Check if wallet is available
     isMetaMaskAvailable() {
-        return typeof window.ethereum !== 'undefined';
+        if (typeof window.ethereum === 'undefined') return false;
+        if (window.ethereum.isMetaMask) return true;
+        if (Array.isArray(window.ethereum.providers)) {
+            return window.ethereum.providers.some((p) => !!p?.isMetaMask);
+        }
+        return false;
     }
 
-    async requestSignature(address) {
-        if (!window.ethereum || !address) return null;
+    async waitForEthereum(timeoutMs = 1800) {
+        if (window.ethereum) return window.ethereum;
+
+        return new Promise((resolve) => {
+            let settled = false;
+            const finish = (value) => {
+                if (settled) return;
+                settled = true;
+                resolve(value || null);
+            };
+
+            const onInit = () => finish(window.ethereum || null);
+            window.addEventListener('ethereum#initialized', onInit, { once: true });
+            setTimeout(() => finish(window.ethereum || null), timeoutMs);
+        });
+    }
+
+    getMetaMaskProvider(ethereum) {
+        if (!ethereum) return null;
+        if (ethereum.isMetaMask) return ethereum;
+        if (Array.isArray(ethereum.providers)) {
+            return ethereum.providers.find((p) => !!p?.isMetaMask) || null;
+        }
+        return null;
+    }
+
+    getTrustWalletProvider(ethereum) {
+        if (!ethereum) return null;
+        if (ethereum.isTrust || ethereum.isTrustWallet) return ethereum;
+        if (Array.isArray(ethereum.providers)) {
+            return ethereum.providers.find((p) => !!(p?.isTrust || p?.isTrustWallet)) || null;
+        }
+        return null;
+    }
+
+    async resolveProvider(preferred = 'any') {
+        const injected = await this.waitForEthereum();
+        if (!injected) return null;
+
+        if (preferred === 'metamask') {
+            return this.getMetaMaskProvider(injected);
+        }
+        if (preferred === 'trust') {
+            return this.getTrustWalletProvider(injected) || injected;
+        }
+        return injected;
+    }
+
+    async requestSignature(address, provider) {
+        const eth = provider || this.ethereum || window.ethereum;
+        if (!eth || !address) return null;
         const issuedAt = new Date().toISOString();
         const message = [
             'GitHub Movies Wallet Login',
@@ -31,7 +86,7 @@ class Web3Auth {
         ].join('\n');
 
         try {
-            const signature = await window.ethereum.request({
+            const signature = await eth.request({
                 method: 'personal_sign',
                 params: [message, address]
             });
@@ -45,20 +100,24 @@ class Web3Auth {
         }
     }
 
-    async syncWalletState(address, providerName) {
+    async syncWalletState(address, providerName, provider) {
+        const eth = provider || this.ethereum || window.ethereum;
+        if (!eth) throw new Error('No Ethereum provider found');
+
+        this.ethereum = eth;
         this.address = address;
         this.provider = providerName || this.provider || 'Web3 Wallet';
 
-        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        const chainId = await eth.request({ method: 'eth_chainId' });
         this.chainId = parseInt(chainId, 16);
         this.chainName = this.getChainName(this.chainId);
 
-        const balanceWei = await window.ethereum.request({
+        const balanceWei = await eth.request({
             method: 'eth_getBalance',
             params: [this.address, 'latest']
         });
         this.balance = (parseInt(balanceWei, 16) / 1e18).toFixed(4);
-        this.setupEventListeners();
+        this.setupEventListeners(eth);
     }
 
     buildWalletData() {
@@ -78,22 +137,23 @@ class Web3Auth {
     // Connect to MetaMask
     async connectMetaMask() {
         try {
-            if (!this.isMetaMaskAvailable()) {
-                alert('MetaMask is not installed. Please install it to continue.');
+            const eth = await this.resolveProvider('metamask');
+            if (!eth) {
+                alert('MetaMask provider not detected. If MetaMask is installed, enable this site in MetaMask settings and refresh.');
                 window.open('https://metamask.io', '_blank');
                 return null;
             }
 
             // Request account access
-            const accounts = await window.ethereum.request({
+            const accounts = await eth.request({
                 method: 'eth_requestAccounts'
             });
             if (!accounts || !accounts.length) return null;
 
-            await this.syncWalletState(accounts[0], 'MetaMask');
+            await this.syncWalletState(accounts[0], 'MetaMask', eth);
 
             // Require a signature so login proves wallet ownership.
-            const signature = await this.requestSignature(this.address);
+            const signature = await this.requestSignature(this.address, eth);
             if (!signature) {
                 alert('Wallet signature is required to log in.');
                 this.disconnect();
@@ -111,20 +171,21 @@ class Web3Auth {
     // Connect to Trust Wallet (via WalletConnect or direct)
     async connectTrustWallet() {
         try {
-            if (!this.isMetaMaskAvailable()) {
+            const eth = await this.resolveProvider('trust');
+            if (!eth) {
                 alert('Trust Wallet is not available. Please open this in Trust Wallet app or install MetaMask.');
                 return null;
             }
 
             // Trust Wallet works through MetaMask API
-            const accounts = await window.ethereum.request({
+            const accounts = await eth.request({
                 method: 'eth_requestAccounts'
             });
             if (!accounts || !accounts.length) return null;
 
-            await this.syncWalletState(accounts[0], 'Trust Wallet');
+            await this.syncWalletState(accounts[0], 'Trust Wallet', eth);
 
-            const signature = await this.requestSignature(this.address);
+            const signature = await this.requestSignature(this.address, eth);
             if (!signature) {
                 alert('Wallet signature is required to log in.');
                 this.disconnect();
@@ -140,10 +201,12 @@ class Web3Auth {
     }
 
     async restoreSession(expectedAddress = null) {
-        if (!window.ethereum) return null;
+        const preferred = this.provider === 'MetaMask' ? 'metamask' : 'any';
+        const eth = await this.resolveProvider(preferred);
+        if (!eth) return null;
 
         try {
-            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            const accounts = await eth.request({ method: 'eth_accounts' });
             if (!accounts || !accounts.length) return null;
 
             const connectedAddress = accounts[0];
@@ -151,7 +214,7 @@ class Web3Auth {
                 return null;
             }
 
-            await this.syncWalletState(connectedAddress, this.provider || 'Web3 Wallet');
+            await this.syncWalletState(connectedAddress, this.provider || 'Web3 Wallet', eth);
             return this.buildWalletData();
         } catch (error) {
             console.error('Restore session failed:', error);
@@ -178,11 +241,12 @@ class Web3Auth {
     }
 
     // Set up wallet event listeners
-    setupEventListeners() {
-        if (window.ethereum) {
+    setupEventListeners(provider) {
+        const eth = provider || this.ethereum || window.ethereum;
+        if (eth) {
             if (this._listenersAttached) return;
             // Account change
-            window.ethereum.on('accountsChanged', (accounts) => {
+            eth.on('accountsChanged', (accounts) => {
                 console.log('Account changed:', accounts);
                 if (accounts.length === 0) {
                     this.disconnect();
@@ -194,7 +258,7 @@ class Web3Auth {
             });
 
             // Chain change
-            window.ethereum.on('chainChanged', (chainId) => {
+            eth.on('chainChanged', (chainId) => {
                 console.log('Chain changed:', chainId);
                 this.chainId = parseInt(chainId, 16);
                 this.chainName = this.getChainName(this.chainId);
@@ -203,7 +267,7 @@ class Web3Auth {
             });
 
             // Disconnect
-            window.ethereum.on('disconnect', () => {
+            eth.on('disconnect', () => {
                 console.log('Wallet disconnected');
                 this.disconnect();
             });
@@ -216,8 +280,11 @@ class Web3Auth {
     async refreshBalance() {
         if (!this.address) return;
 
+        const eth = this.ethereum || window.ethereum;
+        if (!eth) return;
+
         try {
-            const balanceWei = await window.ethereum.request({
+            const balanceWei = await eth.request({
                 method: 'eth_getBalance',
                 params: [this.address, 'latest']
             });
@@ -239,6 +306,7 @@ class Web3Auth {
         this.signature = null;
         this.signatureMessage = null;
         this.signedAt = null;
+        this.ethereum = null;
     }
 
     // Get short address (0x1234...5678)
