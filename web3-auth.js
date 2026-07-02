@@ -121,6 +121,12 @@ class Web3Auth {
         return injected;
     }
 
+    getMetaMaskDeepLink() {
+        const currentUrl = window.location.href;
+        const normalized = currentUrl.replace(/^https?:\/\//, '');
+        return `https://metamask.app.link/dapp/${normalized}`;
+    }
+
     async requestSignature(address, provider) {
         const eth = provider || this.ethereum || window.ethereum;
         if (!eth || !address) return null;
@@ -190,8 +196,9 @@ class Web3Auth {
                 eth = await this.resolveProvider('any');
             }
             if (!eth) {
-                alert('MetaMask provider not detected. If MetaMask is installed, enable this site in MetaMask settings and refresh.');
-                window.open('https://metamask.io', '_blank');
+                const deepLink = this.getMetaMaskDeepLink();
+                alert('MetaMask is not available in this browser context. Opening MetaMask app browser now.');
+                window.open(deepLink, '_blank');
                 return null;
             }
 
