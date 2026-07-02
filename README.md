@@ -65,6 +65,17 @@ const movies = [
 
 Security note: Do not commit your Client ID to the repository. Use the `G_CLIENT_ID` secret instead which the workflow injects during deploy.
 
+## Licensed Stream Setup (ad-free, controlled source)
+
+The player now requests stream URLs from `/api/extract` which resolves a licensed stream endpoint using an environment variable.
+
+1. Set `LICENSED_STREAM_ORIGIN` on your API host (for example your Vercel project).
+2. Your licensed stream service should respond to:
+    - `GET {LICENSED_STREAM_ORIGIN}/play?tmdb=<id>&type=<movie|tv>`
+3. The response must be embeddable in an iframe.
+
+If `LICENSED_STREAM_ORIGIN` is missing, the player shows a setup notice instead of loading a third-party embed.
+
 ## License
 
 Free to use and modify!

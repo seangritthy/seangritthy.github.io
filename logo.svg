@@ -1,27 +1,25 @@
-<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bitcoin Movies logo">
   <defs>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b3a9d9"/>
+      <stop offset="100%" stop-color="#7f95bf"/>
+    </linearGradient>
     <style>
-      .logo-glow { filter: drop-shadow(0 0 4px rgba(0, 255, 157, 0.8)); }
-      .logo-neon { stroke: #00ff9d; stroke-width: 1.5; fill: none; }
-      .logo-fill { fill: #00ff9d; }
+      .soft-glow { filter: drop-shadow(0 0 5px rgba(127, 149, 191, 0.45)); }
+      .frame { fill: #0f1628; stroke: url(#ring); stroke-width: 2; }
+      .coin { fill: #111b31; stroke: #7f95bf; stroke-width: 2; }
+      .btc { fill: #b3a9d9; font: 700 36px 'Orbitron', sans-serif; }
+      .play { fill: #d9a786; opacity: 0.92; }
+      .detail { stroke: #7f95bf; stroke-width: 1.6; stroke-linecap: round; opacity: 0.8; }
     </style>
   </defs>
-  
-  <!-- Outer square frame -->
-  <g class="logo-glow">
-    <rect x="5" y="5" width="90" height="90" class="logo-neon" rx="4"/>
-    
-    <!-- Play button symbol (film/movie theme) -->
-    <polygon points="35,30 35,70 70,50" class="logo-fill"/>
-    
-    <!-- Accent lines -->
-    <line x1="10" y1="50" x2="25" y2="50" class="logo-neon" stroke-linecap="round"/>
-    <line x1="75" y1="50" x2="90" y2="50" class="logo-neon" stroke-linecap="round"/>
-    
-    <!-- Corner accents -->
-    <line x1="15" y1="15" x2="20" y2="20" class="logo-neon" stroke-linecap="round" stroke-width="2"/>
-    <line x1="85" y1="15" x2="80" y2="20" class="logo-neon" stroke-linecap="round" stroke-width="2"/>
-    <line x1="15" y1="85" x2="20" y2="80" class="logo-neon" stroke-linecap="round" stroke-width="2"/>
-    <line x1="85" y1="85" x2="80" y2="80" class="logo-neon" stroke-linecap="round" stroke-width="2"/>
+
+  <g class="soft-glow">
+    <rect x="6" y="6" width="88" height="88" rx="12" class="frame"/>
+    <circle cx="50" cy="50" r="28" class="coin"/>
+    <text x="50" y="61" text-anchor="middle" class="btc">₿</text>
+    <polygon points="69,44 69,56 78,50" class="play"/>
+    <line x1="18" y1="50" x2="28" y2="50" class="detail"/>
+    <line x1="72" y1="20" x2="80" y2="28" class="detail"/>
   </g>
 </svg>

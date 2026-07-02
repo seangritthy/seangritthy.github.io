@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
-    // 1. CORS Headers to allow frontend communication
+    // CORS headers for frontend calls
     res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', '*'); 
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
@@ -10,44 +10,36 @@ export default async function handler(req, res) {
         return;
     }
 
-    const { tmdb } = req.query;
+    const { tmdb, type } = req.query;
 
     if (!tmdb) {
         return res.status(400).json({ error: 'TMDB ID is required' });
     }
 
-    try {
-        const targetUrl = `https://vidsrc.to/embed/movie/${tmdb}`;
-        
-        // 2. Fetch HTML from VidSrc.to with spoofed user-agent parameters
-        const response = await fetch(targetUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
-                'Referer': 'https://vidsrc.to/',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
-            }
+    const streamOrigin = process.env.LICENSED_STREAM_ORIGIN;
+    if (!streamOrigin) {
+        return res.status(503).json({
+            success: false,
+            error: 'Licensed stream provider is not configured',
+            code: 'MISSING_LICENSED_STREAM_ORIGIN'
         });
+    }
 
-        const html = await response.text();
+    try {
+        const mediaType = type === 'tv' ? 'tv' : 'movie';
+        const origin = streamOrigin.replace(/\/$/, '');
+        const streamUrl = `${origin}/play?tmdb=${encodeURIComponent(tmdb)}&type=${encodeURIComponent(mediaType)}`;
 
-        // 3. Extract the CloudOrchestra iframe URL using Regex
-        const iframeRegex = /iframe[^>]+src=["']([^"']*cloudorchestra[^"']*)["']/i;
-        const match = html.match(iframeRegex);
-
-        let finalUrl = null;
-        if (match && match[1]) {
-            finalUrl = match[1].startsWith('http') ? match[1] : `https:${match[1]}`;
-        }
-
-        // 4. Return extracted CloudOrchestra URL or fallback to raw VidSrc.to embed page
-        if (finalUrl) {
-            return res.status(200).json({ success: true, url: finalUrl });
-        } else {
-            return res.status(200).json({ success: false, url: `https://vidsrc.to/embed/movie/${tmdb}` });
-        }
-
+        return res.status(200).json({
+            success: true,
+            url: streamUrl,
+            provider: 'licensed'
+        });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ error: 'Failed to extract stream' });
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to resolve licensed stream URL'
+        });
     }
 }

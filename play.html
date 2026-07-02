@@ -14,14 +14,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Exo+2:wght@300;400;600&family=Noto+Sans+SC:wght@400;500;700&family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
     :root {
-        --primary: #9fb4d9;
+        --primary: #b3a9d9;
         --secondary: #7f95bf;
         --accent: #d9a786;
         --dark-bg: #040711;
         --card-bg: #0b1425;
         --card-strong: #0f1b31;
         --muted: #89a3c5;
-        --ok: #1bd98f;
+        --ok: #8ea1d4;
         --warn: #ffcf5a;
         --player-bg: #020308;
     }
@@ -37,7 +37,7 @@
         overflow-x: hidden;
         background-color: var(--dark-bg);
         background-image:
-            radial-gradient(circle at 10% 5%, rgba(159, 180, 217, 0.18), transparent 34%),
+            radial-gradient(circle at 10% 5%, rgba(179, 169, 217, 0.18), transparent 34%),
             radial-gradient(circle at 85% 10%, rgba(127, 149, 191, 0.16), transparent 36%),
             radial-gradient(circle at 50% 100%, rgba(217, 167, 134, 0.14), transparent 42%),
             linear-gradient(rgba(127, 149, 191, 0.04) 1px, transparent 1px),
@@ -52,7 +52,7 @@
         pointer-events: none;
         z-index: -1;
         opacity: 0.25;
-        background: conic-gradient(from 180deg at 50% 50%, rgba(159, 180, 217, 0.06), rgba(127, 149, 191, 0.04), rgba(217, 167, 134, 0.04), rgba(159, 180, 217, 0.06));
+        background: conic-gradient(from 180deg at 50% 50%, rgba(179, 169, 217, 0.06), rgba(127, 149, 191, 0.04), rgba(217, 167, 134, 0.04), rgba(179, 169, 217, 0.06));
     }
 
     .web3-header {
@@ -72,7 +72,7 @@
 
     .ui-lang-select {
         background: rgba(5, 10, 21, 0.9);
-        border: 1px solid rgba(159, 180, 217, 0.55);
+        border: 1px solid rgba(179, 169, 217, 0.55);
         color: var(--primary);
         padding: 6px 11px;
         font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
@@ -82,7 +82,7 @@
         transition: all 0.25s;
     }
 
-    .ui-lang-select:hover { box-shadow: 0 0 12px rgba(159, 180, 217, 0.45); }
+    .ui-lang-select:hover { box-shadow: 0 0 12px rgba(179, 169, 217, 0.45); }
     .ui-lang-select option { background: var(--dark-bg); color: #fff; }
 
     .header-content {
@@ -100,7 +100,7 @@
         font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif;
         color: var(--primary);
         font-size: 1.45rem;
-        text-shadow: 0 0 14px rgba(159, 180, 217, 0.45);
+        text-shadow: 0 0 14px rgba(179, 169, 217, 0.45);
         font-weight: 700;
     }
 
@@ -150,7 +150,7 @@
     }
 
     .movie-poster { flex: 0 0 220px; }
-    .movie-poster img { width: 100%; border: 2px solid rgba(159, 180, 217, 0.5); box-shadow: 0 0 20px rgba(159, 180, 217, 0.25); border-radius: 10px; }
+    .movie-poster img { width: 100%; border: 2px solid rgba(179, 169, 217, 0.5); box-shadow: 0 0 20px rgba(179, 169, 217, 0.25); border-radius: 10px; }
     .movie-details { flex: 1; min-width: 300px; position: relative; }
 
     .movie-title {
@@ -158,7 +158,7 @@
         font-size: 2.1rem;
         color: var(--primary);
         margin-bottom: 15px;
-        text-shadow: 0 0 14px rgba(159, 180, 217, 0.35);
+        text-shadow: 0 0 14px rgba(179, 169, 217, 0.35);
         line-height: 1.2;
     }
 
@@ -215,15 +215,15 @@
     }
 
     .share-btn {
-        background: rgba(159, 180, 217, 0.1);
-        border: 1px solid rgba(159, 180, 217, 0.62);
+        background: rgba(179, 169, 217, 0.1);
+        border: 1px solid rgba(179, 169, 217, 0.62);
         color: var(--primary);
     }
 
     .share-btn:hover {
         background: var(--primary);
-        color: #001a15;
-        box-shadow: 0 0 14px rgba(159, 180, 217, 0.45);
+        color: #141724;
+        box-shadow: 0 0 14px rgba(179, 169, 217, 0.45);
     }
 
     @keyframes pulseAudio { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
@@ -240,7 +240,7 @@
         margin-top: 22px;
         margin-bottom: 10px;
         letter-spacing: 1px;
-        border-bottom: 1px solid rgba(159, 180, 217, 0.22);
+        border-bottom: 1px solid rgba(179, 169, 217, 0.22);
         padding-bottom: 5px;
     }
 
@@ -296,10 +296,10 @@
 
     .player-container {
         background: var(--player-bg);
-        border: 1px solid rgba(159, 180, 217, 0.55);
+        border: 1px solid rgba(179, 169, 217, 0.55);
         border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 0 30px rgba(159, 180, 217, 0.2);
+        box-shadow: 0 0 30px rgba(179, 169, 217, 0.2);
         margin-bottom: 20px;
         position: relative;
     }
@@ -317,6 +317,19 @@
 
     #stream-frame { width: 100%; height: 650px; border: none; display: block; background: #000; }
 
+    .stream-notice {
+        display: none;
+        margin: 12px;
+        padding: 16px;
+        border-radius: 10px;
+        border: 1px solid rgba(217, 167, 134, 0.55);
+        background: rgba(217, 167, 134, 0.1);
+        color: #f7e5d8;
+        text-align: center;
+        font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
+        line-height: 1.6;
+    }
+
     .cc-notice {
         background: rgba(127, 149, 191, 0.1);
         border: 1px solid rgba(127, 149, 191, 0.4);
@@ -333,11 +346,11 @@
 
     .status-badges { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 20px; }
     .status-badge { padding: 11px 16px; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px; }
-    .badge-primary { background: rgba(159, 180, 217, 0.1); border: 1px solid rgba(159, 180, 217, 0.55); color: var(--primary); border-radius: 999px; }
-    .badge-success { background: rgba(27, 217, 143, 0.1); border: 1px solid rgba(27, 217, 143, 0.55); color: var(--ok); border-radius: 999px; }
+    .badge-primary { background: rgba(179, 169, 217, 0.1); border: 1px solid rgba(179, 169, 217, 0.55); color: var(--primary); border-radius: 999px; }
+    .badge-success { background: rgba(142, 161, 212, 0.1); border: 1px solid rgba(142, 161, 212, 0.55); color: var(--ok); border-radius: 999px; }
 
     .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 6, 12, 0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s; }
-    .loading-text { font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; font-size: 1.5rem; color: var(--primary); text-shadow: 0 0 16px rgba(159, 180, 217, 0.5); margin-bottom: 18px; }
+    .loading-text { font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; font-size: 3rem; color: var(--primary); text-shadow: 0 0 16px rgba(179, 169, 217, 0.5); margin-bottom: 0; animation: btcPulse 1s ease-in-out infinite; }
 
     .control-panel {
         background: rgba(11, 20, 37, 0.86);
@@ -365,7 +378,7 @@
         border-radius: 999px;
     }
 
-    .quality-btn.active { background: var(--primary); color: #001811; border-color: var(--primary); box-shadow: 0 0 12px rgba(159, 180, 217, 0.45); }
+    .quality-btn.active { background: var(--primary); color: #141724; border-color: var(--primary); box-shadow: 0 0 12px rgba(179, 169, 217, 0.45); }
 
     .share-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 7, 14, 0.88); backdrop-filter: blur(5px); z-index: 10000; justify-content: center; align-items: center; }
     .share-modal.active { display: flex; animation: fadeIn 0.3s ease; }
@@ -384,7 +397,7 @@
 
     .share-close { position: absolute; top: 10px; right: 15px; color: white; font-size: 1.8rem; cursor: pointer; transition: color 0.3s; }
     .share-close:hover { color: var(--accent); }
-    .share-poster-img { width: 100%; max-width: 180px; border-radius: 8px; border: 1px solid rgba(159, 180, 217, 0.45); margin-bottom: 15px; box-shadow: 0 0 12px rgba(159, 180, 217, 0.2); }
+    .share-poster-img { width: 100%; max-width: 180px; border-radius: 8px; border: 1px solid rgba(179, 169, 217, 0.45); margin-bottom: 15px; box-shadow: 0 0 12px rgba(179, 169, 217, 0.2); }
     .share-title { font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; color: var(--secondary); margin-bottom: 15px; font-size: 1.1rem; }
     .copy-container { display: flex; gap: 10px; margin-top: 15px; }
     .copy-input { flex: 1; padding: 10px; background: rgba(4, 9, 20, 0.8); border: 1px solid rgba(127, 149, 191, 0.5); color: var(--secondary); font-family: 'Share Tech Mono', monospace; border-radius: 8px; outline: none; }
@@ -392,6 +405,7 @@
     .copy-btn:hover { box-shadow: 0 0 13px rgba(127, 149, 191, 0.45); background: #8ec8ff; }
 
     @keyframes fadeIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+    @keyframes btcPulse { 0%, 100% { transform: scale(1); opacity: 0.72; } 50% { transform: scale(1.12); opacity: 1; } }
 
     @media (max-width: 768px) {
         .ui-lang-wrapper { top: 10px; right: 10px; }
@@ -407,8 +421,7 @@
 
     <div class="loading-overlay" id="loadingOverlay">
         <div style="text-align:center;">
-            <div class="loading-text" id="loadingShield">BOOTSTRAPPING WEB3 STREAM...</div>
-            <div style="color:var(--secondary); font-family:monospace; margin-top:10px;" id="routingText">Resolving gateway route...</div>
+            <div class="loading-text" id="loadingShield">₿</div>
         </div>
     </div>
 
@@ -462,6 +475,7 @@
 
         <div class="player-container">
             <iframe id="stream-frame" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <div class="stream-notice" id="streamNotice"></div>
         </div>
 
         <div class="cc-notice" id="ccNotice">
@@ -597,7 +611,7 @@
         const translations = {
             en: {
                 returnBtn: "← BACK TO HOME",
-                loadingShield: "BOOTSTRAPPING WEB3 STREAM...",
+                loadingShield: "₿",
                 routing: "Resolving gateway route...",
                 syncingTitle: "SYNCING MOVIE DATA...",
                 loadingData: "Loading movie metadata...",
@@ -621,10 +635,12 @@
                 shareTitle: "SHARE THIS MOVIE",
                 copyBtn: "COPY",
                 copiedBtn: "COPIED!"
+                ,
+                streamUnavailable: "Licensed stream is not configured. Set LICENSED_STREAM_ORIGIN on your API host."
             },
             km: {
                 returnBtn: "← ត្រឡប់ទៅទំព័រដើម",
-                loadingShield: "កំពុងចាប់ផ្តើម Web3 Stream...",
+                loadingShield: "₿",
                 routing: "កំពុងកំណត់ផ្លូវ Gateway...",
                 syncingTitle: "កំពុងធ្វើសមកាលកម្មទិន្នន័យភាពយន្ត...",
                 loadingData: "កំពុងផ្ទុក Metadata ភាពយន្ត...",
@@ -648,10 +664,12 @@
                 shareTitle: "ចែករំលែកភាពយន្តនេះ",
                 copyBtn: "ចម្លង",
                 copiedBtn: "បានចម្លង!"
+                ,
+                streamUnavailable: "មិនទាន់កំណត់ Licensed Stream ទេ។ សូមកំណត់ LICENSED_STREAM_ORIGIN នៅម៉ាស៊ីន API របស់អ្នក។"
             },
             zh: {
                 returnBtn: "← 返回主页",
-                loadingShield: "正在启动 Web3 流媒体...",
+                loadingShield: "₿",
                 routing: "正在解析网关路由...",
                 syncingTitle: "正在同步影片数据...",
                 loadingData: "正在加载影片元数据...",
@@ -675,6 +693,8 @@
                 shareTitle: "分享此电影",
                 copyBtn: "复制",
                 copiedBtn: "已复制!"
+                ,
+                streamUnavailable: "尚未配置授权播放源。请在 API 主机中设置 LICENSED_STREAM_ORIGIN。"
             }
         };
 
@@ -717,7 +737,6 @@
 
             document.getElementById('returnBtn').innerText = t.returnBtn;
             document.getElementById('loadingShield').innerText = t.loadingShield;
-            document.getElementById('routingText').innerText = t.routing;
             document.getElementById('catLabel').innerText = t.categories;
             document.getElementById('personnelLabel').innerText = t.personnel;
             document.getElementById('originGuardBadge').innerText = t.originGuard;
@@ -918,21 +937,40 @@
 
         window.addEventListener('beforeunload', () => window.speechSynthesis.cancel());
 
-        async function loadVidsrcFrame() {
+        async function loadLicensedFrame() {
             if (!tmdbId) return dismissOverlay();
             const frame = document.getElementById('stream-frame');
+            const notice = document.getElementById('streamNotice');
             if (!frame) return dismissOverlay();
 
             try {
-                const response = await fetch(`/api/extract?tmdb=${encodeURIComponent(tmdbId)}`);
+                const response = await fetch(`/api/extract?tmdb=${encodeURIComponent(tmdbId)}&type=${encodeURIComponent(mediaType)}`);
                 const data = await response.json();
-                const targetEmbed = data?.success && data.url ? data.url : `https://vidsrc.to/embed/movie/${tmdbId}`;
-                frame.src = targetEmbed;
+                if (data?.success && data.url) {
+                    frame.style.display = 'block';
+                    if (notice) {
+                        notice.style.display = 'none';
+                        notice.innerText = '';
+                    }
+                    frame.src = data.url;
+                } else {
+                    frame.style.display = 'none';
+                    if (notice) {
+                        notice.style.display = 'block';
+                        notice.innerText = getT().streamUnavailable;
+                    }
+                    dismissOverlay();
+                }
             } catch (err) {
-                frame.src = `https://vidsrc.to/embed/movie/${tmdbId}`;
-            } finally {
-                frame.onload = dismissOverlay;
+                frame.style.display = 'none';
+                if (notice) {
+                    notice.style.display = 'block';
+                    notice.innerText = getT().streamUnavailable;
+                }
+                dismissOverlay();
             }
+
+            frame.onload = dismissOverlay;
         }
 
         function handleDashboardLoops() {
@@ -971,7 +1009,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             updateUI();
             syncTmdbDetails();
-            loadVidsrcFrame();
+            loadLicensedFrame();
             handleDashboardLoops();
             setTimeout(dismissOverlay, 6000); 
         });
