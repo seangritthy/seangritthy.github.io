@@ -14,6 +14,43 @@ class Web3Auth {
         this.signedAt = null;
         this._listenersAttached = false;
         this.ethereum = null;
+        this.discoveredProviders = [];
+        this.discoveryInitialized = false;
+        this.initProviderDiscovery();
+    }
+
+    initProviderDiscovery() {
+        if (this.discoveryInitialized || typeof window === 'undefined') return;
+        this.discoveryInitialized = true;
+
+        const seen = new Set();
+        window.addEventListener('eip6963:announceProvider', (event) => {
+            const detail = event?.detail;
+            const provider = detail?.provider;
+            const info = detail?.info || {};
+            const key = info.uuid || info.rdns || info.name || String(this.discoveredProviders.length);
+
+            if (!provider || seen.has(key)) return;
+            seen.add(key);
+            this.discoveredProviders.push({ provider, info });
+        });
+
+        try {
+            window.dispatchEvent(new Event('eip6963:requestProvider'));
+        } catch (error) {
+            console.warn('EIP-6963 provider discovery not available:', error);
+        }
+    }
+
+    getDiscoveredProvider(predicate) {
+        const found = this.discoveredProviders.find((entry) => {
+            try {
+                return predicate(entry.provider, entry.info || {});
+            } catch (_) {
+                return false;
+            }
+        });
+        return found ? found.provider : null;
     }
 
     // Check if wallet is available
@@ -39,6 +76,13 @@ class Web3Auth {
     }
 
     getMetaMaskProvider(ethereum) {
+        const discovered = this.getDiscoveredProvider((provider, info) => {
+            const rdns = String(info.rdns || '').toLowerCase();
+            const name = String(info.name || '').toLowerCase();
+            return !!provider?.isMetaMask || rdns.includes('metamask') || name.includes('metamask');
+        });
+        if (discovered) return discovered;
+
         if (!ethereum) return null;
         if (ethereum.isMetaMask) return ethereum;
         if (Array.isArray(ethereum.providers)) {
@@ -48,6 +92,13 @@ class Web3Auth {
     }
 
     getTrustWalletProvider(ethereum) {
+        const discovered = this.getDiscoveredProvider((provider, info) => {
+            const rdns = String(info.rdns || '').toLowerCase();
+            const name = String(info.name || '').toLowerCase();
+            return !!(provider?.isTrust || provider?.isTrustWallet) || rdns.includes('trustwallet') || name.includes('trust wallet');
+        });
+        if (discovered) return discovered;
+
         if (!ethereum) return null;
         if (ethereum.isTrust || ethereum.isTrustWallet) return ethereum;
         if (Array.isArray(ethereum.providers)) {
@@ -57,8 +108,9 @@ class Web3Auth {
     }
 
     async resolveProvider(preferred = 'any') {
+        this.initProviderDiscovery();
         const injected = await this.waitForEthereum();
-        if (!injected) return null;
+        if (!injected && this.discoveredProviders.length === 0) return null;
 
         if (preferred === 'metamask') {
             return this.getMetaMaskProvider(injected);
