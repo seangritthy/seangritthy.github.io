@@ -522,6 +522,17 @@
         </div>
     </div>
 
+    <div class="share-modal" id="coinChartModal">
+        <div class="share-modal-content" style="max-width:760px;">
+            <span class="share-close" id="coinChartClose">&times;</span>
+            <h2 class="share-title" id="coinChartTitle">LIVE CHART</h2>
+            <div style="width:100%;height:360px;">
+                <canvas id="coinChartCanvas" style="width:100%;height:100%;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // --- Web3 Wallet Login for Player Page ---
         window.addEventListener('DOMContentLoaded', () => {
@@ -620,6 +631,9 @@
                 marketChange: "24H",
                 marketLoading: "Loading market data...",
                 marketError: "Market data unavailable",
+                chartTitle: "LIVE CHART",
+                chartLoading: "Loading chart...",
+                chartError: "Chart unavailable",
                 unknownRole: "Unknown Role",
                 na: "N/A",
                 ccNotice: "💡 <b>SUBTITLES (CC):</b> Click the 'CC' icon inside the video player to enable Khmer, English, or Chinese subtitles.",
@@ -649,6 +663,9 @@
                 marketChange: "២៤ ម៉ោង",
                 marketLoading: "កំពុងទាញទិន្នន័យទីផ្សារ...",
                 marketError: "មិនអាចទាញទិន្នន័យទីផ្សារ",
+                chartTitle: "ក្រាហ្វផ្ទាល់",
+                chartLoading: "កំពុងទាញក្រាហ្វ...",
+                chartError: "មិនអាចបង្ហាញក្រាហ្វ",
                 unknownRole: "មិនស្គាល់តួអង្គ",
                 na: "មិនមាន",
                 ccNotice: "💡 <b>ចំណងជើងរង (CC):</b> ចុចលើរូបតំណាង 'CC' នៅក្នុងផ្ទាំងវីដេអូដើម្បីជ្រើសរើសចំណងជើងរងជាភាសាខ្មែរ អង់គ្លេស ឬចិន។",
@@ -678,6 +695,9 @@
                 marketChange: "24小时",
                 marketLoading: "正在加载市场数据...",
                 marketError: "市场数据不可用",
+                chartTitle: "实时图表",
+                chartLoading: "正在加载图表...",
+                chartError: "图表不可用",
                 unknownRole: "未知角色",
                 na: "无",
                 ccNotice: "💡 <b>字幕 (CC):</b> 点击视频播放器内的 'CC' 图标以启用高棉语、英语或中文字幕。",
@@ -715,9 +735,16 @@
         const copyUrlBtn = document.getElementById('copyUrlBtn');
         const shareUrlInput = document.getElementById('shareUrlInput');
         const shareModalPoster = document.getElementById('shareModalPoster');
+        const coinChartModal = document.getElementById('coinChartModal');
+        const coinChartClose = document.getElementById('coinChartClose');
+        const coinChartTitle = document.getElementById('coinChartTitle');
+        const coinChartCanvas = document.getElementById('coinChartCanvas');
         
         let isSpeaking = false;
         let currentPosterUrl = "";
+        let coinChartInstance = null;
+        let activeChartCoin = null;
+        let coinChartRefreshTimer = null;
 
         function getT() {
             return translations[localStorage.getItem('uiLang') || 'en'];
@@ -742,6 +769,9 @@
             document.getElementById('lblMarketChange').innerText = t.marketChange;
             const ms = document.getElementById('marketSummary');
             if (ms && (!ms.dataset.ready || ms.dataset.ready === '0')) ms.innerText = t.marketLoading;
+            if (coinChartTitle && (!activeChartCoin || !activeChartCoin.symbol)) {
+                coinChartTitle.innerText = t.chartTitle;
+            }
             document.getElementById('ccNotice').innerHTML = t.ccNotice;
             
             aiSpeechBtn.innerText = isSpeaking ? t.aiStopBtn : t.aiReadBtn;
@@ -971,6 +1001,91 @@
             }).format(value);
         }
 
+        function closeCoinChartModal() {
+            if (coinChartModal) coinChartModal.classList.remove('active');
+            if (coinChartRefreshTimer) {
+                clearInterval(coinChartRefreshTimer);
+                coinChartRefreshTimer = null;
+            }
+            activeChartCoin = null;
+        }
+
+        async function renderCoinChart(coinId, symbol) {
+            if (!coinChartCanvas) return;
+            const t = getT();
+            try {
+                const res = await fetch(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(coinId)}/market_chart?vs_currency=usd&days=1&interval=hourly`);
+                if (!res.ok) throw new Error('chart fetch failed');
+                const data = await res.json();
+                const points = data?.prices || [];
+                if (!points.length) throw new Error('no chart points');
+
+                const labels = points.map(([ts]) => {
+                    const d = new Date(ts);
+                    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                });
+                const values = points.map(([, price]) => price);
+
+                if (coinChartInstance) coinChartInstance.destroy();
+                coinChartInstance = new Chart(coinChartCanvas.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: `${symbol.toUpperCase()} / USD`,
+                            data: values,
+                            borderColor: '#4d7cff',
+                            backgroundColor: 'rgba(77,124,255,0.14)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.25,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { intersect: false, mode: 'index' },
+                        plugins: {
+                            legend: { display: true },
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => `${formatUsd(ctx.parsed.y)}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { maxTicksLimit: 8, color: '#64748b' }, grid: { color: 'rgba(77,124,255,0.08)' } },
+                            y: {
+                                ticks: {
+                                    color: '#64748b',
+                                    callback: (v) => formatCompactUsd(v)
+                                },
+                                grid: { color: 'rgba(77,124,255,0.08)' }
+                            }
+                        }
+                    }
+                });
+            } catch (err) {
+                if (coinChartTitle) coinChartTitle.innerText = `${symbol.toUpperCase()} • ${t.chartError}`;
+            }
+        }
+
+        async function openCoinChart(coinId, symbol) {
+            if (!coinChartModal || !coinChartTitle) return;
+            const t = getT();
+            activeChartCoin = { coinId, symbol };
+            coinChartTitle.innerText = `${symbol.toUpperCase()} • ${t.chartLoading}`;
+            coinChartModal.classList.add('active');
+            await renderCoinChart(coinId, symbol);
+            coinChartTitle.innerText = `${symbol.toUpperCase()} • ${t.chartTitle}`;
+
+            if (coinChartRefreshTimer) clearInterval(coinChartRefreshTimer);
+            coinChartRefreshTimer = setInterval(() => {
+                if (activeChartCoin) renderCoinChart(activeChartCoin.coinId, activeChartCoin.symbol);
+            }, 60000);
+        }
+
         async function refreshCryptoMarket() {
             const marketSummary = document.getElementById('marketSummary');
             const marketBody = document.getElementById('marketTableBody');
@@ -994,7 +1109,7 @@
                     const chText = ch === null ? '--' : `${ch >= 0 ? '+' : ''}${ch.toFixed(2)}%`;
                     const chColor = ch === null ? 'var(--muted)' : (ch >= 0 ? '#0f766e' : '#b91c1c');
                     return `
-                        <tr>
+                        <tr data-coin-id="${coin.id}" data-coin-symbol="${coin.symbol}" style="cursor:pointer;">
                             <td style="padding:10px;border-bottom:1px solid rgba(77,124,255,0.12);font-weight:600;">${coin.symbol.toUpperCase()}</td>
                             <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);">${formatUsd(coin.current_price || 0)}</td>
                             <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);">${formatCompactUsd(coin.market_cap || 0)}</td>
@@ -1002,6 +1117,17 @@
                         </tr>
                     `;
                 }).join('');
+
+                if (!marketBody.dataset.bound) {
+                    marketBody.addEventListener('click', (e) => {
+                        const row = e.target.closest('tr[data-coin-id]');
+                        if (!row) return;
+                        const coinId = row.getAttribute('data-coin-id');
+                        const symbol = row.getAttribute('data-coin-symbol') || 'coin';
+                        openCoinChart(coinId, symbol);
+                    });
+                    marketBody.dataset.bound = '1';
+                }
             } catch (err) {
                 marketSummary.innerText = t.marketError;
                 marketSummary.dataset.ready = '0';
@@ -1031,6 +1157,11 @@
             loadLicensedFrame();
             handleDashboardLoops();
             setTimeout(dismissOverlay, 6000); 
+        });
+
+        coinChartClose?.addEventListener('click', closeCoinChartModal);
+        coinChartModal?.addEventListener('click', (e) => {
+            if (e.target === coinChartModal) closeCoinChartModal();
         });
     </script>
 </body>
