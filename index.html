@@ -8,15 +8,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&family=Sora:wght@500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #b3a9d9;
-            --secondary: #7f95bf;
-            --accent: #d9a786;
-            --dark-bg: #04060d;
-            --card-bg: #0c1322;
-            --panel-bg: rgba(6, 11, 22, 0.8);
-            --text-main: #f6fbff;
-            --muted: #8ca7c8;
-            --line-glow: rgba(127, 149, 191, 0.35);
+            --primary: #6f5cff;
+            --secondary: #4d7cff;
+            --accent: #14b8a6;
+            --dark-bg: #f4f6ff;
+            --card-bg: #ffffff;
+            --panel-bg: rgba(255, 255, 255, 0.9);
+            --text-main: #1b1f3b;
+            --muted: #64748b;
+            --line-glow: rgba(111, 92, 255, 0.2);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,20 +27,20 @@
             min-height: 100vh;
             background-color: var(--dark-bg);
             background-image:
-                radial-gradient(circle at 12% 8%, rgba(179, 169, 217, 0.18), transparent 34%),
-                radial-gradient(circle at 86% 12%, rgba(127, 149, 191, 0.16), transparent 36%),
-                radial-gradient(circle at 50% 110%, rgba(217, 167, 134, 0.15), transparent 42%),
-                linear-gradient(rgba(127, 149, 191, 0.06) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(127, 149, 191, 0.05) 1px, transparent 1px);
+                radial-gradient(circle at 10% 4%, rgba(111, 92, 255, 0.16), transparent 34%),
+                radial-gradient(circle at 88% 9%, rgba(77, 124, 255, 0.14), transparent 36%),
+                radial-gradient(circle at 50% 100%, rgba(20, 184, 166, 0.12), transparent 45%),
+                linear-gradient(rgba(111, 92, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(77, 124, 255, 0.04) 1px, transparent 1px);
             background-size: auto, auto, auto, 44px 44px, 44px 44px;
             background-attachment: fixed;
         }
 
         header {
             padding: 18px 20px;
-            background: linear-gradient(145deg, rgba(6, 10, 20, 0.95), rgba(8, 15, 30, 0.9));
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(246, 248, 255, 0.92));
             border-bottom: 1px solid var(--line-glow);
-            box-shadow: 0 16px 32px rgba(2, 7, 20, 0.55), inset 0 -1px 0 rgba(179, 169, 217, 0.12);
+            box-shadow: 0 12px 26px rgba(36, 53, 90, 0.12), inset 0 -1px 0 rgba(111, 92, 255, 0.08);
             backdrop-filter: blur(10px);
             position: sticky;
             top: 0;
@@ -65,10 +65,10 @@
             display: flex;
             align-items: center;
             padding: 6px;
-            border: 1px solid rgba(127, 149, 191, 0.4);
+            border: 1px solid rgba(111, 92, 255, 0.24);
             border-radius: 10px;
-            background: rgba(10, 18, 34, 0.8);
-            box-shadow: inset 0 0 0 1px rgba(179, 169, 217, 0.16);
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: inset 0 0 0 1px rgba(111, 92, 255, 0.08);
         }
 
         .site-logo {
@@ -84,14 +84,14 @@
             font-size: 1.9rem;
             letter-spacing: 2px;
             margin: 0;
-            text-shadow: 0 0 18px rgba(179, 169, 217, 0.45);
+            text-shadow: 0 0 10px rgba(111, 92, 255, 0.2);
         }
 
         .menu-toggle-btn {
             padding: 9px 18px;
             border-radius: 999px;
             border: 1px solid var(--secondary);
-            background: rgba(127, 149, 191, 0.08);
+            background: rgba(77, 124, 255, 0.08);
             color: var(--secondary);
             font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif;
             font-weight: 700;
@@ -102,10 +102,10 @@
 
         .menu-toggle-btn:hover,
         .menu-toggle-btn.active {
-            color: #03131f;
+            color: #ffffff;
             background: var(--secondary);
             border-color: var(--secondary);
-            box-shadow: 0 0 24px rgba(127, 149, 191, 0.55);
+            box-shadow: 0 0 20px rgba(77, 124, 255, 0.35);
         }
 
         .menu-container {
@@ -125,14 +125,14 @@
             opacity: 1;
             padding-top: 18px;
             margin-top: 16px;
-            border-top: 1px dashed rgba(127, 149, 191, 0.45);
+            border-top: 1px dashed rgba(111, 92, 255, 0.35);
         }
 
         .ui-lang-wrapper { text-align: center; }
 
         .ui-lang-select {
-            background: rgba(4, 10, 21, 0.9);
-            border: 1px solid rgba(179, 169, 217, 0.5);
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(111, 92, 255, 0.35);
             color: var(--primary);
             padding: 7px 12px;
             font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
@@ -148,8 +148,8 @@
         }
 
         .ui-lang-select option {
-            background: #081325;
-            color: var(--text-main);
+            background: #ffffff;
+            color: #1b1f3b;
         }
 
         .search-container {
@@ -166,10 +166,10 @@
             flex: 1;
             min-width: 260px;
             padding: 12px 14px;
-            background: rgba(2, 7, 18, 0.9);
-            border: 1px solid rgba(127, 149, 191, 0.45);
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(111, 92, 255, 0.28);
             border-radius: 10px;
-            color: var(--primary);
+            color: #1b1f3b;
             font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
             font-size: 0.98rem;
             outline: none;
@@ -185,7 +185,7 @@
             padding: 12px 22px;
             border-radius: 10px;
             border: 1px solid var(--primary);
-            background: linear-gradient(135deg, rgba(179, 169, 217, 0.25), rgba(179, 169, 217, 0.06));
+            background: linear-gradient(135deg, rgba(111, 92, 255, 0.18), rgba(77, 124, 255, 0.08));
             color: var(--primary);
             font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif;
             font-weight: 700;
@@ -196,8 +196,8 @@
         #searchBtn:hover {
             transform: translateY(-1px);
             background: var(--primary);
-            color: #04131f;
-            box-shadow: 0 0 22px rgba(179, 169, 217, 0.55);
+            color: #ffffff;
+            box-shadow: 0 0 18px rgba(111, 92, 255, 0.35);
         }
 
         .type-selector {
@@ -210,8 +210,8 @@
         .type-btn {
             padding: 8px 18px;
             border-radius: 999px;
-            background: rgba(127, 149, 191, 0.08);
-            border: 1px solid rgba(127, 149, 191, 0.45);
+            background: rgba(77, 124, 255, 0.08);
+            border: 1px solid rgba(77, 124, 255, 0.32);
             color: var(--secondary);
             cursor: pointer;
             font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
@@ -220,10 +220,10 @@
 
         .type-btn:hover,
         .type-btn.active {
-            color: #02131d;
+            color: #ffffff;
             background: var(--secondary);
             border-color: var(--secondary);
-            box-shadow: 0 0 18px rgba(127, 149, 191, 0.5);
+            box-shadow: 0 0 14px rgba(77, 124, 255, 0.32);
         }
 
         .filter-alert {
@@ -243,7 +243,7 @@
         .cat-btn,
         .lang-btn {
             padding: 7px 14px;
-            background: rgba(6, 14, 28, 0.82);
+            background: rgba(255, 255, 255, 0.94);
             border-radius: 999px;
             cursor: pointer;
             font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
@@ -252,27 +252,27 @@
         }
 
         .cat-btn {
-            border: 1px solid rgba(127, 149, 191, 0.5);
+            border: 1px solid rgba(77, 124, 255, 0.32);
             color: var(--secondary);
         }
 
         .cat-btn.active,
         .cat-btn:hover {
             background: var(--secondary);
-            color: #01121a;
-            box-shadow: 0 0 14px rgba(127, 149, 191, 0.55);
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(77, 124, 255, 0.28);
         }
 
         .lang-btn {
-            border: 1px solid rgba(217, 167, 134, 0.6);
+            border: 1px solid rgba(20, 184, 166, 0.4);
             color: var(--accent);
         }
 
         .lang-btn.active,
         .lang-btn:hover {
             background: var(--accent);
-            color: #260813;
-            box-shadow: 0 0 14px rgba(217, 167, 134, 0.5);
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(20, 184, 166, 0.28);
         }
 
         .movies-grid {
@@ -285,14 +285,14 @@
         }
 
         .movie-card {
-            background: linear-gradient(175deg, rgba(12, 20, 37, 0.95), rgba(10, 15, 28, 0.95));
-            border: 1px solid rgba(127, 149, 191, 0.35);
+            background: linear-gradient(175deg, rgba(255, 255, 255, 0.98), rgba(246, 248, 255, 0.98));
+            border: 1px solid rgba(111, 92, 255, 0.18);
             overflow: hidden;
             cursor: pointer;
             transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
             position: relative;
             border-radius: 14px;
-            box-shadow: 0 18px 24px rgba(2, 8, 18, 0.38);
+            box-shadow: 0 12px 20px rgba(29, 44, 73, 0.12);
         }
 
         .movie-card::before {
@@ -313,8 +313,8 @@
 
         .movie-card:hover {
             transform: translateY(-8px);
-            border-color: rgba(179, 169, 217, 0.55);
-            box-shadow: 0 24px 34px rgba(3, 13, 25, 0.58), 0 0 20px rgba(127, 149, 191, 0.25);
+            border-color: rgba(111, 92, 255, 0.42);
+            box-shadow: 0 18px 28px rgba(29, 44, 73, 0.2), 0 0 14px rgba(77, 124, 255, 0.15);
         }
 
         .movie-card:hover::before { opacity: 1; }
@@ -346,7 +346,7 @@
         }
 
         .movie-year { color: var(--secondary); }
-        .movie-rating { color: #ffd166; }
+        .movie-rating { color: #0f766e; }
 
         .loading {
             text-align: center;
@@ -407,10 +407,10 @@
         }
 
         .page-btn:disabled {
-            border-color: #304058;
-            color: #4d627f;
+            border-color: #c7d2fe;
+            color: #94a3b8;
             cursor: not-allowed;
-            background: rgba(7, 15, 30, 0.45);
+            background: rgba(241, 245, 249, 0.92);
             box-shadow: none;
         }
 
