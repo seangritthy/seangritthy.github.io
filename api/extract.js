@@ -30,10 +30,60 @@ export default async function handler(req, res) {
                 });
             }
 
+            let token = '';
+            const tokenEndpoint = process.env.CLOUDNESTRA_TOKEN_ENDPOINT;
+            const tokenHeaderName = process.env.CLOUDNESTRA_TOKEN_HEADER || 'Authorization';
+            const tokenHeaderValue = process.env.CLOUDNESTRA_TOKEN_VALUE || '';
+            const tokenMethod = (process.env.CLOUDNESTRA_TOKEN_METHOD || 'GET').toUpperCase();
+
+            if (tokenEndpoint) {
+                const endpointUrl = new URL(tokenEndpoint);
+                endpointUrl.searchParams.set('tmdb', tmdb);
+                endpointUrl.searchParams.set('type', mediaType);
+
+                const headers = { Accept: 'application/json' };
+                if (tokenHeaderValue) {
+                    headers[tokenHeaderName] = tokenHeaderValue;
+                }
+
+                const tokenResponse = await fetch(endpointUrl.toString(), {
+                    method: tokenMethod === 'POST' ? 'POST' : 'GET',
+                    headers,
+                    body: tokenMethod === 'POST' ? JSON.stringify({ tmdb, type: mediaType }) : undefined
+                });
+
+                if (!tokenResponse.ok) {
+                    return res.status(502).json({
+                        success: false,
+                        error: `Cloudnestra token endpoint failed (${tokenResponse.status})`,
+                        code: 'CLOUDNESTRA_TOKEN_REQUEST_FAILED'
+                    });
+                }
+
+                const tokenData = await tokenResponse.json();
+                token = tokenData?.token || tokenData?.id || tokenData?.data?.token || tokenData?.data?.id || '';
+                if (!token) {
+                    return res.status(502).json({
+                        success: false,
+                        error: 'Cloudnestra token response missing token field',
+                        code: 'CLOUDNESTRA_TOKEN_MISSING'
+                    });
+                }
+            }
+
             const template = process.env.CLOUDNESTRA_PATH_TEMPLATE || '/embed/{type}/{tmdb}';
             const resolvedPath = template
                 .replaceAll('{type}', encodeURIComponent(mediaType))
-                .replaceAll('{tmdb}', encodeURIComponent(tmdb));
+                .replaceAll('{tmdb}', encodeURIComponent(tmdb))
+                .replaceAll('{token}', encodeURIComponent(token));
+
+            if (resolvedPath.includes('{token}')) {
+                return res.status(503).json({
+                    success: false,
+                    error: 'Cloudnestra template requires {token}, but token is not configured',
+                    code: 'MISSING_CLOUDNESTRA_TOKEN_SETUP'
+                });
+            }
 
             const normalizedOrigin = cloudOrigin.replace(/\/$/, '');
             const normalizedPath = resolvedPath.startsWith('/') ? resolvedPath : `/${resolvedPath}`;

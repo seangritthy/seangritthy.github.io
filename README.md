@@ -87,6 +87,16 @@ If you want to use Cloudnestra directly through the same API endpoint:
 Supported template tokens:
 - `{type}` -> `movie` or `tv`
 - `{tmdb}` -> TMDB content id
+- `{token}` -> token returned by your Cloudnestra token API
+
+Optional token API integration:
+- `CLOUDNESTRA_TOKEN_ENDPOINT=https://your-token-api.example.com/token`
+- `CLOUDNESTRA_TOKEN_METHOD=GET|POST` (default `GET`)
+- `CLOUDNESTRA_TOKEN_HEADER=Authorization` (optional header name)
+- `CLOUDNESTRA_TOKEN_VALUE=Bearer <secret>` (optional header value)
+
+Example for tokenized `rcp` routes:
+- `CLOUDNESTRA_PATH_TEMPLATE=/rcp/{token}`
 
 ## License
 
