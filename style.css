@@ -1,12 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap');
 
 :root {
-    --primary: #00ff9d;
-    --secondary: #7b61ff;
-    --accent: #ff00e5;
+    --primary: #9fb4d9;
+    --secondary: #7f95bf;
+    --accent: #d9a786;
     --dark-bg: #0a0a0f;
-    --info: #00ccff;
-    --warning: #fff200;
+    --info: #90a7cc;
+    --warning: #d8c7a2;
     --card-bg: #13131f;
 }
 
@@ -17,7 +17,7 @@ body {
     background-color: var(--dark-bg);
     color: #ffffff;
     min-height: 100vh;
-    background-image: linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(123, 97, 255, 0.03) 1px, transparent 1px);
+    background-image: linear-gradient(rgba(159, 180, 217, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(127, 149, 191, 0.03) 1px, transparent 1px);
     background-size: 50px 50px;
 }
 
@@ -26,7 +26,7 @@ header {
     background: rgba(10, 10, 15, 0.95);
     text-align: center;
     border-bottom: 2px solid var(--primary);
-    box-shadow: 0 0 25px rgba(0, 255, 157, 0.3);
+    box-shadow: 0 0 25px rgba(159, 180, 217, 0.3);
 }
 
 h1 {
@@ -34,7 +34,7 @@ h1 {
     color: var(--primary);
     margin-bottom: 20px;
     font-size: 2.8rem;
-    text-shadow: 0 0 15px rgba(0, 255, 157, 0.6);
+    text-shadow: 0 0 15px rgba(159, 180, 217, 0.6);
     letter-spacing: 4px;
 }
 
@@ -59,7 +59,7 @@ h1 {
     background: var(--card-bg);
     border: 2px solid var(--primary);
     border-radius: 10px;
-    box-shadow: 0 0 40px rgba(0, 255, 157, 0.5);
+    box-shadow: 0 0 40px rgba(159, 180, 217, 0.5);
     min-width: 350px;
     max-width: 450px;
     animation: slideIn 0.3s ease;
@@ -114,7 +114,7 @@ h1 {
     width: 100%;
     padding: 15px;
     margin-bottom: 12px;
-    background: rgba(123, 97, 255, 0.1);
+    background: rgba(127, 149, 191, 0.1);
     border: 1.5px solid var(--secondary);
     border-radius: 8px;
     cursor: pointer;
@@ -129,7 +129,7 @@ h1 {
 
 .wallet-option:hover {
     background: var(--secondary);
-    box-shadow: 0 0 20px rgba(123, 97, 255, 0.6);
+    box-shadow: 0 0 20px rgba(127, 149, 191, 0.6);
     transform: translateX(5px);
     border-color: var(--primary);
 }
@@ -172,14 +172,14 @@ h1 {
     width: auto;
     border: 1.5px solid var(--primary);
     padding: 6px;
-    background: rgba(0, 255, 157, 0.08);
-    box-shadow: 0 0 15px rgba(0, 255, 157, 0.4), inset 0 0 10px rgba(0, 255, 157, 0.1);
+    background: rgba(159, 180, 217, 0.08);
+    box-shadow: 0 0 15px rgba(159, 180, 217, 0.4), inset 0 0 10px rgba(159, 180, 217, 0.1);
     border-radius: 4px;
     transition: all 0.3s ease;
 }
 
 .site-logo:hover {
-    box-shadow: 0 0 25px rgba(0, 255, 157, 0.6), inset 0 0 15px rgba(0, 255, 157, 0.2);
+    box-shadow: 0 0 25px rgba(159, 180, 217, 0.6), inset 0 0 15px rgba(159, 180, 217, 0.2);
     transform: scale(1.05);
 }
 
@@ -187,7 +187,7 @@ h1 {
 .web3-btn {
     padding: 10px 16px;
     border: 1.5px solid var(--primary);
-    background: rgba(0, 255, 157, 0.1);
+    background: rgba(159, 180, 217, 0.1);
     color: var(--primary);
     font-family: 'Share Tech Mono', monospace;
     font-weight: bold;
@@ -201,7 +201,7 @@ h1 {
 .web3-btn:hover {
     background: var(--primary);
     color: #000;
-    box-shadow: 0 0 20px rgba(0, 255, 157, 0.6);
+    box-shadow: 0 0 20px rgba(159, 180, 217, 0.6);
     transform: translateY(-2px);
 }
 
@@ -213,7 +213,7 @@ h1 {
 .metamask-btn:hover {
     background: #f6851b;
     color: #fff;
-    box-shadow: 0 0 20px rgba(246, 133, 27, 0.6);
+    box-shadow: 0 0 20px rgba(176, 145, 108, 0.6);
 }
 
 .trustwallet-btn {
@@ -224,7 +224,7 @@ h1 {
 .trustwallet-btn:hover {
     background: #3375bb;
     color: #fff;
-    box-shadow: 0 0 20px rgba(51, 117, 187, 0.6);
+    box-shadow: 0 0 20px rgba(124, 146, 179, 0.6);
 }
 
 .search-container {
@@ -248,13 +248,13 @@ h1 {
 
 #searchInput:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
+    box-shadow: 0 0 15px rgba(159, 180, 217, 0.3);
 }
 
 #searchBtn {
     padding: 12px 24px;
     border: 1px solid var(--primary);
-    background-color: rgba(0, 255, 157, 0.1);
+    background-color: rgba(159, 180, 217, 0.1);
     color: var(--primary);
     font-family: 'Orbitron', sans-serif;
     font-weight: bold;
@@ -302,7 +302,7 @@ h1 {
 .movie-card:hover {
     transform: translateY(-10px);
     border-color: var(--primary);
-    box-shadow: 0 0 25px rgba(0, 255, 157, 0.4);
+    box-shadow: 0 0 25px rgba(159, 180, 217, 0.4);
 }
 
 .movie-card:hover::before {
@@ -313,7 +313,7 @@ h1 {
     width: 100%;
     height: 330px;
     object-fit: cover;
-    border-bottom: 1px solid rgba(123, 97, 255, 0.3);
+    border-bottom: 1px solid rgba(127, 149, 191, 0.3);
 }
 
 .movie-info {

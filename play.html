@@ -14,9 +14,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Exo+2:wght@300;400;600&family=Noto+Sans+SC:wght@400;500;700&family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
     :root {
-        --primary: #14f2c6;
-        --secondary: #3ba4ff;
-        --accent: #ff5e8a;
+        --primary: #9fb4d9;
+        --secondary: #7f95bf;
+        --accent: #d9a786;
         --dark-bg: #040711;
         --card-bg: #0b1425;
         --card-strong: #0f1b31;
@@ -37,11 +37,11 @@
         overflow-x: hidden;
         background-color: var(--dark-bg);
         background-image:
-            radial-gradient(circle at 10% 5%, rgba(20, 242, 198, 0.18), transparent 34%),
-            radial-gradient(circle at 85% 10%, rgba(59, 164, 255, 0.16), transparent 36%),
-            radial-gradient(circle at 50% 100%, rgba(255, 94, 138, 0.14), transparent 42%),
-            linear-gradient(rgba(59, 164, 255, 0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(59, 164, 255, 0.04) 1px, transparent 1px);
+            radial-gradient(circle at 10% 5%, rgba(159, 180, 217, 0.18), transparent 34%),
+            radial-gradient(circle at 85% 10%, rgba(127, 149, 191, 0.16), transparent 36%),
+            radial-gradient(circle at 50% 100%, rgba(217, 167, 134, 0.14), transparent 42%),
+            linear-gradient(rgba(127, 149, 191, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(127, 149, 191, 0.04) 1px, transparent 1px);
         background-size: auto, auto, auto, 46px 46px, 46px 46px;
         background-attachment: fixed;
     }
@@ -52,7 +52,7 @@
         pointer-events: none;
         z-index: -1;
         opacity: 0.25;
-        background: conic-gradient(from 180deg at 50% 50%, rgba(20, 242, 198, 0.06), rgba(59, 164, 255, 0.04), rgba(255, 94, 138, 0.04), rgba(20, 242, 198, 0.06));
+        background: conic-gradient(from 180deg at 50% 50%, rgba(159, 180, 217, 0.06), rgba(127, 149, 191, 0.04), rgba(217, 167, 134, 0.04), rgba(159, 180, 217, 0.06));
     }
 
     .web3-header {
@@ -63,7 +63,7 @@
         backdrop-filter: blur(12px);
         padding: 38px 20px 20px;
         z-index: 1000;
-        border-bottom: 1px solid rgba(59, 164, 255, 0.4);
+        border-bottom: 1px solid rgba(127, 149, 191, 0.4);
         box-shadow: 0 16px 28px rgba(2, 9, 21, 0.56);
         font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
     }
@@ -72,7 +72,7 @@
 
     .ui-lang-select {
         background: rgba(5, 10, 21, 0.9);
-        border: 1px solid rgba(20, 242, 198, 0.55);
+        border: 1px solid rgba(159, 180, 217, 0.55);
         color: var(--primary);
         padding: 6px 11px;
         font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
@@ -82,7 +82,7 @@
         transition: all 0.25s;
     }
 
-    .ui-lang-select:hover { box-shadow: 0 0 12px rgba(20, 242, 198, 0.45); }
+    .ui-lang-select:hover { box-shadow: 0 0 12px rgba(159, 180, 217, 0.45); }
     .ui-lang-select option { background: var(--dark-bg); color: #fff; }
 
     .header-content {
@@ -100,7 +100,7 @@
         font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif;
         color: var(--primary);
         font-size: 1.45rem;
-        text-shadow: 0 0 14px rgba(20, 242, 198, 0.45);
+        text-shadow: 0 0 14px rgba(159, 180, 217, 0.45);
         font-weight: 700;
     }
 
@@ -109,17 +109,17 @@
         text-decoration: none;
         padding: 9px 14px;
         border-radius: 999px;
-        border: 1px solid rgba(59, 164, 255, 0.55);
+        border: 1px solid rgba(127, 149, 191, 0.55);
         font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
         font-size: 0.88rem;
         transition: all 0.25s ease;
-        background: rgba(59, 164, 255, 0.08);
+        background: rgba(127, 149, 191, 0.08);
     }
 
     .nav-link:hover {
         color: #00131f;
         background: var(--secondary);
-        box-shadow: 0 0 14px rgba(59, 164, 255, 0.45);
+        box-shadow: 0 0 14px rgba(127, 149, 191, 0.45);
     }
 
     .main-container { max-width: 1400px; margin: 0 auto; padding: 120px 20px 40px; }
@@ -127,7 +127,7 @@
     .movie-info-panel {
         background: rgba(11, 20, 37, 0.86);
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(59, 164, 255, 0.34);
+        border: 1px solid rgba(127, 149, 191, 0.34);
         border-radius: 18px;
         padding: 25px;
         margin-bottom: 30px;
@@ -150,7 +150,7 @@
     }
 
     .movie-poster { flex: 0 0 220px; }
-    .movie-poster img { width: 100%; border: 2px solid rgba(20, 242, 198, 0.5); box-shadow: 0 0 20px rgba(20, 242, 198, 0.25); border-radius: 10px; }
+    .movie-poster img { width: 100%; border: 2px solid rgba(159, 180, 217, 0.5); box-shadow: 0 0 20px rgba(159, 180, 217, 0.25); border-radius: 10px; }
     .movie-details { flex: 1; min-width: 300px; position: relative; }
 
     .movie-title {
@@ -158,7 +158,7 @@
         font-size: 2.1rem;
         color: var(--primary);
         margin-bottom: 15px;
-        text-shadow: 0 0 14px rgba(20, 242, 198, 0.35);
+        text-shadow: 0 0 14px rgba(159, 180, 217, 0.35);
         line-height: 1.2;
     }
 
@@ -172,7 +172,7 @@
         background: rgba(3, 9, 20, 0.45);
         padding: 14px;
         border-radius: 10px;
-        border: 1px solid rgba(59, 164, 255, 0.28);
+        border: 1px solid rgba(127, 149, 191, 0.28);
     }
 
     .meta-item { display: flex; align-items: center; gap: 8px; }
@@ -195,35 +195,35 @@
     }
 
     .ai-audio-btn {
-        background: rgba(59, 164, 255, 0.1);
-        border: 1px solid rgba(59, 164, 255, 0.6);
+        background: rgba(127, 149, 191, 0.1);
+        border: 1px solid rgba(127, 149, 191, 0.6);
         color: var(--secondary);
     }
 
     .ai-audio-btn:hover {
         background: var(--secondary);
         color: #00121d;
-        box-shadow: 0 0 14px rgba(59, 164, 255, 0.5);
+        box-shadow: 0 0 14px rgba(127, 149, 191, 0.5);
     }
 
     .ai-audio-btn.playing {
         background: var(--accent);
         color: #fff;
         border-color: var(--accent);
-        box-shadow: 0 0 14px rgba(255, 94, 138, 0.52);
+        box-shadow: 0 0 14px rgba(217, 167, 134, 0.52);
         animation: pulseAudio 1.4s infinite;
     }
 
     .share-btn {
-        background: rgba(20, 242, 198, 0.1);
-        border: 1px solid rgba(20, 242, 198, 0.62);
+        background: rgba(159, 180, 217, 0.1);
+        border: 1px solid rgba(159, 180, 217, 0.62);
         color: var(--primary);
     }
 
     .share-btn:hover {
         background: var(--primary);
         color: #001a15;
-        box-shadow: 0 0 14px rgba(20, 242, 198, 0.45);
+        box-shadow: 0 0 14px rgba(159, 180, 217, 0.45);
     }
 
     @keyframes pulseAudio { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
@@ -240,14 +240,14 @@
         margin-top: 22px;
         margin-bottom: 10px;
         letter-spacing: 1px;
-        border-bottom: 1px solid rgba(20, 242, 198, 0.22);
+        border-bottom: 1px solid rgba(159, 180, 217, 0.22);
         padding-bottom: 5px;
     }
 
     .genre-tag {
         padding: 6px 15px;
-        background: rgba(59, 164, 255, 0.1);
-        border: 1px solid rgba(59, 164, 255, 0.55);
+        background: rgba(127, 149, 191, 0.1);
+        border: 1px solid rgba(127, 149, 191, 0.55);
         font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
         font-size: 0.88rem;
         color: #f5fbff;
@@ -260,7 +260,7 @@
     .genre-tag:hover {
         background: var(--secondary);
         color: #00121d;
-        box-shadow: 0 0 13px rgba(59, 164, 255, 0.46);
+        box-shadow: 0 0 13px rgba(127, 149, 191, 0.46);
         transform: translateY(-2px);
     }
 
@@ -270,8 +270,8 @@
 
     .cast-card {
         flex: 0 0 130px;
-        background: rgba(59, 164, 255, 0.08);
-        border: 1px solid rgba(59, 164, 255, 0.28);
+        background: rgba(127, 149, 191, 0.08);
+        border: 1px solid rgba(127, 149, 191, 0.28);
         border-radius: 10px;
         text-decoration: none;
         color: white;
@@ -285,21 +285,21 @@
 
     .cast-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 0 16px rgba(59, 164, 255, 0.4);
-        background: rgba(59, 164, 255, 0.14);
+        box-shadow: 0 0 16px rgba(127, 149, 191, 0.4);
+        background: rgba(127, 149, 191, 0.14);
         border-color: var(--secondary);
     }
 
-    .cast-photo { width: 85px; height: 85px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(59, 164, 255, 0.65); margin-bottom: 12px; box-shadow: 0 0 10px rgba(59, 164, 255, 0.35); }
+    .cast-photo { width: 85px; height: 85px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(127, 149, 191, 0.65); margin-bottom: 12px; box-shadow: 0 0 10px rgba(127, 149, 191, 0.35); }
     .cast-name { font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.86rem; text-align: center; color: var(--secondary); line-height: 1.2; margin-bottom: 5px; font-weight: bold; }
     .cast-character { font-size: 0.74rem; text-align: center; color: #a0b2cb; line-height: 1.2; font-style: italic; }
 
     .player-container {
         background: var(--player-bg);
-        border: 1px solid rgba(20, 242, 198, 0.55);
+        border: 1px solid rgba(159, 180, 217, 0.55);
         border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 0 30px rgba(20, 242, 198, 0.2);
+        box-shadow: 0 0 30px rgba(159, 180, 217, 0.2);
         margin-bottom: 20px;
         position: relative;
     }
@@ -318,8 +318,8 @@
     #stream-frame { width: 100%; height: 650px; border: none; display: block; background: #000; }
 
     .cc-notice {
-        background: rgba(59, 164, 255, 0.1);
-        border: 1px solid rgba(59, 164, 255, 0.4);
+        background: rgba(127, 149, 191, 0.1);
+        border: 1px solid rgba(127, 149, 191, 0.4);
         color: #b8daff;
         padding: 14px;
         border-radius: 10px;
@@ -333,15 +333,15 @@
 
     .status-badges { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 20px; }
     .status-badge { padding: 11px 16px; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px; }
-    .badge-primary { background: rgba(20, 242, 198, 0.1); border: 1px solid rgba(20, 242, 198, 0.55); color: var(--primary); border-radius: 999px; }
+    .badge-primary { background: rgba(159, 180, 217, 0.1); border: 1px solid rgba(159, 180, 217, 0.55); color: var(--primary); border-radius: 999px; }
     .badge-success { background: rgba(27, 217, 143, 0.1); border: 1px solid rgba(27, 217, 143, 0.55); color: var(--ok); border-radius: 999px; }
 
     .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 6, 12, 0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s; }
-    .loading-text { font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; font-size: 1.5rem; color: var(--primary); text-shadow: 0 0 16px rgba(20, 242, 198, 0.5); margin-bottom: 18px; }
+    .loading-text { font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; font-size: 1.5rem; color: var(--primary); text-shadow: 0 0 16px rgba(159, 180, 217, 0.5); margin-bottom: 18px; }
 
     .control-panel {
         background: rgba(11, 20, 37, 0.86);
-        border: 1px solid rgba(59, 164, 255, 0.35);
+        border: 1px solid rgba(127, 149, 191, 0.35);
         border-radius: 16px;
         padding: 24px;
         margin-top: 30px;
@@ -350,46 +350,46 @@
 
     .control-title { font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; font-size: 1.35rem; color: var(--primary); margin-bottom: 18px; text-align: center; }
     .control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .control-item { background: rgba(6, 13, 26, 0.75); padding: 17px; border: 1px solid rgba(59, 164, 255, 0.3); border-radius: 10px; }
+    .control-item { background: rgba(6, 13, 26, 0.75); padding: 17px; border: 1px solid rgba(127, 149, 191, 0.3); border-radius: 10px; }
     .control-label { color: var(--warn); font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.85rem; margin-bottom: 8px; }
     .control-value { color: white; font-size: 1.05rem; font-family: 'Orbitron', sans-serif; }
     .quality-selector { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
 
     .quality-btn {
         padding: 9px 16px;
-        background: rgba(59, 164, 255, 0.1);
-        border: 1px solid rgba(59, 164, 255, 0.5);
+        background: rgba(127, 149, 191, 0.1);
+        border: 1px solid rgba(127, 149, 191, 0.5);
         color: #d9ecff;
         font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace;
         cursor: pointer;
         border-radius: 999px;
     }
 
-    .quality-btn.active { background: var(--primary); color: #001811; border-color: var(--primary); box-shadow: 0 0 12px rgba(20, 242, 198, 0.45); }
+    .quality-btn.active { background: var(--primary); color: #001811; border-color: var(--primary); box-shadow: 0 0 12px rgba(159, 180, 217, 0.45); }
 
     .share-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 7, 14, 0.88); backdrop-filter: blur(5px); z-index: 10000; justify-content: center; align-items: center; }
     .share-modal.active { display: flex; animation: fadeIn 0.3s ease; }
 
     .share-modal-content {
         background: var(--card-strong);
-        border: 1px solid rgba(59, 164, 255, 0.5);
+        border: 1px solid rgba(127, 149, 191, 0.5);
         padding: 26px;
         border-radius: 14px;
         max-width: 400px;
         width: 90%;
         text-align: center;
-        box-shadow: 0 0 24px rgba(59, 164, 255, 0.24);
+        box-shadow: 0 0 24px rgba(127, 149, 191, 0.24);
         position: relative;
     }
 
     .share-close { position: absolute; top: 10px; right: 15px; color: white; font-size: 1.8rem; cursor: pointer; transition: color 0.3s; }
     .share-close:hover { color: var(--accent); }
-    .share-poster-img { width: 100%; max-width: 180px; border-radius: 8px; border: 1px solid rgba(20, 242, 198, 0.45); margin-bottom: 15px; box-shadow: 0 0 12px rgba(20, 242, 198, 0.2); }
+    .share-poster-img { width: 100%; max-width: 180px; border-radius: 8px; border: 1px solid rgba(159, 180, 217, 0.45); margin-bottom: 15px; box-shadow: 0 0 12px rgba(159, 180, 217, 0.2); }
     .share-title { font-family: 'Orbitron', 'Noto Sans SC', 'Battambang', sans-serif; color: var(--secondary); margin-bottom: 15px; font-size: 1.1rem; }
     .copy-container { display: flex; gap: 10px; margin-top: 15px; }
-    .copy-input { flex: 1; padding: 10px; background: rgba(4, 9, 20, 0.8); border: 1px solid rgba(59, 164, 255, 0.5); color: var(--secondary); font-family: 'Share Tech Mono', monospace; border-radius: 8px; outline: none; }
+    .copy-input { flex: 1; padding: 10px; background: rgba(4, 9, 20, 0.8); border: 1px solid rgba(127, 149, 191, 0.5); color: var(--secondary); font-family: 'Share Tech Mono', monospace; border-radius: 8px; outline: none; }
     .copy-btn { padding: 10px 14px; background: var(--secondary); color: #00111b; border: none; font-family: 'Share Tech Mono', 'Noto Sans SC', 'Battambang', monospace; font-weight: bold; cursor: pointer; border-radius: 8px; transition: all 0.25s; }
-    .copy-btn:hover { box-shadow: 0 0 13px rgba(59, 164, 255, 0.45); background: #8ec8ff; }
+    .copy-btn:hover { box-shadow: 0 0 13px rgba(127, 149, 191, 0.45); background: #8ec8ff; }
 
     @keyframes fadeIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
 
