@@ -205,5 +205,8 @@ class Web3Auth {
     }
 }
 
-// Create global instance
-const web3Auth = new Web3Auth();
+// Expose class + singleton for pages that initialize in different script orders.
+window.Web3Auth = Web3Auth;
+if (!window.web3Auth) {
+    window.web3Auth = new Web3Auth();
+}

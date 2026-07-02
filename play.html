@@ -622,7 +622,17 @@
     </div>
 
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="web3-auth.js"></script>
     <script>
+        function getAuth() {
+            if (window.web3Auth) return window.web3Auth;
+            if (typeof window.Web3Auth === 'function') {
+                window.web3Auth = new window.Web3Auth();
+                return window.web3Auth;
+            }
+            return null;
+        }
+
         // --- Web3 Wallet Login for Player Page ---
         window.addEventListener('DOMContentLoaded', () => {
             // Show Web3 buttons
@@ -648,7 +658,8 @@
             }
             const outBtn = document.getElementById('signOutBtn');
             if (outBtn) outBtn.addEventListener('click', () => { 
-                web3Auth.disconnect();
+                const auth = getAuth();
+                if (auth) auth.disconnect();
                 localStorage.removeItem('g_user'); 
                 location.reload(); 
             });
@@ -656,7 +667,12 @@
 
         // Web3 button handlers
         document.getElementById('metamaskBtn')?.addEventListener('click', async () => {
-            const result = await web3Auth.connectMetaMask();
+            const auth = getAuth();
+            if (!auth) {
+                alert('Web3 module not loaded. Please refresh the page.');
+                return;
+            }
+            const result = await auth.connectMetaMask();
             if (result) {
                 localStorage.setItem('g_user', JSON.stringify({
                     type: 'web3',
@@ -679,7 +695,12 @@
         });
 
         document.getElementById('trustwalletBtn')?.addEventListener('click', async () => {
-            const result = await web3Auth.connectTrustWallet();
+            const auth = getAuth();
+            if (!auth) {
+                alert('Web3 module not loaded. Please refresh the page.');
+                return;
+            }
+            const result = await auth.connectTrustWallet();
             if (result) {
                 localStorage.setItem('g_user', JSON.stringify({
                     type: 'web3',
@@ -1124,6 +1145,7 @@
 
             return data.map((coin) => ({
                 id: coin.id,
+                chart_source: 'coingecko',
                 name: coin.name || coin.symbol || coin.id,
                 symbol: (coin.symbol || '').toUpperCase(),
                 image: coin.image || '',
@@ -1143,6 +1165,7 @@
 
             return list.map((coin) => ({
                 id: coin.id,
+                chart_source: 'coinpaprika',
                 name: coin.name || coin.symbol || coin.id,
                 symbol: (coin.symbol || '').toUpperCase(),
                 image: coin?.logo || '',
@@ -1214,15 +1237,15 @@
             const slowPrev = calcSmaAt(candles, 21, 1);
 
             if (fastNow === null || fastPrev === null || slowNow === null || slowPrev === null) {
-                return { trend: 'NEUTRAL', period: 14, color: '#f59e0b' };
+                return { trend: 'NEUTRAL', action: 'HOLD', period: 14, color: '#f59e0b' };
             }
 
             const isBull = fastNow > slowNow && fastNow >= fastPrev;
             const isBear = fastNow < slowNow && fastNow <= slowPrev;
 
-            if (isBull) return { trend: 'BULL', period: 9, color: '#16c784' };
-            if (isBear) return { trend: 'BEAR', period: 21, color: '#ea3943' };
-            return { trend: 'NEUTRAL', period: 14, color: '#f59e0b' };
+            if (isBull) return { trend: 'BULL', action: 'BUY', period: 9, color: '#16c784' };
+            if (isBear) return { trend: 'BEAR', action: 'SELL', period: 21, color: '#ea3943' };
+            return { trend: 'NEUTRAL', action: 'HOLD', period: 14, color: '#f59e0b' };
         }
 
         function closeCoinChartModal() {
@@ -1234,38 +1257,121 @@
             activeChartCoin = null;
         }
 
-        async function renderCoinChart(coinId, symbol) {
+        function normalizeCandles(rows) {
+            return rows
+                .map((row) => ({
+                    time: Number(row.time) || 0,
+                    open: Number(row.open) || 0,
+                    high: Number(row.high) || 0,
+                    low: Number(row.low) || 0,
+                    close: Number(row.close) || 0
+                }))
+                .filter((row) => row.time > 0)
+                .sort((a, b) => a.time - b.time);
+        }
+
+        function buildFlatCandles(price, points = 24) {
+            const safePrice = Number(price) || 0;
+            if (safePrice <= 0) return [];
+
+            const nowSec = Math.floor(Date.now() / 1000);
+            const oneHour = 60 * 60;
+            const out = [];
+            for (let i = points - 1; i >= 0; i -= 1) {
+                const t = nowSec - (i * oneHour);
+                out.push({
+                    time: t,
+                    open: safePrice,
+                    high: safePrice,
+                    low: safePrice,
+                    close: safePrice
+                });
+            }
+            return out;
+        }
+
+        async function fetchCoinGeckoCandles(coinId) {
+            const ohlcRes = await fetch(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(coinId)}/ohlc?vs_currency=usd&days=1`);
+            let candles = [];
+
+            if (ohlcRes.ok) {
+                const ohlcData = await ohlcRes.json();
+                candles = Array.isArray(ohlcData)
+                    ? ohlcData.map((row) => ({
+                        time: Math.floor((row[0] || 0) / 1000),
+                        open: Number(row[1]) || 0,
+                        high: Number(row[2]) || 0,
+                        low: Number(row[3]) || 0,
+                        close: Number(row[4]) || 0
+                    }))
+                    : [];
+            }
+
+            if (candles.length) return normalizeCandles(candles);
+
+            const fallbackRes = await fetch(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(coinId)}/market_chart?vs_currency=usd&days=1&interval=hourly`);
+            if (!fallbackRes.ok) throw new Error('coingecko chart fetch failed');
+            const fallbackData = await fallbackRes.json();
+            const prices = fallbackData?.prices || [];
+            candles = prices.map(([ts, price]) => ({
+                time: Math.floor((ts || 0) / 1000),
+                open: Number(price) || 0,
+                high: Number(price) || 0,
+                low: Number(price) || 0,
+                close: Number(price) || 0
+            }));
+
+            return normalizeCandles(candles);
+        }
+
+        async function fetchCoinPaprikaCandles(coinId) {
+            const end = new Date();
+            const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+            const qs = `start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`;
+            const paprikaRes = await fetch(`https://api.coinpaprika.com/v1/coins/${encodeURIComponent(coinId)}/ohlcv/historical?${qs}`);
+            if (!paprikaRes.ok) throw new Error('coinpaprika chart fetch failed');
+            const paprikaData = await paprikaRes.json();
+            const candles = Array.isArray(paprikaData)
+                ? paprikaData.map((row) => ({
+                    time: Math.floor(new Date(row.time_open || row.time_close || 0).getTime() / 1000),
+                    open: Number(row.open) || 0,
+                    high: Number(row.high) || 0,
+                    low: Number(row.low) || 0,
+                    close: Number(row.close) || 0
+                }))
+                : [];
+
+            return normalizeCandles(candles);
+        }
+
+        async function renderCoinChart(coinId, symbol, source = 'coingecko', fallbackPrice = null) {
             if (!coinChartCanvas) return;
             const t = getT();
             try {
-                const ohlcRes = await fetch(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(coinId)}/ohlc?vs_currency=usd&days=1`);
                 let candles = [];
+                let providerUsed = source;
 
-                if (ohlcRes.ok) {
-                    const ohlcData = await ohlcRes.json();
-                    candles = Array.isArray(ohlcData)
-                        ? ohlcData.map((row) => ({
-                            time: Math.floor((row[0] || 0) / 1000),
-                            open: Number(row[1]) || 0,
-                            high: Number(row[2]) || 0,
-                            low: Number(row[3]) || 0,
-                            close: Number(row[4]) || 0
-                        })).filter((row) => row.time > 0)
-                        : [];
+                if (source === 'coinpaprika') {
+                    try {
+                        candles = await fetchCoinPaprikaCandles(coinId);
+                    } catch (err) {
+                        // Keep provider label stable for this coin id source.
+                        candles = [];
+                    }
+                } else {
+                    try {
+                        candles = await fetchCoinGeckoCandles(coinId);
+                    } catch (err) {
+                        candles = [];
+                    }
                 }
 
                 if (!candles.length) {
-                    const fallbackRes = await fetch(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(coinId)}/market_chart?vs_currency=usd&days=1&interval=hourly`);
-                    if (!fallbackRes.ok) throw new Error('chart fetch failed');
-                    const fallbackData = await fallbackRes.json();
-                    const prices = fallbackData?.prices || [];
-                    candles = prices.map(([ts, price]) => ({
-                        time: Math.floor((ts || 0) / 1000),
-                        open: Number(price) || 0,
-                        high: Number(price) || 0,
-                        low: Number(price) || 0,
-                        close: Number(price) || 0
-                    })).filter((row) => row.time > 0);
+                    const lastPrice = Number.isFinite(Number(fallbackPrice)) && Number(fallbackPrice) > 0
+                        ? Number(fallbackPrice)
+                        : previousMarketSnapshot.get(coinId);
+                    candles = buildFlatCandles(lastPrice, 24);
+                    providerUsed = `${source} fallback`;
                 }
 
                 if (!candles.length) throw new Error('no chart points');
@@ -1336,7 +1442,7 @@
                     coinMaSeries.setData(maData);
                 }
                 if (coinChartTitle) {
-                    coinChartTitle.innerText = `${symbol.toUpperCase()} • ${t.chartTitle} • AI BOT ${aiSignal.trend} MA(${aiSignal.period})`;
+                    coinChartTitle.innerText = `${symbol.toUpperCase()} • ${t.chartTitle} • AI BOT ${aiSignal.trend} (${aiSignal.action}) MA(${aiSignal.period}) • ${providerUsed}`;
                 }
                 coinChartInstance.timeScale().fitContent();
             } catch (err) {
@@ -1344,17 +1450,24 @@
             }
         }
 
-        async function openCoinChart(coinId, symbol) {
+        async function openCoinChart(coinId, symbol, source = 'coingecko', fallbackPrice = null) {
             if (!coinChartModal || !coinChartTitle) return;
             const t = getT();
-            activeChartCoin = { coinId, symbol };
+            activeChartCoin = { coinId, symbol, source, fallbackPrice };
             coinChartTitle.innerText = `${symbol.toUpperCase()} • ${t.chartLoading}`;
             coinChartModal.classList.add('active');
-            await renderCoinChart(coinId, symbol);
+            await renderCoinChart(coinId, symbol, source, fallbackPrice);
 
             if (coinChartRefreshTimer) clearInterval(coinChartRefreshTimer);
             coinChartRefreshTimer = setInterval(() => {
-                if (activeChartCoin) renderCoinChart(activeChartCoin.coinId, activeChartCoin.symbol);
+                if (activeChartCoin) {
+                    renderCoinChart(
+                        activeChartCoin.coinId,
+                        activeChartCoin.symbol,
+                        activeChartCoin.source,
+                        activeChartCoin.fallbackPrice
+                    );
+                }
             }, 60000);
         }
 
@@ -1385,7 +1498,7 @@
                     const chColor = ch === null ? 'var(--muted)' : (ch >= 0 ? 'var(--cg-green)' : 'var(--cg-red)');
                     const motionClass = resolvePriceMotionClass(coin.id, coin.current_price || 0);
                     return `
-                        <tr data-coin-id="${coin.id}" data-coin-symbol="${coin.symbol}" style="cursor:pointer;">
+                        <tr data-coin-id="${coin.id}" data-coin-symbol="${coin.symbol}" data-coin-source="${coin.chart_source || 'coingecko'}" data-coin-price="${coin.current_price || 0}" style="cursor:pointer;">
                             <td style="padding:10px;border-bottom:1px solid rgba(77,124,255,0.12);">${renderCoinCell(coin)}</td>
                             <td class="${motionClass}" style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);font-weight:600;">${formatUsd(coin.current_price || 0)}</td>
                             <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);color:${chColor};font-weight:600;">${chText}</td>
@@ -1405,7 +1518,9 @@
                         if (!row) return;
                         const coinId = row.getAttribute('data-coin-id');
                         const symbol = row.getAttribute('data-coin-symbol') || 'coin';
-                        openCoinChart(coinId, symbol);
+                        const source = row.getAttribute('data-coin-source') || 'coingecko';
+                        const price = Number(row.getAttribute('data-coin-price') || 0);
+                        openCoinChart(coinId, symbol, source, price);
                     });
                     marketBody.dataset.bound = '1';
                 }

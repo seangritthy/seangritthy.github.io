@@ -647,6 +647,7 @@
         </div>
     </div>
 
+    <script src="web3-auth.js"></script>
     <script>
         // --- MENU TOGGLE LOGIC ---
         const menuToggleBtn = document.getElementById('menuToggleBtn');
@@ -1003,6 +1004,15 @@
         const walletBalance = document.getElementById('walletBalance');
         const walletChain = document.getElementById('walletChain');
 
+        function getAuth() {
+            if (window.web3Auth) return window.web3Auth;
+            if (typeof window.Web3Auth === 'function') {
+                window.web3Auth = new window.Web3Auth();
+                return window.web3Auth;
+            }
+            return null;
+        }
+
         function openWalletModal() {
             if (!walletModal || !walletModalOverlay) return;
             walletModal.style.display = 'flex';
@@ -1016,10 +1026,11 @@
         }
 
         function showProfileModal() {
-            if (!profileModal || !window.web3Auth || !web3Auth.isConnected()) return;
-            const data = web3Auth.getWalletData();
+            const auth = getAuth();
+            if (!profileModal || !auth || !auth.isConnected()) return;
+            const data = auth.getWalletData();
             if (profileName) profileName.innerText = `Wallet Profile (${data.shortAddress})`;
-            if (profileEmail) profileEmail.innerText = `Connected with ${web3Auth.provider || 'Web3 Wallet'}`;
+            if (profileEmail) profileEmail.innerText = `Connected with ${auth.provider || 'Web3 Wallet'}`;
             if (walletAddress) walletAddress.innerText = `Address: ${data.address || 'N/A'}`;
             if (walletBalance) walletBalance.innerText = `Balance: ${data.balance || '0.0000'} ETH`;
             if (walletChain) walletChain.innerText = `Network: ${data.chainName || 'Unknown'}`;
@@ -1043,11 +1054,12 @@
         }
 
         async function connectMetaMaskWallet() {
-            if (!window.web3Auth) {
+            const auth = getAuth();
+            if (!auth) {
                 alert('Web3 module not loaded. Please refresh the page.');
                 return;
             }
-            const walletData = await web3Auth.connectMetaMask();
+            const walletData = await auth.connectMetaMask();
             if (walletData) {
                 updateWalletUI(walletData);
                 closeWalletModal();
@@ -1055,11 +1067,12 @@
         }
 
         async function connectTrustWalletProvider() {
-            if (!window.web3Auth) {
+            const auth = getAuth();
+            if (!auth) {
                 alert('Web3 module not loaded. Please refresh the page.');
                 return;
             }
-            const walletData = await web3Auth.connectTrustWallet();
+            const walletData = await auth.connectTrustWallet();
             if (walletData) {
                 updateWalletUI(walletData);
                 closeWalletModal();
@@ -1067,7 +1080,8 @@
         }
 
         function signOutWallet() {
-            if (window.web3Auth) web3Auth.disconnect();
+            const auth = getAuth();
+            if (auth) auth.disconnect();
             if (walletInfo) {
                 walletInfo.style.display = 'none';
                 walletInfo.innerText = '';
@@ -1080,7 +1094,8 @@
         if (menuLoginBtn) {
             menuLoginBtn.addEventListener('click', async () => {
                 // MetaMask-first UX: connect directly when available, else show options
-                if (window.web3Auth && web3Auth.isMetaMaskAvailable()) {
+                const auth = getAuth();
+                if (auth && auth.isMetaMaskAvailable()) {
                     await connectMetaMaskWallet();
                 } else {
                     openWalletModal();
@@ -1096,24 +1111,26 @@
         document.getElementById('profileClose')?.addEventListener('click', hideProfileModal);
         document.getElementById('profileSignOut')?.addEventListener('click', signOutWallet);
         document.getElementById('walletRefresh')?.addEventListener('click', async () => {
-            if (!window.web3Auth || !web3Auth.isConnected()) return;
-            await web3Auth.refreshBalance();
+            const auth = getAuth();
+            if (!auth || !auth.isConnected()) return;
+            await auth.refreshBalance();
             showProfileModal();
         });
 
         // Keep UI synced with wallet events
         window.addEventListener('walletAccountChanged', () => {
-            if (!window.web3Auth || !web3Auth.isConnected()) return signOutWallet();
-            updateWalletUI(web3Auth.getWalletData());
+            const auth = getAuth();
+            if (!auth || !auth.isConnected()) return signOutWallet();
+            updateWalletUI(auth.getWalletData());
         });
         window.addEventListener('walletChainChanged', () => {
-            if (!window.web3Auth || !web3Auth.isConnected()) return;
-            updateWalletUI(web3Auth.getWalletData());
+            const auth = getAuth();
+            if (!auth || !auth.isConnected()) return;
+            updateWalletUI(auth.getWalletData());
         });
 
         updateUI();
         fetchDashboardData();
     </script>
-    <script src="web3-auth.js"></script>
 </body>
 </html>
