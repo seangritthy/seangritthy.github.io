@@ -391,6 +391,71 @@
         background: rgba(22, 199, 132, 0.08);
     }
 
+    .coin-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .coin-avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid rgba(22, 199, 132, 0.35);
+        background: #ffffff;
+    }
+
+    .coin-name-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    .coin-name-line {
+        font-weight: 600;
+        color: #0f172a;
+        font-size: 0.88rem;
+    }
+
+    .coin-symbol-line {
+        color: var(--muted);
+        font-size: 0.76rem;
+        letter-spacing: 0.2px;
+    }
+
+    .rank-badge {
+        min-width: 34px;
+        text-align: center;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(22, 199, 132, 0.12);
+        color: var(--cg-green-strong);
+        border: 1px solid rgba(22, 199, 132, 0.3);
+        font-size: 0.72rem;
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
+    }
+
+    .market-price-up {
+        animation: flashUp 0.8s ease;
+        color: var(--cg-green-strong);
+    }
+
+    .market-price-down {
+        animation: flashDown 0.8s ease;
+        color: var(--cg-red);
+    }
+
+    @keyframes flashUp {
+        0% { background: rgba(22, 199, 132, 0.3); }
+        100% { background: transparent; }
+    }
+
+    @keyframes flashDown {
+        0% { background: rgba(234, 57, 67, 0.24); }
+        100% { background: transparent; }
+    }
+
     .quality-btn {
         padding: 9px 16px;
         background: rgba(77, 124, 255, 0.08);
@@ -521,12 +586,13 @@
                         <tr>
                             <th id="lblMarketCoin" style="text-align:left;padding:10px;border-bottom:1px solid rgba(77, 124, 255, 0.2);">COIN</th>
                             <th id="lblMarketPrice" style="text-align:right;padding:10px;border-bottom:1px solid rgba(77, 124, 255, 0.2);">PRICE</th>
-                            <th id="lblMarketCap" style="text-align:right;padding:10px;border-bottom:1px solid rgba(77, 124, 255, 0.2);">MARKET CAP</th>
                             <th id="lblMarketChange" style="text-align:right;padding:10px;border-bottom:1px solid rgba(77, 124, 255, 0.2);">24H</th>
+                            <th id="lblMarketCap" style="text-align:right;padding:10px;border-bottom:1px solid rgba(77, 124, 255, 0.2);">MARKET CAP</th>
+                            <th id="lblMarketVolume" style="text-align:right;padding:10px;border-bottom:1px solid rgba(77, 124, 255, 0.2);">VOLUME</th>
                         </tr>
                     </thead>
                     <tbody id="marketTableBody">
-                        <tr><td colspan="4" style="padding:12px;text-align:center;color:var(--muted);">Loading...</td></tr>
+                        <tr><td colspan="5" style="padding:12px;text-align:center;color:var(--muted);">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -652,6 +718,7 @@
                 marketPrice: "PRICE",
                 marketCap: "MARKET CAP",
                 marketChange: "24H",
+                marketVolume: "VOLUME",
                 marketLoading: "Loading market data...",
                 marketError: "Market data unavailable",
                 chartTitle: "LIVE CHART",
@@ -684,6 +751,7 @@
                 marketPrice: "តម្លៃ",
                 marketCap: "មូលធនទីផ្សារ",
                 marketChange: "២៤ ម៉ោង",
+                marketVolume: "បរិមាណ",
                 marketLoading: "កំពុងទាញទិន្នន័យទីផ្សារ...",
                 marketError: "មិនអាចទាញទិន្នន័យទីផ្សារ",
                 chartTitle: "ក្រាហ្វផ្ទាល់",
@@ -716,6 +784,7 @@
                 marketPrice: "价格",
                 marketCap: "市值",
                 marketChange: "24小时",
+                marketVolume: "成交量",
                 marketLoading: "正在加载市场数据...",
                 marketError: "市场数据不可用",
                 chartTitle: "实时图表",
@@ -768,6 +837,7 @@
         let coinChartInstance = null;
         let activeChartCoin = null;
         let coinChartRefreshTimer = null;
+        const previousMarketSnapshot = new Map();
 
         function getT() {
             return translations[localStorage.getItem('uiLang') || 'en'];
@@ -790,6 +860,7 @@
             document.getElementById('lblMarketPrice').innerText = t.marketPrice;
             document.getElementById('lblMarketCap').innerText = t.marketCap;
             document.getElementById('lblMarketChange').innerText = t.marketChange;
+            document.getElementById('lblMarketVolume').innerText = t.marketVolume;
             const ms = document.getElementById('marketSummary');
             if (ms && (!ms.dataset.ready || ms.dataset.ready === '0')) ms.innerText = t.marketLoading;
             if (coinChartTitle && (!activeChartCoin || !activeChartCoin.symbol)) {
@@ -1045,11 +1116,15 @@
 
             return data.map((coin) => ({
                 id: coin.id,
+                name: coin.name || coin.symbol || coin.id,
                 symbol: (coin.symbol || '').toUpperCase(),
+                image: coin.image || '',
+                market_cap_rank: Number(coin.market_cap_rank) || 0,
                 current_price: Number(coin.current_price) || 0,
                 market_cap: Number(coin.market_cap) || 0,
-                market_cap_change_percentage_24h: typeof coin.market_cap_change_percentage_24h === 'number'
-                    ? coin.market_cap_change_percentage_24h
+                total_volume: Number(coin.total_volume) || 0,
+                price_change_percentage_24h: typeof coin.price_change_percentage_24h === 'number'
+                    ? coin.price_change_percentage_24h
                     : null
             }));
         }
@@ -1061,13 +1136,43 @@
 
             return list.map((coin) => ({
                 id: coin.id,
+                name: coin.name || coin.symbol || coin.id,
                 symbol: (coin.symbol || '').toUpperCase(),
+                image: `https://assets.coincap.io/assets/icons/${String(coin.symbol || '').toLowerCase()}@2x.png`,
+                market_cap_rank: Number(coin.rank) || 0,
                 current_price: Number(coin.priceUsd) || 0,
                 market_cap: Number(coin.marketCapUsd) || 0,
-                market_cap_change_percentage_24h: Number.isFinite(Number(coin.changePercent24Hr))
+                total_volume: Number(coin.volumeUsd24Hr) || 0,
+                price_change_percentage_24h: Number.isFinite(Number(coin.changePercent24Hr))
                     ? Number(coin.changePercent24Hr)
                     : null
             }));
+        }
+
+        function resolvePriceMotionClass(coinId, currentPrice) {
+            const prev = previousMarketSnapshot.get(coinId);
+            if (typeof prev !== 'number') return '';
+            if (currentPrice > prev) return 'market-price-up';
+            if (currentPrice < prev) return 'market-price-down';
+            return '';
+        }
+
+        function renderCoinCell(coin) {
+            const rank = coin.market_cap_rank > 0 ? `#${coin.market_cap_rank}` : '#--';
+            const symbol = (coin.symbol || '---').toUpperCase();
+            const name = coin.name || symbol;
+            const fallbackAvatar = `https://dummyimage.com/44x44/eaf9f1/16c784.png&text=${encodeURIComponent(symbol.slice(0, 1))}`;
+            const image = coin.image || fallbackAvatar;
+            return `
+                <div class="coin-cell">
+                    <span class="rank-badge">${rank}</span>
+                    <img class="coin-avatar" src="${image}" alt="${symbol}" onerror="this.src='${fallbackAvatar}'">
+                    <div class="coin-name-wrap">
+                        <span class="coin-name-line">${name}</span>
+                        <span class="coin-symbol-line">${symbol}</span>
+                    </div>
+                </div>
+            `;
         }
 
         function closeCoinChartModal() {
@@ -1173,22 +1278,28 @@
 
                 const totalMcap = data.reduce((sum, coin) => sum + (coin.market_cap || 0), 0);
                 const leaders = data.slice(0, 3).map(c => c.symbol.toUpperCase()).join(', ');
-                marketSummary.innerText = `Top caps: ${leaders} | Total: ${formatCompactUsd(totalMcap)} | ${sourceLabel}`;
+                marketSummary.innerText = `Top caps: ${leaders} | Total: ${formatCompactUsd(totalMcap)} | ${sourceLabel} | ${new Date().toLocaleTimeString()}`;
                 marketSummary.dataset.ready = '1';
 
                 marketBody.innerHTML = data.map(coin => {
-                    const ch = typeof coin.market_cap_change_percentage_24h === 'number' ? coin.market_cap_change_percentage_24h : null;
+                    const ch = typeof coin.price_change_percentage_24h === 'number' ? coin.price_change_percentage_24h : null;
                     const chText = ch === null ? '--' : `${ch >= 0 ? '+' : ''}${ch.toFixed(2)}%`;
                     const chColor = ch === null ? 'var(--muted)' : (ch >= 0 ? 'var(--cg-green)' : 'var(--cg-red)');
+                    const motionClass = resolvePriceMotionClass(coin.id, coin.current_price || 0);
                     return `
                         <tr data-coin-id="${coin.id}" data-coin-symbol="${coin.symbol}" style="cursor:pointer;">
-                            <td style="padding:10px;border-bottom:1px solid rgba(77,124,255,0.12);font-weight:600;">${coin.symbol.toUpperCase()}</td>
-                            <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);">${formatUsd(coin.current_price || 0)}</td>
-                            <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);">${formatCompactUsd(coin.market_cap || 0)}</td>
+                            <td style="padding:10px;border-bottom:1px solid rgba(77,124,255,0.12);">${renderCoinCell(coin)}</td>
+                            <td class="${motionClass}" style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);font-weight:600;">${formatUsd(coin.current_price || 0)}</td>
                             <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);color:${chColor};font-weight:600;">${chText}</td>
+                            <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);">${formatCompactUsd(coin.market_cap || 0)}</td>
+                            <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);">${formatCompactUsd(coin.total_volume || 0)}</td>
                         </tr>
                     `;
                 }).join('');
+
+                for (const coin of data) {
+                    previousMarketSnapshot.set(coin.id, coin.current_price || 0);
+                }
 
                 if (!marketBody.dataset.bound) {
                     marketBody.addEventListener('click', (e) => {
@@ -1203,7 +1314,7 @@
             } catch (err) {
                 marketSummary.innerText = t.marketError;
                 marketSummary.dataset.ready = '0';
-                marketBody.innerHTML = `<tr><td colspan="4" style="padding:12px;text-align:center;color:var(--muted);">${t.marketError}</td></tr>`;
+                marketBody.innerHTML = `<tr><td colspan="5" style="padding:12px;text-align:center;color:var(--muted);">${t.marketError}</td></tr>`;
             }
         }
 
