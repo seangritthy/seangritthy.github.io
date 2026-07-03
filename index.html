@@ -7,7 +7,6 @@
     <link rel="icon" type="image/svg+xml" href="logo.svg">
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&family=Sora:wght@500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* ===== YOUR EXISTING STYLES (unchanged) ===== */
         :root {
             --primary: #6f5cff;
             --secondary: #4d7cff;
@@ -606,7 +605,6 @@
         </div>
     </main>
 
-    <!-- WALLET MODAL (MetaMask only) -->
     <div class="wallet-modal" id="walletModal" style="display:none;">
         <div class="wallet-modal-content">
             <div class="wallet-modal-header">
@@ -615,19 +613,21 @@
             </div>
             <div class="wallet-modal-body">
                 <p style="color:var(--secondary);margin-bottom:20px;text-align:center;font-family:'JetBrains Mono',monospace;">Select a wallet to connect</p>
-                <!-- MetaMask only -->
                 <button class="wallet-option" id="connectMetaMask">
                     <div class="wallet-icon">🦊</div>
                     <div class="wallet-name">MetaMask</div>
                     <div class="wallet-desc">Connect to your MetaMask wallet</div>
                 </button>
-                <!-- Trust Wallet button removed -->
+                <button class="wallet-option" id="connectTrustWallet">
+                    <div class="wallet-icon">💎</div>
+                    <div class="wallet-name">Trust Wallet</div>
+                    <div class="wallet-desc">Connect to your Trust Wallet</div>
+                </button>
             </div>
         </div>
     </div>
     <div class="wallet-modal-overlay" id="walletModalOverlay" style="display:none;"></div>
 
-    <!-- PROFILE MODAL (unchanged) -->
     <div id="profileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:2100;align-items:center;justify-content:center;padding:20px;">
         <div style="max-width:420px;width:100%;background:var(--card-bg);border:1px solid var(--secondary);border-radius:10px;padding:18px;box-shadow:0 0 24px rgba(0,0,0,0.45);">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -675,178 +675,1020 @@
     </div>
     <input id="walletScanInput" type="file" accept="image/*" capture="environment" style="display:none;" />
 
-    <!-- Load web3-auth.js (MetaMask only) -->
     <script src="web3-auth.js"></script>
-
     <script>
-        // ===== MENU, TRANSLATIONS, TMDB FETCHING (unchanged) =====
-        // ... (keep all your existing menu, search, filter, pagination, TMDB logic)
-        // I'll include it below for completeness, but it's exactly as you had it.
+        // --- MENU TOGGLE LOGIC ---
+        const menuToggleBtn = document.getElementById('menuToggleBtn');
+        const menuContainer = document.getElementById('menuContainer');
+        
+        menuToggleBtn.addEventListener('click', () => {
+            menuContainer.classList.toggle('active');
+            menuToggleBtn.classList.toggle('active');
+        });
 
-        // ===== WALLET LOGIC (modified to use Web3Auth class and remove Trust Wallet) =====
-        (function() {
-            // --- Helper to get auth instance ---
-            function getAuth() {
-                if (window.web3Auth) return window.web3Auth;
-                if (typeof window.Web3Auth === 'function') {
-                    window.web3Auth = new window.Web3Auth();
-                    return window.web3Auth;
-                }
-                return null;
+        // --- HEADER HIDE ON SCROLL LOGIC ---
+        let lastScrollY = window.scrollY;
+        const mainHeader = document.getElementById('mainHeader');
+        
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > lastScrollY && window.scrollY > mainHeader.offsetHeight) {
+                mainHeader.classList.add('header-hidden');
+                menuContainer.classList.remove('active');
+                menuToggleBtn.classList.remove('active');
+            } else {
+                mainHeader.classList.remove('header-hidden');
             }
+            lastScrollY = window.scrollY;
+        });
 
-            // --- UI update ---
-            function updateWalletUI(walletData) {
-                if (!walletData) return;
-                const short = walletData.shortAddress || `${walletData.address.slice(0,6)}...${walletData.address.slice(-4)}`;
-                const walletInfo = document.getElementById('walletInfo');
-                if (walletInfo) {
-                    walletInfo.style.display = 'inline-block';
-                    walletInfo.innerText = `🦊 ${short}`;
-                }
-                document.getElementById('menuLoginBtn').style.display = 'none';
-                document.getElementById('menuProfileBtn').style.display = 'inline-block';
-                document.getElementById('signOutBtn').style.display = 'inline-block';
+        if (!localStorage.getItem('uiLang')) {
+            const browserLang = navigator.language || navigator.userLanguage;
+            if (browserLang.toLowerCase().includes('km')) localStorage.setItem('uiLang', 'km');
+            else if (browserLang.toLowerCase().includes('zh')) localStorage.setItem('uiLang', 'zh');
+            else localStorage.setItem('uiLang', 'en');
+        }
+
+        const translations = {
+            en: {
+                siteTitle: "GITHUB MOVIES",
+                searchPlaceholder: "Search Database...",
+                searchBtn: "🔍 SEARCH",
+                menuBtn: "☰ MENU",
+                moviesBtn: "🎥 MOVIES",
+                tvBtn: "📺 TV SHOWS",
+                clearFilter: "✖ CLEAR ACTIVE FILTER",
+                catPopular: "🔥 POPULAR",
+                catTrending: "📈 TRENDING",
+                catTopRated: "⭐ TOP RATED",
+                langAll: "🌐 ALL LANGUAGES",
+                langKhmer: "🇰🇭 KHMER",
+                langEnglish: "🇬🇧 ENGLISH",
+                langChinese: "🇨🇳 CHINESE",
+                prevBtn: "&#8592; PREV",
+                nextBtn: "NEXT &#8594;",
+                initSystem: "₿",
+                fetchingDB: "FETCHING ON-CHAIN CATALOG...",
+                noResults: "🔍 NO RESULTS FOUND IN ARCHIVE",
+                networkError: "⚠️ NETWORK ERROR • PLEASE REFRESH",
+                pageOf: (cur, tot) => `PAGE ${cur} OF ${tot}`,
+                scanCast: (name) => `SEARCHING TITLES FEATURING: ${name}`,
+                filterGenre: (name) => `FILTERING BY GENRE: ${name}`,
+                filterRegion: (name) => `FILTERING REGION: ${name}`,
+                filterLang: (name) => `FILTERING NATIVE LANGUAGE: ${name}`,
+                scanFor: (term) => `SEARCHING FOR "${term}"...`
+            },
+            km: {
+                siteTitle: "GITHUB MOVIES",
+                searchPlaceholder: "ស្វែងរកទិន្នន័យ...",
+                searchBtn: "🔍 ស្វែងរក",
+                menuBtn: "☰ ម៉ឺនុយ",
+                moviesBtn: "🎥 ភាពយន្ត",
+                tvBtn: "📺 កម្មវិធីទូរទស្សន៍",
+                clearFilter: "✖ លុបជម្រើស",
+                catPopular: "🔥 ពេញនិយម",
+                catTrending: "📈 កំពុងពេញនិយម",
+                catTopRated: "⭐ វាយតម្លៃខ្ពស់បំផុត",
+                langAll: "🌐 ភាសាទាំងអស់",
+                langKhmer: "🇰🇭 ខ្មែរ",
+                langEnglish: "🇬🇧 អង់គ្លេស",
+                langChinese: "🇨🇳 ចិន",
+                prevBtn: "&#8592; ថយក្រោយ",
+                nextBtn: "បន្ទាប់ &#8594;",
+                initSystem: "₿",
+                fetchingDB: "កំពុងទាញយកកាតាឡុក Web3...",
+                noResults: "🔍 រកមិនឃើញលទ្ធផលទេ",
+                networkError: "⚠️ បញ្ហាបណ្តាញ • សូមព្យាយាមម្តងទៀត",
+                pageOf: (cur, tot) => `ទំព័រ ${cur} នៃ ${tot}`,
+                scanCast: (name) => `ស្វែងរកតួសម្តែង: ${name}`,
+                filterGenre: (name) => `ប្រភេទ: ${name}`,
+                filterRegion: (name) => `តំបន់: ${name}`,
+                filterLang: (name) => `ភាសា: ${name}`,
+                scanFor: (term) => `ស្វែងរក "${term}"...`
+            },
+            zh: {
+                siteTitle: "GITHUB MOVIES",
+                searchPlaceholder: "搜索数据库...",
+                searchBtn: "🔍 搜索",
+                menuBtn: "☰ 菜单",
+                moviesBtn: "🎥 电影",
+                tvBtn: "📺 电视剧",
+                clearFilter: "✖ 清除过滤",
+                catPopular: "🔥 热门",
+                catTrending: "📈 趋势",
+                catTopRated: "⭐ 最高评分",
+                langAll: "🌐 所有语言",
+                langKhmer: "🇰🇭 高棉语",
+                langEnglish: "🇬🇧 英语",
+                langChinese: "🇨🇳 中文",
+                prevBtn: "&#8592; 上一页",
+                nextBtn: "下一页 &#8594;",
+                initSystem: "₿",
+                fetchingDB: "正在获取 Web3 片库...",
+                noResults: "🔍 未找到结果",
+                networkError: "⚠️ 网络错误 • 请刷新",
+                pageOf: (cur, tot) => `第 ${cur} 页，共 ${tot} 页`,
+                scanCast: (name) => `扫描参演文件: ${name}`,
+                filterGenre: (name) => `按类型过滤: ${name}`,
+                filterRegion: (name) => `过滤地区: ${name}`,
+                filterLang: (name) => `过滤语言: ${name}`,
+                scanFor: (term) => `正在搜索 "${term}"...`
             }
+        };
 
-            // --- Session persistence ---
-            function persistWalletSession(walletData) {
-                if (!walletData || !walletData.address) return;
-                localStorage.setItem('g_user', JSON.stringify({
-                    type: 'web3',
-                    verified: true,
-                    provider: 'MetaMask',
-                    address: walletData.address,
-                    shortAddress: walletData.shortAddress,
-                    balance: walletData.balance,
-                    chainId: walletData.chainId,
-                    chainName: walletData.chainName
-                }));
-            }
+        const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentType = urlParams.get('type') || 'movie';
+        const targetGenreId = urlParams.get('genre');
+        const targetGenreName = urlParams.get('genreName');
+        const targetActorId = urlParams.get('actor');
+        const targetActorName = urlParams.get('actorName');
+        const targetSearch = urlParams.get('search');
+        const targetCountryId = urlParams.get('country');
+        const targetCountryName = urlParams.get('countryName');
+        const targetLangId = urlParams.get('lang');
+        const targetLangName = urlParams.get('langName');
 
-            async function restoreWalletSession() {
-                const auth = getAuth();
-                if (!auth) return;
-                const raw = localStorage.getItem('g_user');
-                if (!raw) return;
-                try {
-                    const stored = JSON.parse(raw);
-                    if (stored?.type !== 'web3' || !stored?.verified || !stored?.address) {
-                        localStorage.removeItem('g_user');
-                        return;
-                    }
-                    const walletData = await auth.restoreSession(stored.address);
-                    if (walletData) {
-                        walletData.provider = 'MetaMask';
-                        updateWalletUI(walletData);
-                        persistWalletSession(walletData);
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentCategory = 'popular';
+        let currentLanguage = '';
+
+        const moviesGrid = document.getElementById('moviesGrid');
+        const searchInput = document.getElementById('searchInput');
+        const resetBtn = document.getElementById('resetFilterBtn');
+        const filterWrapper = document.getElementById('filterWrapper');
+        const paginationWrap = document.getElementById('pagination');
+        const uiLangSelect = document.getElementById('uiLangSelect');
+
+        if (currentType === 'tv') {
+            document.getElementById('tvBtn').classList.add('active');
+            document.getElementById('movieBtn').classList.remove('active');
+        }
+
+        if (targetGenreId || targetActorId || targetSearch || targetCountryId || targetLangId) {
+            resetBtn.style.display = 'block';
+            filterWrapper.style.display = 'none';
+        }
+
+        function getT() { return translations[localStorage.getItem('uiLang') || 'en']; }
+
+        function updateUI() {
+            const lang = localStorage.getItem('uiLang') || 'en';
+            const t = translations[lang];
+            uiLangSelect.value = lang;
+            
+            document.getElementById('siteTitle').innerText = t.siteTitle;
+            document.title = t.siteTitle;
+            searchInput.placeholder = t.searchPlaceholder;
+            document.getElementById('searchBtn').innerText = t.searchBtn;
+            document.getElementById('menuToggleBtn').innerText = t.menuBtn;
+            document.getElementById('movieBtn').innerText = t.moviesBtn;
+            document.getElementById('tvBtn').innerText = t.tvBtn;
+            resetBtn.innerText = t.clearFilter;
+            
+            document.getElementById('catPopular').innerText = t.catPopular;
+            document.getElementById('catTrending').innerText = t.catTrending;
+            document.getElementById('catTopRated').innerText = t.catTopRated;
+            
+            document.getElementById('langAll').innerText = t.langAll;
+            document.getElementById('langKhmer').innerText = t.langKhmer;
+            document.getElementById('langEnglish').innerText = t.langEnglish;
+            document.getElementById('langChinese').innerText = t.langChinese;
+
+            document.getElementById('prevBtn').innerHTML = t.prevBtn;
+            document.getElementById('nextBtn').innerHTML = t.nextBtn;
+            
+            const initEl = document.getElementById('initText');
+            if(initEl) initEl.innerText = t.initSystem;
+            
+            updatePaginationUI();
+        }
+
+        function setGridMessage(message, showSpinner = false) {
+            moviesGrid.innerHTML = `<div class="loading">${showSpinner ? '<div class="spinner"></div>' : ''}<div>${message}</div></div>`;
+            paginationWrap.style.display = 'none';
+        }
+
+        async function fetchDashboardData() {
+            const t = getT();
+            if(currentPage === 1) setGridMessage(t.fetchingDB, true);
+            let url;
+            let displayContext = "";
+            
+            const uiLangCode = localStorage.getItem('uiLang') || 'en';
+            const tmdbLang = uiLangCode === 'km' ? 'km-KH' : (uiLangCode === 'zh' ? 'zh-CN' : 'en-US');
+
+            try {
+                if (targetActorId) {
+                    displayContext = t.scanCast(targetActorName.toUpperCase());
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_cast=${targetActorId}&sort_by=popularity.desc&page=${currentPage}&language=${tmdbLang}`;
+                } else if (targetGenreId) {
+                    displayContext = t.filterGenre(targetGenreName.toUpperCase());
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_genres=${targetGenreId}&sort_by=popularity.desc&page=${currentPage}&language=${tmdbLang}`;
+                } else if (targetCountryId) {
+                    displayContext = t.filterRegion(targetCountryName.toUpperCase());
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_origin_country=${targetCountryId}&sort_by=popularity.desc&page=${currentPage}&language=${tmdbLang}`;
+                } else if (targetLangId) {
+                    displayContext = t.filterLang(targetLangName.toUpperCase());
+                    url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_original_language=${targetLangId}&sort_by=popularity.desc&page=${currentPage}&language=${tmdbLang}`;
+                } else if (targetSearch) {
+                    displayContext = t.scanFor(targetSearch.toUpperCase());
+                    url = `https://api.themoviedb.org/3/search/${currentType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(targetSearch)}&page=${currentPage}&language=${tmdbLang}`;
+                    searchInput.value = targetSearch;
+                } else {
+                    if (currentLanguage) {
+                        let sortType = currentCategory === 'top_rated' ? 'vote_average.desc&vote_count.gte=200' : 'popularity.desc';
+                        url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&with_original_language=${currentLanguage}&sort_by=${sortType}&page=${currentPage}&language=${tmdbLang}`;
                     } else {
-                        localStorage.removeItem('g_user');
-                        signOutWallet();
+                        if (currentCategory === 'trending') {
+                            url = `https://api.themoviedb.org/3/trending/${currentType}/week?api_key=${TMDB_API_KEY}&page=${currentPage}&language=${tmdbLang}`;
+                        } else if (currentCategory === 'top_rated') {
+                            url = `https://api.themoviedb.org/3/${currentType}/top_rated?api_key=${TMDB_API_KEY}&page=${currentPage}&language=${tmdbLang}`;
+                        } else {
+                            url = `https://api.themoviedb.org/3/${currentType}/popular?api_key=${TMDB_API_KEY}&page=${currentPage}&language=${tmdbLang}`;
+                        }
                     }
-                } catch (_) {
-                    localStorage.removeItem('g_user');
                 }
-            }
 
-            // --- Connect MetaMask ---
-            async function connectMetaMask() {
-                const auth = getAuth();
-                if (!auth) {
-                    alert('Web3 module not loaded. Please refresh.');
+                if (displayContext && currentPage === 1) setGridMessage(displayContext, true);
+
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                totalPages = data.total_pages || 1;
+                if(totalPages > 500) totalPages = 500; 
+
+                displayItems(data.results);
+                updatePaginationUI();
+            } catch (error) {
+                setGridMessage(t.networkError);
+            }
+        }
+
+        function displayItems(items) {
+            moviesGrid.innerHTML = '';
+            const t = getT();
+            if (!items || items.length === 0) {
+                setGridMessage(t.noResults);
+                return;
+            }
+            const fragment = document.createDocumentFragment();
+            items.forEach(item => {
+                if (!item.poster_path) return;
+                const card = document.createElement('div');
+                card.className = 'movie-card';
+                const title = item.title || item.name;
+                const date = item.release_date || item.first_air_date;
+                const year = date ? date.substring(0, 4) : 'N/A';
+                const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+                
+                card.onclick = () => { window.location.href = `play.html?tmdb=${item.id}&type=${currentType}&title=${encodeURIComponent(title)}`; };
+                
+                card.innerHTML = `
+                    <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" class="movie-poster" loading="lazy">
+                    <div class="movie-info">
+                        <div class="movie-title">${escapeHtml(title)}</div>
+                        <div class="movie-year">📅 ${year}</div>
+                        <div class="movie-rating">⭐ ${rating}/10</div>
+                    </div>
+                `;
+                fragment.appendChild(card);
+            });
+            moviesGrid.appendChild(fragment);
+            paginationWrap.style.display = 'flex';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function updatePaginationUI() {
+            const t = getT();
+            document.getElementById('pageInfo').innerText = t.pageOf(currentPage, totalPages);
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+        }
+
+        uiLangSelect.addEventListener('change', (e) => {
+            localStorage.setItem('uiLang', e.target.value);
+            updateUI();
+            currentPage = 1; 
+            fetchDashboardData();
+        });
+
+        function searchContent() {
+            const term = searchInput.value.trim();
+            if (term) window.location.href = `index.html?search=${encodeURIComponent(term)}&type=${currentType}`;
+            else window.location.href = `index.html?type=${currentType}`;
+        }
+        document.getElementById('movieBtn').addEventListener('click', () => { window.location.href = 'index.html?type=movie'; });
+        document.getElementById('tvBtn').addEventListener('click', () => { window.location.href = 'index.html?type=tv'; });
+        resetBtn.addEventListener('click', () => { window.location.href = `index.html?type=${currentType}`; });
+        document.getElementById('searchBtn').addEventListener('click', searchContent);
+        searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchContent(); });
+
+        document.querySelectorAll('.cat-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentCategory = e.target.dataset.cat;
+                currentPage = 1; fetchDashboardData();
+            });
+        });
+
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentLanguage = e.target.dataset.lang;
+                currentPage = 1; fetchDashboardData();
+            });
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentPage > 1) { currentPage--; fetchDashboardData(); window.scrollTo({top: 0, behavior: 'smooth'}); }
+        });
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentPage < totalPages) { currentPage++; fetchDashboardData(); window.scrollTo({top: 0, behavior: 'smooth'}); }
+        });
+
+        // --- Web3 Wallet Login (MetaMask / Trust Wallet) ---
+        const menuLoginBtn = document.getElementById('menuLoginBtn');
+        const menuProfileBtn = document.getElementById('menuProfileBtn');
+        const walletInfo = document.getElementById('walletInfo');
+        const walletModal = document.getElementById('walletModal');
+        const walletModalOverlay = document.getElementById('walletModalOverlay');
+        const profileModal = document.getElementById('profileModal');
+        const profileName = document.getElementById('profileName');
+        const profileEmail = document.getElementById('profileEmail');
+        const walletAssetsSection = document.getElementById('walletAssetsSection');
+        const walletAddress = document.getElementById('walletAddress');
+        const walletBalance = document.getElementById('walletBalance');
+        const walletChain = document.getElementById('walletChain');
+        const walletActionStatus = document.getElementById('walletActionStatus');
+        const walletSendPanel = document.getElementById('walletSendPanel');
+        const walletSendTo = document.getElementById('walletSendTo');
+        const walletSendAmount = document.getElementById('walletSendAmount');
+        const walletSendSymbol = document.getElementById('walletSendSymbol');
+        const walletReceivePanel = document.getElementById('walletReceivePanel');
+        const walletQrImage = document.getElementById('walletQrImage');
+        const walletReceiveAddress = document.getElementById('walletReceiveAddress');
+        const walletScanInput = document.getElementById('walletScanInput');
+        const topSignOutBtn = document.getElementById('signOutBtn');
+
+        function getAuth() {
+            if (window.web3Auth) return window.web3Auth;
+            if (typeof window.Web3Auth === 'function') {
+                window.web3Auth = new window.Web3Auth();
+                return window.web3Auth;
+            }
+            return null;
+        }
+
+        function createEmergencyAuthAdapter() {
+            const adapter = {
+                provider: 'Web3 Wallet',
+                address: null,
+                balance: null,
+                chainId: null,
+                chainName: null,
+                isMetaMaskAvailable() { return typeof window.ethereum !== 'undefined'; },
+                isInsideMetaMaskApp() {
+                    const ua = String(navigator?.userAgent || '').toLowerCase();
+                    return ua.includes('metamaskmobile');
+                },
+                isConnected() { return !!this.address; },
+                getShortAddress(addr = this.address) { return addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : ''; },
+                getChainName(chainId) { return chainId ? `Network ${chainId}` : 'Unknown'; },
+                getMetaMaskDeepLinks(targetUrl = null) {
+                    const url = new URL(targetUrl || window.location.href, window.location.origin);
+                    const dappPath = `${url.host}${url.pathname}${url.search}${url.hash}`;
+                    return {
+                        native: `metamask://dapp/${dappPath}`,
+                        universal: `https://metamask.app.link/dapp/${dappPath}`,
+                        universalEncoded: `https://metamask.app.link/dapp/${encodeURIComponent(dappPath)}`
+                    };
+                },
+                getMetaMaskDeepLink() {
+                    return this.getMetaMaskDeepLinks().universal;
+                },
+                openMetaMaskApp(targetUrl = null) {
+                    if (window.ethereum?.isMetaMask) return;
+
+                    const target = targetUrl || window.location.href;
+                    const links = this.getMetaMaskDeepLinks(target);
+                    let hidden = document.visibilityState === 'hidden';
+                    const onVisibilityChange = () => {
+                        if (document.visibilityState === 'hidden') hidden = true;
+                    };
+                    document.addEventListener('visibilitychange', onVisibilityChange, { once: true });
+
+                    window.location.href = links.native;
+                    setTimeout(() => {
+                        if (!hidden) window.location.href = links.universal;
+                    }, 700);
+                    setTimeout(() => {
+                        if (!hidden) window.location.href = links.universalEncoded;
+                    }, 1600);
+                },
+                isMetaMaskInternalError(error) {
+                    const message = String(
+                        error?.data?.originalError?.message ||
+                        error?.data?.message ||
+                        error?.message ||
+                        ''
+                    ).toLowerCase();
+                    return error?.code === -32603 || message.includes('internal error');
+                },
+                getWalletData() {
+                    return {
+                        address: this.address,
+                        balance: this.balance,
+                        chainId: this.chainId,
+                        chainName: this.chainName,
+                        provider: this.provider,
+                        shortAddress: this.getShortAddress()
+                    };
+                },
+                async refreshBalance() {
+                    if (!this.address || !window.ethereum) return null;
+                    const wei = await window.ethereum.request({ method: 'eth_getBalance', params: [this.address, 'latest'] });
+                    this.balance = (parseInt(wei, 16) / 1e18).toFixed(4);
+                    return this.balance;
+                },
+                async restoreSession(expectedAddress = null) {
+                    if (!window.ethereum) return null;
+                    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                    if (!accounts || !accounts.length) return null;
+                    const address = accounts[0];
+                    if (expectedAddress && address.toLowerCase() !== String(expectedAddress).toLowerCase()) return null;
+                    this.address = address;
+                    const chainHex = await window.ethereum.request({ method: 'eth_chainId' });
+                    this.chainId = parseInt(chainHex, 16);
+                    this.chainName = this.getChainName(this.chainId);
+                    await this.refreshBalance();
+                    return this.getWalletData();
+                },
+                async connectMetaMask() {
+                    if (!window.ethereum) {
+                        this.openMetaMaskApp();
+                        return null;
+                    }
+                    this.provider = 'MetaMask';
+                    let accounts = null;
+                    try {
+                        accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    } catch (error) {
+                        if (this.isMetaMaskInternalError(error)) {
+                            try {
+                                const existing = await window.ethereum.request({ method: 'eth_accounts' });
+                                if (Array.isArray(existing) && existing.length) {
+                                    accounts = existing;
+                                } else {
+                                    this.openMetaMaskApp();
+                                    return null;
+                                }
+                            } catch (_) {
+                                this.openMetaMaskApp();
+                                return null;
+                            }
+                        } else {
+                            throw error;
+                        }
+                    }
+                    if (!accounts || !accounts.length) return null;
+                    this.address = accounts[0];
+                    const chainHex = await window.ethereum.request({ method: 'eth_chainId' });
+                    this.chainId = parseInt(chainHex, 16);
+                    this.chainName = this.getChainName(this.chainId);
+                    await this.refreshBalance();
+                    return this.getWalletData();
+                },
+                async connectTrustWallet() {
+                    this.provider = 'Trust Wallet';
+                    return this.connectMetaMask();
+                },
+                disconnect() {
+                    this.address = null;
+                    this.balance = null;
+                    this.chainId = null;
+                    this.chainName = null;
+                }
+            };
+            window.web3Auth = adapter;
+            return adapter;
+        }
+
+        function loadScriptOnce(src) {
+            return new Promise((resolve, reject) => {
+                const existing = document.querySelector(`script[data-loader="${src}"]`);
+                if (existing) {
+                    if (existing.dataset.ready === '1') return resolve();
+                    existing.addEventListener('load', () => resolve(), { once: true });
+                    existing.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)), { once: true });
                     return;
                 }
-                const walletData = await auth.connect();
-                if (walletData) {
-                    walletData.provider = 'MetaMask';
-                    updateWalletUI(walletData);
-                    persistWalletSession(walletData);
-                    closeWalletModal();
+
+                const script = document.createElement('script');
+                script.src = src;
+                script.async = true;
+                script.dataset.loader = src;
+                script.addEventListener('load', () => {
+                    script.dataset.ready = '1';
+                    resolve();
+                }, { once: true });
+                script.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)), { once: true });
+                document.head.appendChild(script);
+            });
+        }
+
+        async function ensureWeb3AuthLoaded() {
+            let auth = getAuth();
+            if (auth) return auth;
+
+            try {
+                await loadScriptOnce('web3-auth.js?v=20260707');
+            } catch (error) {
+                console.error('Primary web3 auth load failed:', error);
+            }
+
+            auth = getAuth();
+            if (auth) return auth;
+            return createEmergencyAuthAdapter();
+        }
+
+        function openWalletModal() {
+            if (!walletModal || !walletModalOverlay) return;
+            walletModal.style.display = 'flex';
+            walletModalOverlay.style.display = 'block';
+        }
+
+        function shouldAutoMetaMaskLogin() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('mm_login') === '1';
+        }
+
+        function getIndexLoginUrl() {
+            const target = new URL(window.location.href);
+            target.pathname = target.pathname.replace(/[^/]*$/, 'index.html');
+            target.search = '';
+            target.hash = '';
+            target.searchParams.set('mm_login', '1');
+            return target.toString();
+        }
+
+        function redirectToCleanIndex() {
+            const target = new URL(window.location.href);
+            target.pathname = target.pathname.replace(/[^/]*$/, 'index.html');
+            target.search = '';
+            target.hash = '';
+            window.location.replace(target.toString());
+        }
+
+        function closeWalletModal() {
+            if (!walletModal || !walletModalOverlay) return;
+            walletModal.style.display = 'none';
+            walletModalOverlay.style.display = 'none';
+        }
+
+        function showProfileModal() {
+            const auth = getAuth();
+            if (!profileModal || !auth) return;
+            
+            // Safely fetch data regardless of adapter version
+            const data = (typeof auth.getWalletData === 'function') ? auth.getWalletData() : {
+                address: auth.address,
+                balance: auth.balance,
+                chainName: auth.chainName,
+                shortAddress: auth.address ? `${auth.address.slice(0, 6)}...${auth.address.slice(-4)}` : ''
+            };
+
+            if (!data || !data.address) return;
+
+            const symbol = getNativeTokenSymbol(data.chainName);
+            if (profileName) profileName.innerText = `Wallet Profile (${data.shortAddress || 'Connected'})`;
+            if (profileEmail) profileEmail.innerText = `Connected with ${auth.provider || 'Web3 Wallet'}`;
+            if (walletAddress) walletAddress.innerText = `Address: ${data.address || 'N/A'}`;
+            if (walletBalance) walletBalance.innerText = `Balance: ${data.balance || '0.0000'} ${symbol}`;
+            if (walletChain) walletChain.innerText = `Network: ${data.chainName || 'Unknown'}`;
+            if (walletSendSymbol) walletSendSymbol.innerText = symbol;
+            if (walletAssetsSection) walletAssetsSection.style.display = 'block';
+            hideWalletActionPanels();
+            if (walletSendTo) walletSendTo.value = '';
+            if (walletSendAmount) walletSendAmount.value = '';
+            setWalletActionStatus('');
+            profileModal.style.display = 'flex';
+        }
+
+        function hideProfileModal() {
+            hideWalletActionPanels();
+            setWalletActionStatus('');
+            if (profileModal) profileModal.style.display = 'none';
+        }
+
+        function setWalletActionStatus(message, isError = false) {
+            if (!walletActionStatus) return;
+            if (!message) {
+                walletActionStatus.style.display = 'none';
+                walletActionStatus.innerText = '';
+                return;
+            }
+
+            walletActionStatus.style.display = 'block';
+            walletActionStatus.style.color = isError ? '#ef4444' : 'var(--secondary)';
+            walletActionStatus.innerText = message;
+        }
+
+        function getNativeTokenSymbol(chainName = '') {
+            const value = String(chainName || '').toLowerCase();
+            if (value.includes('polygon')) return 'MATIC';
+            if (value.includes('binance') || value.includes('bsc')) return 'BNB';
+            if (value.includes('avalanche')) return 'AVAX';
+            if (value.includes('fantom')) return 'FTM';
+            return 'ETH';
+        }
+
+        function hideWalletActionPanels() {
+            if (walletSendPanel) walletSendPanel.style.display = 'none';
+            if (walletReceivePanel) walletReceivePanel.style.display = 'none';
+        }
+
+        function openSendPanel(prefilledAddress = '') {
+            hideWalletActionPanels();
+            if (!walletSendPanel) return;
+
+            walletSendPanel.style.display = 'block';
+            if (walletSendTo && prefilledAddress) walletSendTo.value = prefilledAddress;
+            if (walletSendTo && !walletSendTo.value) walletSendTo.focus();
+            setWalletActionStatus('Fill recipient and amount, then confirm in MetaMask app.');
+        }
+
+        function formatAddressCompact(address) {
+            if (!address || address.length < 12) return address || '';
+            return `${address.slice(0, 8)}...${address.slice(-6)}`;
+        }
+
+        function parseAddressFromScannedValue(rawValue) {
+            if (!rawValue) return null;
+            const raw = String(rawValue).trim();
+            let candidate = raw;
+
+            if (raw.toLowerCase().startsWith('ethereum:')) {
+                const payload = raw.slice(9);
+                candidate = payload.split(/[/?@]/)[0] || '';
+            }
+
+            if (/^0x[a-fA-F0-9]{40}$/.test(candidate)) return candidate;
+            return null;
+        }
+
+        function toWeiHex(ethAmountInput) {
+            const amount = String(ethAmountInput || '').trim();
+            if (!/^\d+(\.\d+)?$/.test(amount)) {
+                throw new Error('Amount must be a valid number.');
+            }
+
+            const [wholePart, fractionRaw = ''] = amount.split('.');
+            if (fractionRaw.length > 18) {
+                throw new Error('Amount supports up to 18 decimals.');
+            }
+
+            const fractionPart = fractionRaw.padEnd(18, '0');
+            const wei = (BigInt(wholePart) * (10n ** 18n)) + BigInt(fractionPart || '0');
+            if (wei <= 0n) {
+                throw new Error('Amount must be greater than zero.');
+            }
+
+            return `0x${wei.toString(16)}`;
+        }
+
+        function updateReceivePanel(address) {
+            if (!walletReceivePanel || !walletReceiveAddress || !walletQrImage) return;
+            if (!address) {
+                walletReceivePanel.style.display = 'none';
+                return;
+            }
+
+            if (walletSendPanel) walletSendPanel.style.display = 'none';
+            const qrPayload = `ethereum:${address}`;
+            walletReceiveAddress.innerText = address;
+            walletQrImage.src = `https://quickchart.io/qr?size=220&text=${encodeURIComponent(qrPayload)}`;
+            walletReceivePanel.style.display = 'block';
+        }
+
+        async function handleWalletBuy() {
+            window.location.href = 'https://portfolio.metamask.io/buy';
+        }
+
+        async function handleWalletSend(prefilledAddress = '') {
+            const auth = getAuth();
+            if (!auth || !auth.isConnected()) {
+                setWalletActionStatus('Connect your wallet first.', true);
+                return;
+            }
+
+            openSendPanel(prefilledAddress);
+        }
+
+        async function submitWalletSend() {
+            const auth = getAuth();
+            if (!auth || !auth.isConnected()) {
+                setWalletActionStatus('Connect your wallet first.', true);
+                return;
+            }
+
+            if (!window.ethereum) {
+                setWalletActionStatus('Ethereum provider not available in this context.', true);
+                return;
+            }
+
+            const senderAddress = auth.getWalletData()?.address;
+            if (!senderAddress) {
+                setWalletActionStatus('Wallet address is missing.', true);
+                return;
+            }
+
+            const cleanTo = String(walletSendTo?.value || '').trim();
+            if (!/^0x[a-fA-F0-9]{40}$/.test(cleanTo)) {
+                setWalletActionStatus('Invalid recipient address.', true);
+                return;
+            }
+
+            const amountEth = String(walletSendAmount?.value || '').trim();
+            if (!amountEth) {
+                setWalletActionStatus('Enter amount to send.', true);
+                return;
+            }
+
+            let valueHex;
+            try {
+                valueHex = toWeiHex(amountEth);
+            } catch (error) {
+                setWalletActionStatus(error.message || 'Invalid amount.', true);
+                return;
+            }
+
+            try {
+                setWalletActionStatus('Submitting transaction to MetaMask...');
+                const txHash = await window.ethereum.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: senderAddress,
+                        to: cleanTo,
+                        value: valueHex
+                    }]
+                });
+                setWalletActionStatus(`Sent. TX: ${formatAddressCompact(txHash)}`);
+                if (walletSendAmount) walletSendAmount.value = '';
+            } catch (error) {
+                const message = error?.message || 'Transaction failed.';
+                setWalletActionStatus(message, true);
+            }
+        }
+
+        async function handleWalletReceive() {
+            const auth = getAuth();
+            if (!auth || !auth.isConnected()) {
+                setWalletActionStatus('Connect your wallet first.', true);
+                return;
+            }
+
+            const address = auth.getWalletData()?.address;
+            if (!address) {
+                setWalletActionStatus('Wallet address not available.', true);
+                return;
+            }
+
+            updateReceivePanel(address);
+            setWalletActionStatus('Receive wallet QR is ready.');
+        }
+
+        async function handleWalletScan() {
+            if (!walletScanInput) return;
+            setWalletActionStatus('Pick a QR image to scan.');
+            walletScanInput.value = '';
+            walletScanInput.click();
+        }
+
+        async function processWalletScanFile(file) {
+            if (!file) return;
+
+            if (!('BarcodeDetector' in window) || typeof createImageBitmap !== 'function') {
+                setWalletActionStatus('QR scan is not supported on this browser. Paste address manually in Send.', true);
+                return;
+            }
+
+            try {
+                const bitmap = await createImageBitmap(file);
+                const detector = new BarcodeDetector({ formats: ['qr_code'] });
+                const results = await detector.detect(bitmap);
+                if (typeof bitmap.close === 'function') bitmap.close();
+
+                if (!results || !results.length) {
+                    setWalletActionStatus('No QR code detected. Try another image.', true);
+                    return;
+                }
+
+                const rawValue = results[0]?.rawValue || '';
+                const recipientAddress = parseAddressFromScannedValue(rawValue);
+                if (!recipientAddress) {
+                    setWalletActionStatus('QR detected, but no valid Ethereum address found.', true);
+                    return;
+                }
+
+                setWalletActionStatus(`Scanned recipient: ${formatAddressCompact(recipientAddress)}`);
+                openSendPanel(recipientAddress);
+            } catch (_) {
+                setWalletActionStatus('Failed to scan QR image.', true);
+            }
+        }
+
+        function updateWalletUI(walletData) {
+            if (!walletData) return;
+            const short = `${walletData.address.slice(0, 6)}...${walletData.address.slice(-4)}`;
+            if (walletInfo) {
+                walletInfo.style.display = 'inline-block';
+                walletInfo.innerText = `🦊 ${short}`;
+            }
+            if (menuLoginBtn) menuLoginBtn.style.display = 'none';
+            if (menuProfileBtn) menuProfileBtn.style.display = 'inline-block';
+            if (topSignOutBtn) topSignOutBtn.style.display = 'inline-block';
+        }
+
+        function persistWalletSession(walletData, providerLabel) {
+            if (!walletData || !walletData.address) return;
+            localStorage.setItem('g_user', JSON.stringify({
+                type: 'web3',
+                verified: true,
+                provider: providerLabel || walletData.provider || 'Web3 Wallet',
+                address: walletData.address,
+                shortAddress: walletData.shortAddress,
+                balance: walletData.balance,
+                chainId: walletData.chainId,
+                chainName: walletData.chainName,
+                signature: walletData.signature || null,
+                signatureMessage: walletData.signatureMessage || null,
+                signedAt: walletData.signedAt || null
+            }));
+        }
+
+        async function restoreWalletSession() {
+            const auth = await ensureWeb3AuthLoaded();
+            if (!auth) return;
+
+            const raw = localStorage.getItem('g_user');
+            if (!raw) return;
+
+            try {
+                const stored = JSON.parse(raw);
+                if (stored?.type !== 'web3' || !stored?.verified || !stored?.address) {
+                    localStorage.removeItem('g_user');
+                    return;
+                }
+
+                const walletData = await auth.restoreSession(stored.address);
+                if (!walletData) {
+                    localStorage.removeItem('g_user');
+                    signOutWallet();
+                    return;
+                }
+
+                walletData.provider = stored.provider || walletData.provider;
+                updateWalletUI(walletData);
+                persistWalletSession(walletData, walletData.provider);
+            } catch (error) {
+                console.error('Wallet session restore failed:', error);
+                localStorage.removeItem('g_user');
+            }
+        }
+
+        async function connectMetaMaskWallet() {
+            const auth = await ensureWeb3AuthLoaded();
+            if (!auth) {
+                alert('Web3 module not loaded. Please refresh the page.');
+                return;
+            }
+
+            const loginUrl = getIndexLoginUrl();
+            if (!auth.isMetaMaskAvailable?.()) {
+                if (typeof auth.openMetaMaskApp === 'function') {
+                    auth.openMetaMaskApp(loginUrl);
+                }
+                return;
+            }
+
+            const walletData = await auth.connectMetaMask();
+            if (walletData) {
+                updateWalletUI(walletData);
+                persistWalletSession(walletData, 'MetaMask');
+                closeWalletModal();
+
+                if (shouldAutoMetaMaskLogin()) {
+                    redirectToCleanIndex();
+                    return;
                 }
             }
+        }
 
-            // --- Sign out ---
-            function signOutWallet() {
-                const auth = getAuth();
-                if (auth) auth.disconnect();
-                localStorage.removeItem('g_user');
-                document.getElementById('walletInfo').style.display = 'none';
-                document.getElementById('menuLoginBtn').style.display = 'inline-block';
-                document.getElementById('menuProfileBtn').style.display = 'none';
-                document.getElementById('signOutBtn').style.display = 'none';
-                hideProfileModal();
+        async function connectTrustWalletProvider() {
+            const auth = await ensureWeb3AuthLoaded();
+            if (!auth) {
+                alert('Web3 module not loaded. Please refresh the page.');
+                return;
+            }
+            const walletData = await auth.connectTrustWallet();
+            if (walletData) {
+                updateWalletUI(walletData);
+                persistWalletSession(walletData, 'Trust Wallet');
+                closeWalletModal();
+            }
+        }
+
+        function signOutWallet() {
+            const auth = getAuth();
+            if (auth) auth.disconnect();
+            localStorage.removeItem('g_user');
+            if (walletInfo) {
+                walletInfo.style.display = 'none';
+                walletInfo.innerText = '';
+            }
+            if (menuLoginBtn) menuLoginBtn.style.display = 'inline-block';
+            if (menuProfileBtn) menuProfileBtn.style.display = 'none';
+            if (topSignOutBtn) topSignOutBtn.style.display = 'none';
+            hideProfileModal();
+        }
+
+        // Action Listeners
+        if (menuLoginBtn) menuLoginBtn.addEventListener('click', openWalletModal);
+        if (menuProfileBtn) menuProfileBtn.addEventListener('click', showProfileModal);
+        if (walletInfo) walletInfo.addEventListener('click', showProfileModal);
+        
+        document.getElementById('walletModalClose')?.addEventListener('click', closeWalletModal);
+        if (walletModalOverlay) walletModalOverlay.addEventListener('click', closeWalletModal);
+        
+        document.getElementById('connectMetaMask')?.addEventListener('click', connectMetaMaskWallet);
+        document.getElementById('connectTrustWallet')?.addEventListener('click', connectTrustWalletProvider);
+        
+        document.getElementById('profileClose')?.addEventListener('click', hideProfileModal);
+        document.getElementById('profileSignOut')?.addEventListener('click', signOutWallet);
+        document.getElementById('signOutBtn')?.addEventListener('click', signOutWallet);
+        
+        document.getElementById('walletBuyBtn')?.addEventListener('click', handleWalletBuy);
+        document.getElementById('walletSendBtn')?.addEventListener('click', () => handleWalletSend());
+        document.getElementById('walletReceiveBtn')?.addEventListener('click', handleWalletReceive);
+        document.getElementById('walletScanBtn')?.addEventListener('click', handleWalletScan);
+        document.getElementById('walletSendSubmit')?.addEventListener('click', submitWalletSend);
+        document.getElementById('walletSendCancel')?.addEventListener('click', () => {
+            if (walletSendPanel) walletSendPanel.style.display = 'none';
+            setWalletActionStatus('');
+        });
+        
+        document.getElementById('walletCopyAddress')?.addEventListener('click', async () => {
+            const auth = getAuth();
+            const address = auth?.getWalletData?.()?.address || auth?.address;
+            if (!address) {
+                setWalletActionStatus('Wallet address not available.', true);
+                return;
             }
 
-            // --- Modal controls (same as yours) ---
-            function openWalletModal() {
-                document.getElementById('walletModal').style.display = 'flex';
-                document.getElementById('walletModalOverlay').style.display = 'block';
+            try {
+                await navigator.clipboard.writeText(address);
+                setWalletActionStatus('Address copied to clipboard.');
+            } catch (_) {
+                setWalletActionStatus('Could not copy automatically. Copy from the address text.', true);
             }
-            function closeWalletModal() {
-                document.getElementById('walletModal').style.display = 'none';
-                document.getElementById('walletModalOverlay').style.display = 'none';
-            }
-            function showProfileModal() {
-                const auth = getAuth();
-                if (!auth || !auth.isConnected()) return;
-                const data = auth.getWalletData();
-                if (!data) return;
-                const symbol = getNativeTokenSymbol(data.chainName);
-                document.getElementById('profileName').innerText = `Wallet Profile (${data.shortAddress})`;
-                document.getElementById('profileEmail').innerText = `Connected with ${data.provider}`;
-                document.getElementById('walletAddress').innerText = `Address: ${data.address}`;
-                document.getElementById('walletBalance').innerText = `Balance: ${data.balance || '0.0000'} ${symbol}`;
-                document.getElementById('walletChain').innerText = `Network: ${data.chainName || 'Unknown'}`;
-                document.getElementById('walletSendSymbol').innerText = symbol;
-                document.getElementById('walletAssetsSection').style.display = 'block';
-                hideWalletActionPanels();
-                document.getElementById('profileModal').style.display = 'flex';
-            }
-            function hideProfileModal() {
-                document.getElementById('profileModal').style.display = 'none';
-            }
-            function hideWalletActionPanels() {
-                document.getElementById('walletSendPanel').style.display = 'none';
-                document.getElementById('walletReceivePanel').style.display = 'none';
-            }
-            function getNativeTokenSymbol(chainName) {
-                const name = (chainName || '').toLowerCase();
-                if (name.includes('polygon')) return 'MATIC';
-                if (name.includes('binance') || name.includes('bsc')) return 'BNB';
-                if (name.includes('avalanche')) return 'AVAX';
-                if (name.includes('fantom')) return 'FTM';
-                return 'ETH';
-            }
-            // --- Send/Receive/Scan functions (keep yours) ---
-            // I'll keep them short; you already have them in your code.
-            // They are unchanged.
+        });
+        
+        walletScanInput?.addEventListener('change', async (event) => {
+            const file = event.target?.files?.[0] || null;
+            await processWalletScanFile(file);
+        });
+        
+        document.getElementById('walletRefresh')?.addEventListener('click', async () => {
+            const auth = getAuth();
+            if (!auth) return;
+            await auth.refreshBalance?.();
+            showProfileModal();
+        });
 
-            // --- Wire up events ---
-            document.getElementById('menuLoginBtn').addEventListener('click', openWalletModal);
-            document.getElementById('menuProfileBtn').addEventListener('click', showProfileModal);
-            document.getElementById('walletInfo').addEventListener('click', showProfileModal);
-            document.getElementById('walletModalClose').addEventListener('click', closeWalletModal);
-            document.getElementById('walletModalOverlay').addEventListener('click', closeWalletModal);
-            document.getElementById('connectMetaMask').addEventListener('click', connectMetaMask);
-            document.getElementById('profileClose').addEventListener('click', hideProfileModal);
-            document.getElementById('profileSignOut').addEventListener('click', signOutWallet);
-            document.getElementById('signOutBtn').addEventListener('click', signOutWallet);
+        // Keep UI synced with wallet events
+        window.addEventListener('walletAccountChanged', () => {
+            const auth = getAuth();
+            if (!auth || !auth.isConnected?.()) return signOutWallet();
+            updateWalletUI(auth.getWalletData?.());
+        });
+        window.addEventListener('walletChainChanged', () => {
+            const auth = getAuth();
+            if (!auth || !auth.isConnected?.()) return;
+            updateWalletUI(auth.getWalletData?.());
+        });
 
-            // --- The rest of your wallet action listeners (Buy, Send, Receive, Scan, Refresh, Copy) ---
-            // Keep them exactly as they were in your original script.
-            // (To avoid duplication, I'll assume they are defined below in your existing code.)
-            // They are identical to the ones you already have, so I won't rewrite them here.
-
-            // --- Init ---
-            restoreWalletSession();
-        })();
-
-        // ===== ALL YOUR EXISTING TMDB, SEARCH, FILTER, PAGINATION CODE =====
-        // (Place your entire existing script below, but make sure to remove
-        //  the old wallet definitions and Trust Wallet listener.)
-        // Since your original file has all that, I'll keep it as-is.
-        // For brevity, I'm not repeating it here; you already have it.
-        // Just replace the wallet section with the above.
+        updateUI();
+        fetchDashboardData();
+        restoreWalletSession();
+        if (shouldAutoMetaMaskLogin()) connectMetaMaskWallet();
     </script>
 </body>
 </html>

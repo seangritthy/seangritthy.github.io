@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GitHub Movies | Secure Stream</title>
     <link rel="icon" type="image/svg+xml" href="logo.svg">
+    
     <meta property="og:title" id="ogTitle" content="GitHub Movies">
     <meta property="og:image" id="ogImage" content="">
     <meta property="og:url" id="ogUrl" content="">
@@ -28,230 +29,471 @@
         --warn: #f59e0b;
         --player-bg: #0b1021;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-        margin: 0; padding: 0; color: #1b1f3b;
+        margin: 0;
+        padding: 0;
+        color: #1b1f3b;
         font-family: 'Space Grotesk', 'Noto Sans SC', 'Battambang', sans-serif;
-        min-height: 100vh; overflow-x: hidden;
+        min-height: 100vh;
+        overflow-x: hidden;
         background-color: var(--dark-bg);
         background-image:
-            radial-gradient(circle at 10% 4%, rgba(111,92,255,0.16), transparent 34%),
-            radial-gradient(circle at 88% 9%, rgba(77,124,255,0.14), transparent 36%),
-            radial-gradient(circle at 50% 100%, rgba(20,184,166,0.12), transparent 45%),
-            linear-gradient(rgba(111,92,255,0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(77,124,255,0.04) 1px, transparent 1px);
+            radial-gradient(circle at 10% 4%, rgba(111, 92, 255, 0.16), transparent 34%),
+            radial-gradient(circle at 88% 9%, rgba(77, 124, 255, 0.14), transparent 36%),
+            radial-gradient(circle at 50% 100%, rgba(20, 184, 166, 0.12), transparent 45%),
+            linear-gradient(rgba(111, 92, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(77, 124, 255, 0.04) 1px, transparent 1px);
         background-size: auto, auto, auto, 46px 46px, 46px 46px;
         background-attachment: fixed;
     }
+
     .web3-grid {
-        position: fixed; inset: 0; pointer-events: none; z-index: -1; opacity: 0.25;
-        background: conic-gradient(from 180deg at 50% 50%, rgba(179,169,217,0.06), rgba(127,149,191,0.04), rgba(217,167,134,0.04), rgba(179,169,217,0.06));
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: -1;
+        opacity: 0.25;
+        background: conic-gradient(from 180deg at 50% 50%, rgba(179, 169, 217, 0.06), rgba(127, 149, 191, 0.04), rgba(217, 167, 134, 0.04), rgba(179, 169, 217, 0.06));
     }
+
     .web3-header {
-        position: fixed; top: 0; width: 100%;
-        background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(246,248,255,0.92));
-        backdrop-filter: blur(12px); padding: 38px 20px 20px; z-index: 1000;
-        border-bottom: 1px solid rgba(111,92,255,0.2);
-        box-shadow: 0 12px 26px rgba(36,53,90,0.12);
+        position: fixed;
+        top: 0;
+        width: 100%;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(246, 248, 255, 0.92));
+        backdrop-filter: blur(12px);
+        padding: 38px 20px 20px;
+        z-index: 1000;
+        border-bottom: 1px solid rgba(111, 92, 255, 0.2);
+        box-shadow: 0 12px 26px rgba(36, 53, 90, 0.12);
         font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
     }
+
     .ui-lang-wrapper { position: absolute; top: 14px; right: 20px; }
+
     .ui-lang-select {
-        background: rgba(255,255,255,0.92); border: 1px solid rgba(111,92,255,0.35);
-        color: var(--primary); padding: 6px 11px; font-family: inherit; outline: none;
-        cursor: pointer; border-radius: 8px; transition: all 0.25s;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(111, 92, 255, 0.35);
+        color: var(--primary);
+        padding: 6px 11px;
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
+        outline: none;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.25s;
     }
-    .ui-lang-select:hover { box-shadow: 0 0 12px rgba(179,169,217,0.45); }
+
+    .ui-lang-select:hover { box-shadow: 0 0 12px rgba(179, 169, 217, 0.45); }
     .ui-lang-select option { background: #ffffff; color: #1b1f3b; }
+
     .header-content {
-        max-width: 1400px; margin: 0 auto; padding: 0 20px;
-        display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
     }
+
     .site-title {
         font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif;
-        color: var(--primary); font-size: 1.45rem; text-shadow: 0 0 10px rgba(111,92,255,0.2);
+        color: var(--primary);
+        font-size: 1.45rem;
+        text-shadow: 0 0 10px rgba(111, 92, 255, 0.2);
         font-weight: 700;
     }
+
     .nav-link {
-        color: var(--secondary); text-decoration: none; padding: 9px 14px; border-radius: 999px;
-        border: 1px solid rgba(77,124,255,0.35);
-        font-family: inherit; font-size: 0.88rem; transition: all 0.25s ease;
-        background: rgba(77,124,255,0.08);
+        color: var(--secondary);
+        text-decoration: none;
+        padding: 9px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(77, 124, 255, 0.35);
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
+        font-size: 0.88rem;
+        transition: all 0.25s ease;
+        background: rgba(77, 124, 255, 0.08);
     }
-    .nav-link:hover { color: #ffffff; background: var(--secondary); box-shadow: 0 0 12px rgba(77,124,255,0.28); }
+
+    .nav-link:hover {
+        color: #ffffff;
+        background: var(--secondary);
+        box-shadow: 0 0 12px rgba(77, 124, 255, 0.28);
+    }
+
     .main-container { max-width: 1400px; margin: 0 auto; padding: 120px 20px 40px; }
 
-    /* Movie info panel */
     .movie-info-panel {
-        background: rgba(255,255,255,0.92); backdrop-filter: blur(10px);
-        border: 1px solid rgba(111,92,255,0.2); border-radius: 18px; padding: 25px;
-        margin-bottom: 30px; box-shadow: 0 14px 24px rgba(36,53,90,0.12);
-        position: relative; display: flex; gap: 30px; flex-wrap: wrap;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(111, 92, 255, 0.2);
+        border-radius: 18px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 14px 24px rgba(36, 53, 90, 0.12);
+        position: relative;
+        display: flex;
+        gap: 30px;
+        flex-wrap: wrap;
     }
+
     .movie-info-panel::before {
-        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
         border-radius: 18px 18px 0 0;
         background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
     }
+
     .movie-poster { flex: 0 0 220px; }
-    .movie-poster img { width: 100%; border: 2px solid rgba(179,169,217,0.5); box-shadow: 0 0 20px rgba(179,169,217,0.25); border-radius: 10px; }
+    .movie-poster img { width: 100%; border: 2px solid rgba(179, 169, 217, 0.5); box-shadow: 0 0 20px rgba(179, 169, 217, 0.25); border-radius: 10px; }
     .movie-details { flex: 1; min-width: 300px; position: relative; }
-    .movie-title { font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif; font-size: 2.1rem; color: var(--primary); margin-bottom: 15px; text-shadow: 0 0 8px rgba(111,92,255,0.18); line-height: 1.2; }
-    .movie-meta {
-        display: flex; flex-wrap: wrap; gap: 12px 22px; margin-bottom: 20px;
-        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
-        color: var(--secondary); background: rgba(248,250,255,0.95); padding: 14px;
-        border-radius: 10px; border: 1px solid rgba(77,124,255,0.18);
+
+    .movie-title {
+        font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif;
+        font-size: 2.1rem;
+        color: var(--primary);
+        margin-bottom: 15px;
+        text-shadow: 0 0 8px rgba(111, 92, 255, 0.18);
+        line-height: 1.2;
     }
+
+    .movie-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 22px;
+        margin-bottom: 20px;
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
+        color: var(--secondary);
+        background: rgba(248, 250, 255, 0.95);
+        padding: 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(77, 124, 255, 0.18);
+    }
+
     .meta-item { display: flex; align-items: center; gap: 8px; }
     .meta-link { color: var(--warn); text-decoration: none; border-bottom: 1px dashed transparent; transition: all 0.25s; }
     .meta-link:hover { color: #1e293b; border-color: #1e293b; }
+
     .btn-group { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; }
-    .ai-audio-btn, .share-btn {
-        display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px;
+
+    .ai-audio-btn,
+    .share-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 13px;
         font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
-        font-size: 0.84rem; cursor: pointer; border-radius: 999px; transition: all 0.25s;
+        font-size: 0.84rem;
+        cursor: pointer;
+        border-radius: 999px;
+        transition: all 0.25s;
     }
+
     .ai-audio-btn {
-        background: rgba(127,149,191,0.1); border: 1px solid rgba(127,149,191,0.6);
+        background: rgba(127, 149, 191, 0.1);
+        border: 1px solid rgba(127, 149, 191, 0.6);
         color: var(--secondary);
     }
-    .ai-audio-btn:hover { background: var(--secondary); color: #00121d; box-shadow: 0 0 14px rgba(127,149,191,0.5); }
-    .ai-audio-btn.playing {
-        background: var(--accent); color: #ffffff; border-color: var(--accent);
-        box-shadow: 0 0 14px rgba(217,167,134,0.52); animation: pulseAudio 1.4s infinite;
+
+    .ai-audio-btn:hover {
+        background: var(--secondary);
+        color: #00121d;
+        box-shadow: 0 0 14px rgba(127, 149, 191, 0.5);
     }
+
+    .ai-audio-btn.playing {
+        background: var(--accent);
+        color: #ffffff;
+        border-color: var(--accent);
+        box-shadow: 0 0 14px rgba(217, 167, 134, 0.52);
+        animation: pulseAudio 1.4s infinite;
+    }
+
     .share-btn {
-        background: rgba(179,169,217,0.1); border: 1px solid rgba(179,169,217,0.62);
+        background: rgba(179, 169, 217, 0.1);
+        border: 1px solid rgba(179, 169, 217, 0.62);
         color: var(--primary);
     }
-    .share-btn:hover { background: var(--primary); color: #141724; box-shadow: 0 0 14px rgba(179,169,217,0.45); }
+
+    .share-btn:hover {
+        background: var(--primary);
+        color: #141724;
+        box-shadow: 0 0 14px rgba(179, 169, 217, 0.45);
+    }
+
     @keyframes pulseAudio { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
+
     .overview { margin: 10px 0 20px; line-height: 1.7; color: #334155; font-size: 1.02rem; }
+
     .tags-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+
     .section-label {
-        width: 100%; color: var(--primary); font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif;
-        font-size: 0.96rem; margin-top: 22px; margin-bottom: 10px; letter-spacing: 1px;
-        border-bottom: 1px solid rgba(179,169,217,0.22); padding-bottom: 5px;
+        width: 100%;
+        color: var(--primary);
+        font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif;
+        font-size: 0.96rem;
+        margin-top: 22px;
+        margin-bottom: 10px;
+        letter-spacing: 1px;
+        border-bottom: 1px solid rgba(179, 169, 217, 0.22);
+        padding-bottom: 5px;
     }
+
     .genre-tag {
-        padding: 6px 15px; background: rgba(127,149,191,0.1); border: 1px solid rgba(77,124,255,0.3);
+        padding: 6px 15px;
+        background: rgba(127, 149, 191, 0.1);
+        border: 1px solid rgba(77, 124, 255, 0.3);
         font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
-        font-size: 0.88rem; color: #1f2937; text-decoration: none; transition: all 0.25s;
-        cursor: pointer; border-radius: 999px;
+        font-size: 0.88rem;
+        color: #1f2937;
+        text-decoration: none;
+        transition: all 0.25s;
+        cursor: pointer;
+        border-radius: 999px;
     }
-    .genre-tag:hover { background: var(--secondary); color: #ffffff; box-shadow: 0 0 10px rgba(77,124,255,0.24); transform: translateY(-2px); }
+
+    .genre-tag:hover {
+        background: var(--secondary);
+        color: #ffffff;
+        box-shadow: 0 0 10px rgba(77, 124, 255, 0.24);
+        transform: translateY(-2px);
+    }
+
     .cast-grid { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 15px; scrollbar-width: thin; scrollbar-color: var(--secondary) transparent; }
     .cast-grid::-webkit-scrollbar { height: 8px; }
     .cast-grid::-webkit-scrollbar-thumb { background: var(--secondary); border-radius: 4px; }
+
     .cast-card {
-        flex: 0 0 130px; background: rgba(248,250,255,0.95); border: 1px solid rgba(77,124,255,0.2);
-        border-radius: 10px; text-decoration: none; color: #1f2937; transition: all 0.25s;
-        display: flex; flex-direction: column; align-items: center; padding: 14px 10px; cursor: pointer;
+        flex: 0 0 130px;
+        background: rgba(248, 250, 255, 0.95);
+        border: 1px solid rgba(77, 124, 255, 0.2);
+        border-radius: 10px;
+        text-decoration: none;
+        color: #1f2937;
+        transition: all 0.25s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 14px 10px;
+        cursor: pointer;
     }
-    .cast-card:hover { transform: translateY(-4px); box-shadow: 0 0 16px rgba(127,149,191,0.4); background: rgba(127,149,191,0.14); border-color: var(--secondary); }
-    .cast-photo { width: 85px; height: 85px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(127,149,191,0.65); margin-bottom: 12px; box-shadow: 0 0 10px rgba(127,149,191,0.35); }
+
+    .cast-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 0 16px rgba(127, 149, 191, 0.4);
+        background: rgba(127, 149, 191, 0.14);
+        border-color: var(--secondary);
+    }
+
+    .cast-photo { width: 85px; height: 85px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(127, 149, 191, 0.65); margin-bottom: 12px; box-shadow: 0 0 10px rgba(127, 149, 191, 0.35); }
     .cast-name { font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.86rem; text-align: center; color: var(--secondary); line-height: 1.2; margin-bottom: 5px; font-weight: bold; }
     .cast-character { font-size: 0.74rem; text-align: center; color: #a0b2cb; line-height: 1.2; font-style: italic; }
 
     .player-container {
-        background: var(--player-bg); border: 1px solid rgba(179,169,217,0.55); border-radius: 12px;
-        overflow: hidden; box-shadow: 0 0 30px rgba(179,169,217,0.2); margin-bottom: 20px;
+        background: var(--player-bg);
+        border: 1px solid rgba(179, 169, 217, 0.55);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 0 30px rgba(179, 169, 217, 0.2);
+        margin-bottom: 20px;
         position: relative;
     }
+
     .player-container::before {
-        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
         background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
         z-index: 2;
     }
+
     #stream-frame { width: 100%; height: 650px; border: none; display: block; background: #000; }
+
     .stream-notice {
-        display: none; margin: 12px; padding: 16px; border-radius: 10px;
-        border: 1px solid rgba(245,158,11,0.35); background: rgba(245,158,11,0.08);
-        color: #92400e; text-align: center; font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
+        display: none;
+        margin: 12px;
+        padding: 16px;
+        border-radius: 10px;
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        background: rgba(245, 158, 11, 0.08);
+        color: #92400e;
+        text-align: center;
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
         line-height: 1.6;
     }
+
     .cc-notice {
-        background: rgba(77,124,255,0.08); border: 1px solid rgba(77,124,255,0.25);
-        color: #1e3a8a; padding: 14px; border-radius: 10px;
+        background: rgba(77, 124, 255, 0.08);
+        border: 1px solid rgba(77, 124, 255, 0.25);
+        color: #1e3a8a;
+        padding: 14px;
+        border-radius: 10px;
         font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
-        text-align: center; margin-bottom: 28px; font-size: 0.93rem;
+        text-align: center;
+        margin-bottom: 28px;
+        font-size: 0.93rem;
     }
+
     .cc-notice b { color: #0f172a; }
+
     .status-badges { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 20px; }
     .status-badge { padding: 11px 16px; font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px; }
-    .badge-primary { background: rgba(179,169,217,0.1); border: 1px solid rgba(179,169,217,0.55); color: var(--primary); border-radius: 999px; }
-    .badge-success { background: rgba(142,161,212,0.1); border: 1px solid rgba(142,161,212,0.55); color: var(--ok); border-radius: 999px; }
+    .badge-primary { background: rgba(179, 169, 217, 0.1); border: 1px solid rgba(179, 169, 217, 0.55); color: var(--primary); border-radius: 999px; }
+    .badge-success { background: rgba(142, 161, 212, 0.1); border: 1px solid rgba(142, 161, 212, 0.55); color: var(--ok); border-radius: 999px; }
 
-    .loading-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(3,6,12,0.95); display: flex; justify-content: center; align-items: center;
-        z-index: 9999; transition: opacity 0.5s;
-    }
-    .loading-text {
-        font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif;
-        font-size: 3rem; color: var(--primary); text-shadow: 0 0 16px rgba(111,92,255,0.35);
-        margin-bottom: 0; animation: btcPulse 1s ease-in-out infinite;
-    }
-    @keyframes btcPulse { 0%,100% { transform: scale(1); opacity: 0.72; } 50% { transform: scale(1.12); opacity: 1; } }
+    .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 6, 12, 0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s; }
+    .loading-text { font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif; font-size: 3rem; color: var(--primary); text-shadow: 0 0 16px rgba(111, 92, 255, 0.35); margin-bottom: 0; animation: btcPulse 1s ease-in-out infinite; }
 
-    /* Control panel (market board) */
     .control-panel {
         background: linear-gradient(180deg, #ffffff 0%, var(--cg-green-soft) 100%);
-        border: 1px solid rgba(22,199,132,0.3); border-radius: 16px; padding: 24px;
-        margin-top: 30px; box-shadow: 0 14px 24px rgba(22,199,132,0.14);
+        border: 1px solid rgba(22, 199, 132, 0.3);
+        border-radius: 16px;
+        padding: 24px;
+        margin-top: 30px;
+        box-shadow: 0 14px 24px rgba(22, 199, 132, 0.14);
     }
+
     .control-title { font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif; font-size: 1.35rem; color: var(--cg-green-strong); margin-bottom: 18px; text-align: center; }
     .control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .control-item { background: #ffffff; padding: 17px; border: 1px solid rgba(22,199,132,0.22); border-radius: 10px; }
+    .control-item { background: #ffffff; padding: 17px; border: 1px solid rgba(22, 199, 132, 0.22); border-radius: 10px; }
     .control-label { color: var(--warn); font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace; font-size: 0.85rem; margin-bottom: 8px; }
     .control-value { color: #1f2937; font-size: 1.05rem; font-family: 'Sora', sans-serif; }
     .quality-selector { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
-    #marketTable thead tr { background: rgba(22,199,132,0.08); }
-    #marketTable th { color: var(--cg-green-strong); border-bottom: 1px solid rgba(22,199,132,0.25) !important; font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace; letter-spacing: 0.3px; }
-    #marketTable td { border-bottom: 1px solid rgba(22,199,132,0.14) !important; }
-    #marketTableBody tr:hover { background: rgba(22,199,132,0.08); }
-    .coin-cell { display: flex; align-items: center; gap: 10px; }
-    .coin-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(22,199,132,0.35); background: #ffffff; }
-    .coin-name-wrap { display: flex; flex-direction: column; gap: 1px; }
-    .coin-name-line { font-weight: 600; color: #0f172a; font-size: 0.88rem; }
-    .coin-symbol-line { color: var(--muted); font-size: 0.76rem; letter-spacing: 0.2px; }
+
+    #marketTable thead tr {
+        background: rgba(22, 199, 132, 0.08);
+    }
+
+    #marketTable th {
+        color: var(--cg-green-strong);
+        border-bottom: 1px solid rgba(22, 199, 132, 0.25) !important;
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
+        letter-spacing: 0.3px;
+    }
+
+    #marketTable td {
+        border-bottom: 1px solid rgba(22, 199, 132, 0.14) !important;
+    }
+
+    #marketTableBody tr:hover {
+        background: rgba(22, 199, 132, 0.08);
+    }
+
+    .coin-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .coin-avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid rgba(22, 199, 132, 0.35);
+        background: #ffffff;
+    }
+
+    .coin-name-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    .coin-name-line {
+        font-weight: 600;
+        color: #0f172a;
+        font-size: 0.88rem;
+    }
+
+    .coin-symbol-line {
+        color: var(--muted);
+        font-size: 0.76rem;
+        letter-spacing: 0.2px;
+    }
+
     .rank-badge {
-        min-width: 34px; text-align: center; padding: 2px 8px; border-radius: 999px;
-        background: rgba(22,199,132,0.12); color: var(--cg-green-strong);
-        border: 1px solid rgba(22,199,132,0.3); font-size: 0.72rem;
+        min-width: 34px;
+        text-align: center;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(22, 199, 132, 0.12);
+        color: var(--cg-green-strong);
+        border: 1px solid rgba(22, 199, 132, 0.3);
+        font-size: 0.72rem;
         font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
     }
-    .market-price-up { animation: flashUp 0.8s ease; color: var(--cg-green-strong); }
-    .market-price-down { animation: flashDown 0.8s ease; color: var(--cg-red); }
-    @keyframes flashUp { 0% { background: rgba(22,199,132,0.3); } 100% { background: transparent; } }
-    @keyframes flashDown { 0% { background: rgba(234,57,67,0.24); } 100% { background: transparent; } }
+
+    .market-price-up {
+        animation: flashUp 0.8s ease;
+        color: var(--cg-green-strong);
+    }
+
+    .market-price-down {
+        animation: flashDown 0.8s ease;
+        color: var(--cg-red);
+    }
+
+    @keyframes flashUp {
+        0% { background: rgba(22, 199, 132, 0.3); }
+        100% { background: transparent; }
+    }
+
+    @keyframes flashDown {
+        0% { background: rgba(234, 57, 67, 0.24); }
+        100% { background: transparent; }
+    }
 
     .quality-btn {
-        padding: 9px 16px; background: rgba(77,124,255,0.08);
-        border: 1px solid rgba(77,124,255,0.28); color: var(--secondary);
+        padding: 9px 16px;
+        background: rgba(77, 124, 255, 0.08);
+        border: 1px solid rgba(77, 124, 255, 0.28);
+        color: var(--secondary);
         font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
-        cursor: pointer; border-radius: 999px;
+        cursor: pointer;
+        border-radius: 999px;
     }
-    .quality-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); box-shadow: 0 0 12px rgba(111,92,255,0.32); }
 
-    .share-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3,7,14,0.88); backdrop-filter: blur(5px); z-index: 10000; justify-content: center; align-items: center; }
+    .quality-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); box-shadow: 0 0 12px rgba(111, 92, 255, 0.32); }
+
+    .share-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 7, 14, 0.88); backdrop-filter: blur(5px); z-index: 10000; justify-content: center; align-items: center; }
     .share-modal.active { display: flex; animation: fadeIn 0.3s ease; }
+
     .share-modal-content {
-        background: var(--card-strong); border: 1px solid rgba(111,92,255,0.28);
-        padding: 26px; border-radius: 14px; max-width: 400px; width: 90%;
-        text-align: center; box-shadow: 0 0 24px rgba(127,149,191,0.24);
+        background: var(--card-strong);
+        border: 1px solid rgba(111, 92, 255, 0.28);
+        padding: 26px;
+        border-radius: 14px;
+        max-width: 400px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 0 24px rgba(127, 149, 191, 0.24);
         position: relative;
     }
+
     .share-close { position: absolute; top: 10px; right: 15px; color: #334155; font-size: 1.8rem; cursor: pointer; transition: color 0.3s; }
     .share-close:hover { color: var(--accent); }
-    .share-poster-img { width: 100%; max-width: 180px; border-radius: 8px; border: 1px solid rgba(179,169,217,0.45); margin-bottom: 15px; box-shadow: 0 0 12px rgba(179,169,217,0.2); }
+    .share-poster-img { width: 100%; max-width: 180px; border-radius: 8px; border: 1px solid rgba(179, 169, 217, 0.45); margin-bottom: 15px; box-shadow: 0 0 12px rgba(179, 169, 217, 0.2); }
     .share-title { font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif; color: var(--secondary); margin-bottom: 15px; font-size: 1.1rem; }
     .copy-container { display: flex; gap: 10px; margin-top: 15px; }
-    .copy-input { flex: 1; padding: 10px; background: rgba(255,255,255,0.96); border: 1px solid rgba(77,124,255,0.3); color: var(--secondary); font-family: 'JetBrains Mono', monospace; border-radius: 8px; outline: none; }
+    .copy-input { flex: 1; padding: 10px; background: rgba(255, 255, 255, 0.96); border: 1px solid rgba(77, 124, 255, 0.3); color: var(--secondary); font-family: 'JetBrains Mono', monospace; border-radius: 8px; outline: none; }
     .copy-btn { padding: 10px 14px; background: var(--secondary); color: #ffffff; border: none; font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace; font-weight: bold; cursor: pointer; border-radius: 8px; transition: all 0.25s; }
-    .copy-btn:hover { box-shadow: 0 0 13px rgba(127,149,191,0.45); background: #8ec8ff; }
+    .copy-btn:hover { box-shadow: 0 0 13px rgba(127, 149, 191, 0.45); background: #8ec8ff; }
+
     @keyframes fadeIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+    @keyframes btcPulse { 0%, 100% { transform: scale(1); opacity: 0.72; } 50% { transform: scale(1.12); opacity: 1; } }
 
     @media (max-width: 768px) {
         .ui-lang-wrapper { top: 10px; right: 10px; }
@@ -264,6 +506,7 @@
 </head>
 <body>
     <div class="web3-grid"></div>
+
     <div class="loading-overlay" id="loadingOverlay">
         <div style="text-align:center;">
             <div class="loading-text" id="loadingShield">₿</div>
@@ -280,13 +523,11 @@
         </div>
         <div class="header-content">
             <div class="site-title">GITHUB MOVIES</div>
-            <div id="authInline" style="display:flex;align-items:center;gap:10px;">
-                <div id="userInfo" style="display:none;color:var(--primary);font-family:'JetBrains Mono',monospace;cursor:pointer;"></div>
-                <div id="walletInfo" style="display:none;color:var(--primary);font-family:'JetBrains Mono',monospace;font-size:0.9rem;cursor:pointer;"></div>
-                <!-- MetaMask only -->
-                <button id="metamaskBtn" class="quality-btn" style="display:none;">MetaMask</button>
-                <button id="signOutBtn" class="quality-btn" style="display:none;">Sign out</button>
-            </div>
+                <div id="authInline" style="display:flex;align-items:center;gap:10px;">
+                    <div id="userInfo" style="display:none;color:var(--primary);font-family:'JetBrains Mono',monospace;cursor:pointer;"></div>
+                    <div id="walletInfo" style="display:none;color:var(--primary);font-family:'JetBrains Mono',monospace;font-size:0.9rem;cursor:pointer;"></div>
+                    <button id="signOutBtn" class="quality-btn" style="display:none;">Sign out</button>
+                </div>
             <a href="index.html" class="nav-link" id="returnBtn">← BACK TO HOME</a>
         </div>
     </header>
@@ -296,6 +537,7 @@
             <div class="movie-poster" id="moviePoster"></div>
             <div class="movie-details">
                 <h1 class="movie-title" id="movieTitle">SYNCING MOVIE DATA...</h1>
+                
                 <div class="movie-meta">
                     <div class="meta-item">⭐ <span id="ratingVal">N/A</span></div>
                     <div class="meta-item">⏱️ <span id="runtimeVal">N/A</span></div>
@@ -303,13 +545,17 @@
                     <div class="meta-item">🌍 <span id="countryVal">N/A</span></div>
                     <div class="meta-item">🗣️ <span id="langVal">N/A</span></div>
                 </div>
+                
                 <div class="btn-group">
                     <button class="ai-audio-btn" id="aiSpeechBtn">🔊 VOICE SUMMARY</button>
                     <button class="share-btn" id="shareMovieBtn">🔗 SHARE MOVIE</button>
                 </div>
+
                 <div class="overview" id="movieOverview">Loading movie metadata...</div>
+                
                 <div class="section-label" id="catLabel">CATEGORIES</div>
                 <div class="tags-container" id="movieGenres"></div>
+                
                 <div class="section-label" id="personnelLabel">KEY PERSONNEL</div>
                 <div class="cast-grid" id="movieCast"></div>
             </div>
@@ -338,11 +584,11 @@
                 <table id="marketTable" style="width:100%;border-collapse:collapse;min-width:560px;">
                     <thead>
                         <tr>
-                            <th id="lblMarketCoin" style="text-align:left;padding:10px;border-bottom:1px solid rgba(77,124,255,0.2);">COIN</th>
-                            <th id="lblMarketPrice" style="text-align:right;padding:10px;border-bottom:1px solid rgba(77,124,255,0.2);">PRICE</th>
-                            <th id="lblMarketChange" style="text-align:right;padding:10px;border-bottom:1px solid rgba(77,124,255,0.2);">24H</th>
-                            <th id="lblMarketCap" style="text-align:right;padding:10px;border-bottom:1px solid rgba(77,124,255,0.2);">MARKET CAP</th>
-                            <th id="lblMarketVolume" style="text-align:right;padding:10px;border-bottom:1px solid rgba(77,124,255,0.2);">VOLUME</th>
+                            <th id="lblMarketCoin" style="text-align:left;padding:10px;border-bottom:1px solid rgba(77, 124, 255, 0.2);">COIN</th>
+                            <th id="lblMarketPrice" style="text-align:right;padding:10px;border-bottom:1px solid rgba(77, 124, 255, 0.2);">PRICE</th>
+                            <th id="lblMarketChange" style="text-align:right;padding:10px;border-bottom:1px solid rgba(77, 124, 255, 0.2);">24H</th>
+                            <th id="lblMarketCap" style="text-align:right;padding:10px;border-bottom:1px solid rgba(77, 124, 255, 0.2);">MARKET CAP</th>
+                            <th id="lblMarketVolume" style="text-align:right;padding:10px;border-bottom:1px solid rgba(77, 124, 255, 0.2);">VOLUME</th>
                         </tr>
                     </thead>
                     <tbody id="marketTableBody">
@@ -378,14 +624,433 @@
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <script src="web3-auth.js"></script>
     <script>
-        // ============ GLOBALS ============
+        function getAuth() {
+            if (window.web3Auth) return window.web3Auth;
+            if (typeof window.Web3Auth === 'function') {
+                window.web3Auth = new window.Web3Auth();
+                return window.web3Auth;
+            }
+            return null;
+        }
+
+        function createEmergencyAuthAdapter() {
+            const adapter = {
+                provider: 'Web3 Wallet',
+                address: null,
+                balance: null,
+                chainId: null,
+                chainName: null,
+                isMetaMaskAvailable() { return typeof window.ethereum !== 'undefined'; },
+                isInsideMetaMaskApp() {
+                    const ua = String(navigator?.userAgent || '').toLowerCase();
+                    return ua.includes('metamaskmobile');
+                },
+                isConnected() { return !!this.address; },
+                getShortAddress(addr = this.address) { return addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : ''; },
+                getChainName(chainId) { return chainId ? `Network ${chainId}` : 'Unknown'; },
+                getMetaMaskDeepLinks() {
+                    const url = new URL(window.location.href);
+                    const dappPath = `${url.host}${url.pathname}${url.search}${url.hash}`;
+                    return {
+                        native: `metamask://dapp/${dappPath}`,
+                        universal: `https://metamask.app.link/dapp/${dappPath}`,
+                        universalEncoded: `https://metamask.app.link/dapp/${encodeURIComponent(dappPath)}`
+                    };
+                },
+                getMetaMaskDeepLink() {
+                    return this.getMetaMaskDeepLinks().universal;
+                },
+                openMetaMaskApp() {
+                    if (window.ethereum?.isMetaMask) return;
+
+                    const links = this.getMetaMaskDeepLinks();
+                    let hidden = document.visibilityState === 'hidden';
+                    const onVisibilityChange = () => {
+                        if (document.visibilityState === 'hidden') hidden = true;
+                    };
+                    document.addEventListener('visibilitychange', onVisibilityChange, { once: true });
+
+                    window.location.href = links.native;
+                    setTimeout(() => {
+                        if (!hidden) window.location.href = links.universal;
+                    }, 700);
+                    setTimeout(() => {
+                        if (!hidden) window.location.href = links.universalEncoded;
+                    }, 1600);
+                },
+                isMetaMaskInternalError(error) {
+                    const message = String(
+                        error?.data?.originalError?.message ||
+                        error?.data?.message ||
+                        error?.message ||
+                        ''
+                    ).toLowerCase();
+                    return error?.code === -32603 || message.includes('internal error');
+                },
+                getWalletData() {
+                    return {
+                        address: this.address,
+                        balance: this.balance,
+                        chainId: this.chainId,
+                        chainName: this.chainName,
+                        provider: this.provider,
+                        shortAddress: this.getShortAddress()
+                    };
+                },
+                async refreshBalance() {
+                    if (!this.address || !window.ethereum) return null;
+                    const wei = await window.ethereum.request({ method: 'eth_getBalance', params: [this.address, 'latest'] });
+                    this.balance = (parseInt(wei, 16) / 1e18).toFixed(4);
+                    return this.balance;
+                },
+                async restoreSession(expectedAddress = null) {
+                    if (!window.ethereum) return null;
+                    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                    if (!accounts || !accounts.length) return null;
+                    const address = accounts[0];
+                    if (expectedAddress && address.toLowerCase() !== String(expectedAddress).toLowerCase()) return null;
+                    this.address = address;
+                    const chainHex = await window.ethereum.request({ method: 'eth_chainId' });
+                    this.chainId = parseInt(chainHex, 16);
+                    this.chainName = this.getChainName(this.chainId);
+                    await this.refreshBalance();
+                    return this.getWalletData();
+                },
+                async connectMetaMask() {
+                    if (!window.ethereum) {
+                        this.openMetaMaskApp();
+                        return null;
+                    }
+                    this.provider = 'MetaMask';
+                    let accounts = null;
+                    try {
+                        accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    } catch (error) {
+                        if (this.isMetaMaskInternalError(error)) {
+                            try {
+                                const existing = await window.ethereum.request({ method: 'eth_accounts' });
+                                if (Array.isArray(existing) && existing.length) {
+                                    accounts = existing;
+                                } else {
+                                    this.openMetaMaskApp();
+                                    return null;
+                                }
+                            } catch (_) {
+                                this.openMetaMaskApp();
+                                return null;
+                            }
+                        } else {
+                            throw error;
+                        }
+                    }
+                    if (!accounts || !accounts.length) return null;
+                    this.address = accounts[0];
+                    const chainHex = await window.ethereum.request({ method: 'eth_chainId' });
+                    this.chainId = parseInt(chainHex, 16);
+                    this.chainName = this.getChainName(this.chainId);
+                    await this.refreshBalance();
+                    return this.getWalletData();
+                },
+                async connectTrustWallet() {
+                    this.provider = 'Trust Wallet';
+                    return this.connectMetaMask();
+                },
+                disconnect() {
+                    this.address = null;
+                    this.balance = null;
+                    this.chainId = null;
+                    this.chainName = null;
+                }
+            };
+            window.web3Auth = adapter;
+            return adapter;
+        }
+
+        function loadScriptOnce(src) {
+            return new Promise((resolve, reject) => {
+                const existing = document.querySelector(`script[data-loader="${src}"]`);
+                if (existing) {
+                    if (existing.dataset.ready === '1') return resolve();
+                    existing.addEventListener('load', () => resolve(), { once: true });
+                    existing.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)), { once: true });
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = src;
+                script.async = true;
+                script.dataset.loader = src;
+                script.addEventListener('load', () => {
+                    script.dataset.ready = '1';
+                    resolve();
+                }, { once: true });
+                script.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)), { once: true });
+                document.head.appendChild(script);
+            });
+        }
+
+        async function ensureWeb3AuthLoaded() {
+            let auth = getAuth();
+            if (auth) return auth;
+
+            try {
+                await loadScriptOnce('web3-auth.js?v=20260707');
+            } catch (error) {
+                console.error('Primary web3 auth load failed:', error);
+            }
+
+            auth = getAuth();
+            if (auth) return auth;
+            return createEmergencyAuthAdapter();
+        }
+
+        function persistWalletSession(walletData, providerLabel) {
+            if (!walletData || !walletData.address) return;
+            localStorage.setItem('g_user', JSON.stringify({
+                type: 'web3',
+                verified: true,
+                provider: providerLabel || walletData.provider || 'Web3 Wallet',
+                address: walletData.address,
+                shortAddress: walletData.shortAddress,
+                balance: walletData.balance,
+                chainId: walletData.chainId,
+                chainName: walletData.chainName,
+                signature: walletData.signature || null,
+                signatureMessage: walletData.signatureMessage || null,
+                signedAt: walletData.signedAt || null
+            }));
+        }
+
+        async function restoreWalletSession() {
+            const auth = await ensureWeb3AuthLoaded();
+            if (!auth) return null;
+
+            const raw = localStorage.getItem('g_user');
+            if (!raw) return null;
+
+            try {
+                const stored = JSON.parse(raw);
+                if (stored?.type !== 'web3' || !stored?.verified || !stored?.address) {
+                    localStorage.removeItem('g_user');
+                    return null;
+                }
+
+                const walletData = await auth.restoreSession(stored.address);
+                if (!walletData) {
+                    localStorage.removeItem('g_user');
+                    return null;
+                }
+
+                walletData.provider = stored.provider || walletData.provider;
+                persistWalletSession(walletData, walletData.provider);
+                return walletData;
+            } catch (error) {
+                console.error('Wallet session restore failed:', error);
+                localStorage.removeItem('g_user');
+                return null;
+            }
+        }
+
+        // --- Web3 Wallet Login for Player Page ---
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Show Web3 buttons
+            const metamaskBtn = document.getElementById('metamaskBtn');
+            const trustwalletBtn = document.getElementById('trustwalletBtn');
+            if (metamaskBtn) metamaskBtn.style.display = 'inline-block';
+            if (trustwalletBtn) trustwalletBtn.style.display = 'inline-block';
+
+            const restored = await restoreWalletSession();
+            if (restored) {
+                const ui = document.getElementById('userInfo');
+                if (ui) { ui.innerText = restored.shortAddress; ui.style.display = 'block'; }
+                const out = document.getElementById('signOutBtn');
+                if (out) out.style.display = 'inline-block';
+                if (metamaskBtn) metamaskBtn.style.display = 'none';
+                if (trustwalletBtn) trustwalletBtn.style.display = 'none';
+            }
+            const outBtn = document.getElementById('signOutBtn');
+            if (outBtn) outBtn.addEventListener('click', () => { 
+                const auth = getAuth();
+                if (auth) auth.disconnect();
+                localStorage.removeItem('g_user'); 
+                location.reload(); 
+            });
+        });
+
+        // Web3 button handlers
+        document.getElementById('metamaskBtn')?.addEventListener('click', async () => {
+            const auth = await ensureWeb3AuthLoaded();
+            if (!auth) {
+                alert('Web3 module not loaded. Please refresh the page.');
+                return;
+            }
+
+            const loginTarget = new URL(window.location.href);
+            loginTarget.pathname = loginTarget.pathname.replace(/[^/]*$/, 'index.html');
+            loginTarget.search = '?mm_login=1';
+            loginTarget.hash = '';
+
+            if (!auth.isMetaMaskAvailable?.() && typeof auth.openMetaMaskApp === 'function') {
+                auth.openMetaMaskApp(loginTarget.toString());
+                return;
+            }
+
+            const result = await auth.connectMetaMask();
+            if (result) {
+                persistWalletSession(result, 'MetaMask');
+                const ui = document.getElementById('userInfo');
+                if (ui) { ui.innerText = result.shortAddress; ui.style.display = 'block'; }
+                const out = document.getElementById('signOutBtn');
+                if (out) out.style.display = 'inline-block';
+                const metamaskBtn = document.getElementById('metamaskBtn');
+                const trustwalletBtn = document.getElementById('trustwalletBtn');
+                if (metamaskBtn) metamaskBtn.style.display = 'none';
+                if (trustwalletBtn) trustwalletBtn.style.display = 'none';
+                window.location.replace('index.html');
+            }
+        });
+
+        document.getElementById('trustwalletBtn')?.addEventListener('click', async () => {
+            const auth = await ensureWeb3AuthLoaded();
+            if (!auth) {
+                alert('Web3 module not loaded. Please refresh the page.');
+                return;
+            }
+            const result = await auth.connectTrustWallet();
+            if (result) {
+                persistWalletSession(result, 'Trust Wallet');
+                const ui = document.getElementById('userInfo');
+                if (ui) { ui.innerText = result.shortAddress; ui.style.display = 'block'; }
+                const out = document.getElementById('signOutBtn');
+                if (out) out.style.display = 'inline-block';
+                const metamaskBtn = document.getElementById('metamaskBtn');
+                const trustwalletBtn = document.getElementById('trustwalletBtn');
+                if (metamaskBtn) metamaskBtn.style.display = 'none';
+                if (trustwalletBtn) trustwalletBtn.style.display = 'none';
+            }
+        });
+
+        if (!localStorage.getItem('uiLang')) {
+            const browserLang = navigator.language || navigator.userLanguage;
+            if (browserLang.toLowerCase().includes('km')) localStorage.setItem('uiLang', 'km');
+            else if (browserLang.toLowerCase().includes('zh')) localStorage.setItem('uiLang', 'zh');
+            else localStorage.setItem('uiLang', 'en');
+        }
+
+        const translations = {
+            en: {
+                returnBtn: "← BACK TO HOME",
+                loadingShield: "₿",
+                routing: "Resolving gateway route...",
+                syncingTitle: "SYNCING MOVIE DATA...",
+                loadingData: "Loading movie metadata...",
+                categories: "CATEGORIES",
+                personnel: "KEY PERSONNEL",
+                originGuard: "🛡️ WEB3 GATEWAY: SECURE PLAYER ACTIVE",
+                tmdbConnected: "🎬 TMDB: CONNECTED",
+                controlPanel: "MARKET CAP BOARD",
+                marketCoin: "COIN",
+                marketPrice: "PRICE",
+                marketCap: "MARKET CAP",
+                marketChange: "24H",
+                marketVolume: "VOLUME",
+                marketLoading: "Loading market data...",
+                marketError: "Market data unavailable",
+                chartTitle: "LIVE CHART",
+                chartLoading: "Loading chart...",
+                chartError: "Chart unavailable",
+                unknownRole: "Unknown Role",
+                na: "N/A",
+                ccNotice: "💡 <b>SUBTITLES (CC):</b> Click the 'CC' icon inside the video player to enable Khmer, English, or Chinese subtitles.",
+                aiReadBtn: "🔊 VOICE SUMMARY",
+                aiStopBtn: "⏹️ STOP AUDIO",
+                shareBtn: "🔗 SHARE MOVIE",
+                shareTitle: "SHARE THIS MOVIE",
+                copyBtn: "COPY",
+                copiedBtn: "COPIED!",
+                streamUnavailable: "Full playback requires a configured provider. Set LICENSED_STREAM_ORIGIN or CLOUDNESTRA_ORIGIN on your API host."
+            },
+            km: {
+                returnBtn: "← ត្រឡប់ទៅទំព័រដើម",
+                loadingShield: "₿",
+                routing: "កំពុងកំណត់ផ្លូវ Gateway...",
+                syncingTitle: "កំពុងធ្វើសមកាលកម្មទិន្នន័យភាពយន្ត...",
+                loadingData: "កំពុងផ្ទុក Metadata ភាពយន្ត...",
+                categories: "ប្រភេទភាពយន្ត",
+                personnel: "តួសម្តែង",
+                originGuard: "🛡️ WEB3 GATEWAY: កម្មវិធីចាក់វីដេអូមានសុវត្ថិភាព",
+                tmdbConnected: "🎬 TMDB: បានភ្ជាប់",
+                controlPanel: "ផ្ទាំងមូលធនទីផ្សារ",
+                marketCoin: "កាក់",
+                marketPrice: "តម្លៃ",
+                marketCap: "មូលធនទីផ្សារ",
+                marketChange: "២៤ ម៉ោង",
+                marketVolume: "បរិមាណ",
+                marketLoading: "កំពុងទាញទិន្នន័យទីផ្សារ...",
+                marketError: "មិនអាចទាញទិន្នន័យទីផ្សារ",
+                chartTitle: "ក្រាហ្វផ្ទាល់",
+                chartLoading: "កំពុងទាញក្រាហ្វ...",
+                chartError: "មិនអាចបង្ហាញក្រាហ្វ",
+                unknownRole: "មិនស្គាល់តួអង្គ",
+                na: "មិនមាន",
+                ccNotice: "💡 <b>ចំណងជើងរង (CC):</b> ចុចលើរូបតំណាង 'CC' នៅក្នុងផ្ទាំងវីដេអូដើម្បីជ្រើសរើសចំណងជើងរងជាភាសាខ្មែរ អង់គ្លេស ឬចិន។",
+                aiReadBtn: "🔊 សង្ខេបដោយសំឡេង",
+                aiStopBtn: "⏹️ បញ្ឈប់សំឡេង",
+                shareBtn: "🔗 ចែករំលែក",
+                shareTitle: "ចែករំលែកភាពយន្តនេះ",
+                copyBtn: "ចម្លង",
+                copiedBtn: "បានចម្លង!",
+                streamUnavailable: "ការចាក់ពេញត្រូវការអ្នកផ្គត់ផ្គង់ដែលបានកំណត់។ សូមកំណត់ LICENSED_STREAM_ORIGIN ឬ CLOUDNESTRA_ORIGIN នៅម៉ាស៊ីន API របស់អ្នក។"
+            },
+            zh: {
+                returnBtn: "← 返回主页",
+                loadingShield: "₿",
+                routing: "正在解析网关路由...",
+                syncingTitle: "正在同步影片数据...",
+                loadingData: "正在加载影片元数据...",
+                categories: "类别",
+                personnel: "演职人员",
+                originGuard: "🛡️ WEB3 GATEWAY: 安全播放器已启用",
+                tmdbConnected: "🎬 TMDB: 已连接",
+                controlPanel: "市值看板",
+                marketCoin: "币种",
+                marketPrice: "价格",
+                marketCap: "市值",
+                marketChange: "24小时",
+                marketVolume: "成交量",
+                marketLoading: "正在加载市场数据...",
+                marketError: "市场数据不可用",
+                chartTitle: "实时图表",
+                chartLoading: "正在加载图表...",
+                chartError: "图表不可用",
+                unknownRole: "未知角色",
+                na: "无",
+                ccNotice: "💡 <b>字幕 (CC):</b> 点击视频播放器内的 'CC' 图标以启用高棉语、英语或中文字幕。",
+                aiReadBtn: "🔊 语音摘要",
+                aiStopBtn: "⏹️ 停止语音",
+                shareBtn: "🔗 分享电影",
+                shareTitle: "分享此电影",
+                copyBtn: "复制",
+                copiedBtn: "已复制!",
+                streamUnavailable: "完整播放需要已配置的播放源。请在 API 主机中设置 LICENSED_STREAM_ORIGIN 或 CLOUDNESTRA_ORIGIN。"
+            }
+        };
+
+        (function applyOriginGuard() {
+            window.open = function() { console.warn("🛡️ Web3 Gateway: Blocked popup"); return { focus: function(){}, close: function(){} }; };
+            window.onbeforeunload = function(e) { if (document.activeElement && document.activeElement.tagName === 'IFRAME') return "Web3 gateway active."; };
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.genre-tag') || e.target.closest('.cast-card') || e.target.closest('.meta-link') || e.target.closest('.ai-audio-btn') || e.target.closest('.share-btn')) return; 
+                if (e.target.tagName === 'A' && (e.target.href.includes('ad') || e.target.href.includes('bet'))) e.preventDefault();
+            }, true);
+        })();
+
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
         const urlParams = new URLSearchParams(window.location.search);
         const tmdbId = urlParams.get('tmdb');
         const mediaType = urlParams.get('type') || 'movie';
-        let currentMovieTitle = "Unknown";
+        let currentMovieTitle = "Unknown"; 
 
-        // UI elements
         const uiLangSelect = document.getElementById('uiLangSelect');
         const aiSpeechBtn = document.getElementById('aiSpeechBtn');
         const shareMovieBtn = document.getElementById('shareMovieBtn');
@@ -398,7 +1063,7 @@
         const coinChartClose = document.getElementById('coinChartClose');
         const coinChartTitle = document.getElementById('coinChartTitle');
         const coinChartCanvas = document.getElementById('coinChartCanvas');
-
+        
         let isSpeaking = false;
         let currentPosterUrl = "";
         let coinChartInstance = null;
@@ -408,21 +1073,16 @@
         let coinChartRefreshTimer = null;
         const previousMarketSnapshot = new Map();
 
-        // ============ TRANSLATIONS ============
-        const translations = {
-            en: { returnBtn: "← BACK TO HOME", loadingShield: "₿", syncingTitle: "SYNCING MOVIE DATA...", loadingData: "Loading movie metadata...", categories: "CATEGORIES", personnel: "KEY PERSONNEL", originGuard: "🛡️ WEB3 GATEWAY: SECURE PLAYER ACTIVE", tmdbConnected: "🎬 TMDB: CONNECTED", controlPanel: "MARKET CAP BOARD", marketCoin: "COIN", marketPrice: "PRICE", marketCap: "MARKET CAP", marketChange: "24H", marketVolume: "VOLUME", marketLoading: "Loading market data...", marketError: "Market data unavailable", chartTitle: "LIVE CHART", chartLoading: "Loading chart...", chartError: "Chart unavailable", unknownRole: "Unknown Role", na: "N/A", ccNotice: "💡 <b>SUBTITLES (CC):</b> Click the 'CC' icon inside the video player to enable Khmer, English, or Chinese subtitles.", aiReadBtn: "🔊 VOICE SUMMARY", aiStopBtn: "⏹️ STOP AUDIO", shareBtn: "🔗 SHARE MOVIE", shareTitle: "SHARE THIS MOVIE", copyBtn: "COPY", copiedBtn: "COPIED!" },
-            km: { returnBtn: "← ត្រឡប់ទៅទំព័រដើម", loadingShield: "₿", syncingTitle: "កំពុងធ្វើសមកាលកម្មទិន្នន័យភាពយន្ត...", loadingData: "កំពុងផ្ទុក Metadata ភាពយន្ត...", categories: "ប្រភេទភាពយន្ត", personnel: "តួសម្តែង", originGuard: "🛡️ WEB3 GATEWAY: កម្មវិធីចាក់វីដេអូមានសុវត្ថិភាព", tmdbConnected: "🎬 TMDB: បានភ្ជាប់", controlPanel: "ផ្ទាំងមូលធនទីផ្សារ", marketCoin: "កាក់", marketPrice: "តម្លៃ", marketCap: "មូលធនទីផ្សារ", marketChange: "២៤ ម៉ោង", marketVolume: "បរិមាណ", marketLoading: "កំពុងទាញទិន្នន័យទីផ្សារ...", marketError: "មិនអាចទាញទិន្នន័យទីផ្សារ", chartTitle: "ក្រាហ្វផ្ទាល់", chartLoading: "កំពុងទាញក្រាហ្វ...", chartError: "មិនអាចបង្ហាញក្រាហ្វ", unknownRole: "មិនស្គាល់តួអង្គ", na: "មិនមាន", ccNotice: "💡 <b>ចំណងជើងរង (CC):</b> ចុចលើរូបតំណាង 'CC' នៅក្នុងផ្ទាំងវីដេអូដើម្បីជ្រើសរើសចំណងជើងរងជាភាសាខ្មែរ អង់គ្លេស ឬចិន។", aiReadBtn: "🔊 សង្ខេបដោយសំឡេង", aiStopBtn: "⏹️ បញ្ឈប់សំឡេង", shareBtn: "🔗 ចែករំលែក", shareTitle: "ចែករំលែកភាពយន្តនេះ", copyBtn: "ចម្លង", copiedBtn: "បានចម្លង!" },
-            zh: { returnBtn: "← 返回主页", loadingShield: "₿", syncingTitle: "正在同步影片数据...", loadingData: "正在加载影片元数据...", categories: "类别", personnel: "演职人员", originGuard: "🛡️ WEB3 GATEWAY: 安全播放器已启用", tmdbConnected: "🎬 TMDB: 已连接", controlPanel: "市值看板", marketCoin: "币种", marketPrice: "价格", marketCap: "市值", marketChange: "24小时", marketVolume: "成交量", marketLoading: "正在加载市场数据...", marketError: "市场数据不可用", chartTitle: "实时图表", chartLoading: "正在加载图表...", chartError: "图表不可用", unknownRole: "未知角色", na: "无", ccNotice: "💡 <b>字幕 (CC):</b> 点击视频播放器内的 'CC' 图标以启用高棉语、英语或中文字幕。", aiReadBtn: "🔊 语音摘要", aiStopBtn: "⏹️ 停止语音", shareBtn: "🔗 分享电影", shareTitle: "分享此电影", copyBtn: "复制", copiedBtn: "已复制!" }
-        };
-
         function getT() {
             return translations[localStorage.getItem('uiLang') || 'en'];
         }
 
+        // AUTO TRANSLATE UI ELEMENTS
         function updateUI() {
             const lang = localStorage.getItem('uiLang') || 'en';
             const t = translations[lang];
             uiLangSelect.value = lang;
+
             document.getElementById('returnBtn').innerText = t.returnBtn;
             document.getElementById('loadingShield').innerText = t.loadingShield;
             document.getElementById('catLabel').innerText = t.categories;
@@ -435,13 +1095,22 @@
             document.getElementById('lblMarketCap').innerText = t.marketCap;
             document.getElementById('lblMarketChange').innerText = t.marketChange;
             document.getElementById('lblMarketVolume').innerText = t.marketVolume;
+            const ms = document.getElementById('marketSummary');
+            if (ms && (!ms.dataset.ready || ms.dataset.ready === '0')) ms.innerText = t.marketLoading;
+            if (coinChartTitle && (!activeChartCoin || !activeChartCoin.symbol)) {
+                coinChartTitle.innerText = t.chartTitle;
+            }
             document.getElementById('ccNotice').innerHTML = t.ccNotice;
+            
             aiSpeechBtn.innerText = isSpeaking ? t.aiStopBtn : t.aiReadBtn;
+            
+            // Share UI updates
             shareMovieBtn.innerText = t.shareBtn;
             document.getElementById('shareModalTitle').innerText = t.shareTitle;
             if (copyUrlBtn.innerText !== t.copiedBtn) {
                 copyUrlBtn.innerText = t.copyBtn;
             }
+
             const titleEl = document.getElementById('movieTitle');
             if (titleEl.innerText === "SYNCING MOVIE DATA..." || titleEl.innerText === "កំពុងធ្វើសមកាលកម្មទិន្នន័យភាពយន្ត..." || titleEl.innerText === "正在同步影片数据...") {
                 titleEl.innerText = t.syncingTitle;
@@ -457,15 +1126,18 @@
             if (overlay) { overlay.style.opacity = '0'; setTimeout(() => overlay.style.display = 'none', 500); }
         }
 
-        // ============ TMDB DETAILS ============
+        // SMART TRANSLATION TMDB FALLBACK
         async function syncTmdbDetails() {
             if (!tmdbId) return;
             const t = getT();
             const uiLangCode = localStorage.getItem('uiLang') || 'en';
             const tmdbLang = uiLangCode === 'km' ? 'km-KH' : (uiLangCode === 'zh' ? 'zh-CN' : 'en-US');
+
             try {
                 let res = await fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}&language=${tmdbLang}`);
                 let data = await res.json();
+
+                // FALLBACK FEATURE: If TMDB has no localized description, quietly fetch the English one!
                 if (!data.overview && tmdbLang !== 'en-US') {
                     const fallbackRes = await fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}&language=en-US`);
                     const fallbackData = await fallbackRes.json();
@@ -475,68 +1147,113 @@
                         data.name = fallbackData.name;
                     }
                 }
+
                 currentMovieTitle = data.title || data.name || "Unknown";
                 const year = (data.release_date || data.first_air_date || 'N/A').substring(0, 4);
+
                 document.title = `GitHub Movies | ${currentMovieTitle}`;
                 document.getElementById('movieTitle').innerHTML = `${currentMovieTitle} <span style="color:var(--warn);">(${year})</span>`;
                 document.getElementById('ratingVal').innerText = data.vote_average ? `${data.vote_average.toFixed(1)}/10` : t.na;
                 document.getElementById('runtimeVal').innerText = data.runtime ? `${data.runtime} min` : (data.episode_run_time && data.episode_run_time.length > 0 ? `${data.episode_run_time[0]} min` : t.na);
                 document.getElementById('releaseVal').innerText = data.release_date || data.first_air_date || t.na;
                 document.getElementById('movieOverview').innerText = data.overview || '';
-                document.getElementById('countryVal').innerHTML = data.production_countries && data.production_countries.length > 0 ? data.production_countries.map(c => `<a href="index.html?country=${c.iso_3166_1}&countryName=${encodeURIComponent(c.name)}&type=${mediaType}" class="meta-link">${c.name}</a>`).join(', ') : t.na;
-                document.getElementById('langVal').innerHTML = data.spoken_languages && data.spoken_languages.length > 0 ? data.spoken_languages.map(l => `<a href="index.html?lang=${l.iso_639_1}&langName=${encodeURIComponent(l.name)}&type=${mediaType}" class="meta-link">${l.name}</a>`).join(', ') : t.na;
+
+                document.getElementById('countryVal').innerHTML = data.production_countries && data.production_countries.length > 0 
+                    ? data.production_countries.map(c => `<a href="index.html?country=${c.iso_3166_1}&countryName=${encodeURIComponent(c.name)}&type=${mediaType}" class="meta-link">${c.name}</a>`).join(', ') : t.na;
+                
+                document.getElementById('langVal').innerHTML = data.spoken_languages && data.spoken_languages.length > 0 
+                    ? data.spoken_languages.map(l => `<a href="index.html?lang=${l.iso_639_1}&langName=${encodeURIComponent(l.name)}&type=${mediaType}" class="meta-link">${l.name}</a>`).join(', ') : t.na;
+
+                // Setup Posters & Share Meta Tags
                 if (data.poster_path) {
                     currentPosterUrl = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
-                    document.getElementById('moviePoster').innerHTML = `<img src="${currentPosterUrl}" alt="${currentMovieTitle} Poster" />`;
+                    document.getElementById('moviePoster').innerHTML = `<img src="${currentPosterUrl}">`;
                     shareModalPoster.src = currentPosterUrl;
                     document.getElementById('ogImage').setAttribute("content", currentPosterUrl);
                 }
                 document.getElementById('ogTitle').setAttribute("content", `Watch ${currentMovieTitle} on GitHub Movies`);
                 document.getElementById('ogUrl').setAttribute("content", window.location.href);
+
                 if (data.backdrop_path) {
                     document.body.style.backgroundImage = `linear-gradient(rgba(10,10,15,0.9), rgba(10,10,15,0.9)), url('https://image.tmdb.org/t/p/w1280${data.backdrop_path}')`;
                     document.body.style.backgroundSize = 'cover'; document.body.style.backgroundPosition = 'center'; document.body.style.backgroundAttachment = 'fixed';
                 }
+
                 if (data.genres) {
-                    document.getElementById('movieGenres').innerHTML = data.genres.map(g => `<a href="index.html?genre=${g.id}&genreName=${encodeURIComponent(g.name)}&type=${mediaType}" class="genre-tag">📁 ${g.name}</a>`).join('');
+                    document.getElementById('movieGenres').innerHTML = data.genres.map(g => 
+                        `<a href="index.html?genre=${g.id}&genreName=${encodeURIComponent(g.name)}&type=${mediaType}" class="genre-tag">📁 ${g.name}</a>`
+                    ).join('');
                 }
+
                 const castRes = await fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}/credits?api_key=${TMDB_API_KEY}&language=${tmdbLang}`);
                 const castData = await castRes.json();
+                
                 if (castData.cast) {
                     const topCast = castData.cast.slice(0, 12);
                     document.getElementById('movieCast').innerHTML = topCast.map(actor => {
                         const imgPath = actor.profile_path ? `https://image.tmdb.org/t/p/w185${actor.profile_path}` : 'https://via.placeholder.com/150x150/0f1b31/3ba4ff?text=NO+PHOTO';
-                        return `<a href="index.html?actor=${actor.id}&actorName=${encodeURIComponent(actor.name)}&type=${mediaType}" class="cast-card"><img src="${imgPath}" class="cast-photo" alt="${actor.name}"><div class="cast-name">${actor.name}</div><div class="cast-character">${actor.character || t.unknownRole}</div></a>`;
+                        return `
+                        <a href="index.html?actor=${actor.id}&actorName=${encodeURIComponent(actor.name)}&type=${mediaType}" class="cast-card">
+                            <img src="${imgPath}" class="cast-photo" alt="${actor.name}">
+                            <div class="cast-name">${actor.name}</div>
+                            <div class="cast-character">${actor.character || t.unknownRole}</div>
+                        </a>`;
                     }).join('');
                 }
+
             } catch (e) { console.warn("TMDB sync failed."); }
         }
 
-        // ============ SHARE ============
+        // --- SHARE SYSTEM LOGIC ---
         shareMovieBtn.addEventListener('click', async () => {
-            const safeTitle = currentMovieTitle || "Unknown Movie";
-            const shareData = { title: `Watch ${safeTitle} on GitHub Movies`, text: `Check out ${safeTitle} on GitHub Movies!`, url: window.location.href };
+            const shareData = {
+                title: `Watch ${currentMovieTitle} on GitHub Movies`,
+                text: `Check out ${currentMovieTitle} on GitHub Movies!`,
+                url: window.location.href
+            };
+
+            // Attempt Native Mobile Share First
             if (navigator.share) {
-                try { await navigator.share(shareData); return; } catch (err) { console.log("Native share cancelled."); }
+                try {
+                    await navigator.share(shareData);
+                    return; // Native share succeeded, don't open modal
+                } catch (err) {
+                    console.log("Native share cancelled or not fully supported.");
+                }
             }
+
+            // Fallback: Open custom share modal
             shareUrlInput.value = window.location.href;
             shareModal.classList.add('active');
         });
+
+        // Close Modal Listeners
         shareClose.addEventListener('click', () => shareModal.classList.remove('active'));
-        window.addEventListener('click', (e) => { if (e.target === shareModal) shareModal.classList.remove('active'); });
+        window.addEventListener('click', (e) => { 
+            if (e.target === shareModal) shareModal.classList.remove('active'); 
+        });
+
+        // Copy Link Action
         copyUrlBtn.addEventListener('click', () => {
             shareUrlInput.select();
             document.execCommand('copy');
+            
             const t = getT();
             copyUrlBtn.innerText = t.copiedBtn;
             copyUrlBtn.style.background = "var(--primary)";
-            setTimeout(() => { copyUrlBtn.innerText = t.copyBtn; copyUrlBtn.style.background = "var(--secondary)"; }, 2000);
+            
+            setTimeout(() => { 
+                copyUrlBtn.innerText = t.copyBtn; 
+                copyUrlBtn.style.background = "var(--secondary)";
+            }, 2000);
         });
 
-        // ============ AI VOICE ============
+        // --- AI AUDIO LOGIC ---
         aiSpeechBtn.addEventListener('click', () => {
             if (!('speechSynthesis' in window)) return alert("Your browser does not support AI Speech.");
+            
             const t = getT();
+            
             if (isSpeaking) {
                 window.speechSynthesis.cancel();
                 isSpeaking = false;
@@ -544,79 +1261,102 @@
                 aiSpeechBtn.innerText = t.aiReadBtn;
                 return;
             }
+
             const overviewText = document.getElementById('movieOverview').innerText;
             if (!overviewText) return;
+
             const textToSpeak = `${currentMovieTitle}. ${overviewText}`;
             const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            
             const uiLangCode = localStorage.getItem('uiLang') || 'en';
             if(uiLangCode === 'km') utterance.lang = 'km-KH';
             else if(uiLangCode === 'zh') utterance.lang = 'zh-CN';
             else utterance.lang = 'en-US';
-            utterance.onend = () => { isSpeaking = false; aiSpeechBtn.classList.remove('playing'); aiSpeechBtn.innerText = getT().aiReadBtn; };
-            window.speechSynthesis.cancel();
+
+            utterance.onend = () => {
+                isSpeaking = false;
+                aiSpeechBtn.classList.remove('playing');
+                aiSpeechBtn.innerText = getT().aiReadBtn;
+            };
+
+            window.speechSynthesis.cancel(); 
             window.speechSynthesis.speak(utterance);
+            
             isSpeaking = true;
             aiSpeechBtn.classList.add('playing');
             aiSpeechBtn.innerText = t.aiStopBtn;
         });
+
         window.addEventListener('beforeunload', () => window.speechSynthesis.cancel());
 
-        // ============ STREAM EXTRACTION via API ============
-        async function loadLicensedFrame() {
+        // --- UPDATED LOGIC TO FETCH CLOUDNESTRA URL ---
+       async function loadLicensedFrame() {
             if (!tmdbId) return dismissOverlay();
             const frame = document.getElementById('stream-frame');
             const notice = document.getElementById('streamNotice');
             if (!frame) return dismissOverlay();
 
             try {
-                const response = await fetch(`/api/extract?tmdb=${tmdbId}&type=${mediaType}`);
-                const data = await response.json();
-
-                if (data.success && data.url) {
-                    console.log('[player] Stream URL:', data.url);
-                    frame.src = data.url;
-                    frame.style.display = 'block';
-                    if (notice) {
-                        notice.style.display = 'none';
-                    }
-                } else {
-                    throw new Error(data.error || 'No stream URL returned');
-                }
+                // 1. The long encoded string you provided
+                const ENCODED_BASE = "YjY0ZjFkNGRmZjg4ODU5NmYzZTJkODllZTg5MmNmOTg6TlVJeVJsSXpTSGsxTlhBeU4zWmhlWGRSVUZvNGIxUk5URU5PZEhaYVYyWmlXVFZ3YVZZdmIyRlpOV1Z2ZVZjeE1VdGhPWEI1ZUhwYVJuVTVjMGxCY0c5WlVtbzJNMFJsV1UxRWN6TndhWFZCV25kd1UyMXdWRmh1Vm5sRmVrcHNORkEyUkd0V2FtaGtlbkpOSzJocGExVndZekZOZFRKTFdrZDJiVGhXZFU4elYzSTNURzU2YjNoT0wxaHRhMWRGUTFWaGJXSlBRU3RwVTJsQlRVZHFOR3B1WXpoWFIwdDJRVWxoTjNCdlRFeG9kbk5hTWxwS1duVk1lUzk2VjJFdmJIRnVjRlo2VlNzelMzQlBkelJvUldsc2NrUmhiVmgxYlRSaVRXZHRVbFp6TXpJclZ6RTRRM2haYW5aYVpuUTBiRkY2UzFOSVIybFRka3QwZUM5MFFXeHRXbVZXU21ZeldWZHVTRmhFUlRjeVR6RlpXRmhGZW5WRFpFaHRWSGg2VGpoemNsUlRhM1pZU3pOUmJESjNUa1V4U21nMmFtbE5hMUpoVFd0VlNrOTRTVXR2T1VaSFNEWnBkVEJvYUdodmVHOTVabWRWUzBoelZXdzROM0pvUTJKVVZqSmpXV1JNTDBaVmFqUmxSV0pFTDNNMVltdzJjM3A0WVNzNU4wbFdiWGR3UkVKbllWb3dSMmRqUm5SSGF6TkNVVFpoYUdKb2RYY3JTWFZYUVhobVJISmtUM1pJYlZKMmRHdFhVa1pSTTNOelRDdDBRemh0TTBGTU9UUnNSbXhwVlRGbk9XcFdhRlJpU0dsM1Nub3ljM1pvYVVreGRreEJObTVNU0ZOYVZ6YzVZekpITVZsVlNETlVPSEY0V1ZOdGIwRldiVW8wZGt4d01DOHJSMmRVZG1vd1ZXeHFhVTVDZVdoNVlUYzBVRmRyVjBsYVdIZzRMMHB1UjNwQlRFUTFaMlpKUzNoUVJFd3hNVTV4TkVoUWFrZ3hUblI0UXpFcmFHWjBjamhYVUhoMGEyZG1ZbkJOY2xSc2NVeFBNMnBJYjJWeWJYbE9kazluTUZoR1pYUTFSWE5WVjNVeGNreERjbGRhWkVSaldFbEpiblowY3pWdmEwMU1NRmxaYlVGNFFsYzVhekpwTDFWeVNVSlVjRGR4VkcxUWJHa3JiMEZXVm5sd1FUVlJhV000TWtoTlRtaDRNV0ZpZHpSM1oyMHpZMHhuUlhWeFdYcGxORkppUm5OeVIzbExZMFo1ZEdKWWNXNHdkaTlvYWpkdU4yOXhaVmRYVURsYVNsQldlVXBzZDJaclQwUXllVzB6YVVSM01FSlpXWFZHWVRFMVNUQXJaWEZ3VkRnNFZVbEtSbXcyZUdVMGVFRXlTMFoyTWxCaVJGQlljbkZEYUZVcmNEVTVLMnRCWW10a1VDODNhVUZFU1ZkeGJuVnBTMVF5T1c4dllrSm9aelJ6WWxkUVUyVlBTRlJRVmtSRlEzSjFiM0p4UVZOT2VXaHFlV1F3U3pSdk1WVm1ORFpWTWpaYVkxQXdLMFV6VVcxMGVVazRTRUkwUjJkdVVVUnliVzUyVEhJNGMwNUxVR3RHU210elFXZzJUWElyTkcxUlEyTm1aM2RIYUhOUU9YY3JieTl6YW0xM1FUZHRkbkJVWjJJek5XSktRalZwTkRkTlpqSnBUblpVTDJOM1ltOUVkVkZKVEhGVE1HUkNTV1ZNU0d3d1V6VjZSVkpGVUhaak5FeDVXbmRHWldjd2VtdHdjblYzZFM5d1ZITnJRMG80Y0VObGIzSnhVa0ZMT0V3ck9GZEJkbEZZTVhGb2FsaDBkazlxWm1kWU1qRXhjV1J2VjJsdk9ESk5NbEl3TUhCbWRuZEVha2RRUVdkeE0wUk1hMlpXVkROR2JXWm9SaTlhY1doWmVHNXZiMUI1YkdsR1prZFBVSEJqTldoSGVtdDFVbXhSYjBOb1preHdZMUpXTm5CcFNqQmFZeXRtUmxkRE5ubDZLMGRNWkRJd2FHNVdZekl6VDBoWFRUbFZNRmQ1VDNaQ1JFa3dTVkpyZEhCamNFNVJRMWd3VW1sMVlsaFBSV1JYTm5OWVkyaHdOamxTWkVwSVVtYzBkR1ZzTlRCWWJreERkMDFQTUhSVmFteFBORm96Y21GS1JrOTZWVVIzU1dwelFWTlBMMFJqY0dOdlFXbExNbWRTYlVrMVVIRjVXVGMwTW1RMmMwUlZOWGM5";
+                
+                // 2. Decode the Base64 string
+                const decodedUrl = atob(ENCODED_BASE);
+                
+                // 3. Dynamically replace the ID token in the URL with your tmdbId
+                // This assumes the token structure allows for direct swap.
+                const finalUrl = decodedUrl.replace(/rcp\/[^/]+/, `rcp/${tmdbId}`);
+                
+                frame.src = finalUrl;
+                frame.style.display = 'block';
             } catch (err) {
-                console.error('[player] Error:', err);
+                console.error("Stream resolution failed:", err);
                 frame.style.display = 'none';
                 if (notice) {
                     notice.style.display = 'block';
-                    notice.innerHTML = `
-                        <strong>❌ Stream Unavailable</strong><br>
-                        ${err.message || 'Please try again later.'}<br>
-                        <small style="color: #94a3b8;">Note: Not all movies have streams available.</small>
-                    `;
+                    notice.innerText = "Stream unavailable.";
                 }
             } finally {
                 dismissOverlay();
             }
         }
-
-        // ============ MARKET DATA ============
         function formatUsd(value) {
-            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: value >= 1000 ? 0 : 2 }).format(value);
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: value >= 1000 ? 0 : 2
+            }).format(value);
         }
+
         function formatCompactUsd(value) {
-            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', compactDisplay: 'short', maximumFractionDigits: 2 }).format(value);
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                notation: 'compact',
+                compactDisplay: 'short',
+                maximumFractionDigits: 2
+            }).format(value);
         }
+
         async function fetchJsonWithTimeout(url, timeoutMs = 12000) {
             const ctrl = new AbortController();
             const timeout = setTimeout(() => ctrl.abort(), timeoutMs);
             try {
-                const res = await fetch(url, { signal: ctrl.signal, headers: { 'accept': 'application/json' } });
+                const res = await fetch(url, {
+                    signal: ctrl.signal,
+                    headers: { 'accept': 'application/json' }
+                });
                 if (!res.ok) throw new Error(`http ${res.status}`);
                 return await res.json();
-            } finally { clearTimeout(timeout); }
+            } finally {
+                clearTimeout(timeout);
+            }
         }
+
         async function fetchMarketFromCoinGecko() {
             const data = await fetchJsonWithTimeout('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=12&page=1&sparkline=false&price_change_percentage=24h');
             if (!Array.isArray(data) || data.length === 0) throw new Error('coingecko empty');
+
             return data.map((coin) => ({
                 id: coin.id,
                 chart_source: 'coingecko',
@@ -627,12 +1367,16 @@
                 current_price: Number(coin.current_price) || 0,
                 market_cap: Number(coin.market_cap) || 0,
                 total_volume: Number(coin.total_volume) || 0,
-                price_change_percentage_24h: typeof coin.price_change_percentage_24h === 'number' ? coin.price_change_percentage_24h : null
+                price_change_percentage_24h: typeof coin.price_change_percentage_24h === 'number'
+                    ? coin.price_change_percentage_24h
+                    : null
             }));
         }
+
         async function fetchMarketFromCoinPaprika() {
             const list = await fetchJsonWithTimeout('https://api.coinpaprika.com/v1/tickers?quotes=USD&limit=12');
             if (!Array.isArray(list) || list.length === 0) throw new Error('coinpaprika empty');
+
             return list.map((coin) => ({
                 id: coin.id,
                 chart_source: 'coinpaprika',
@@ -643,9 +1387,12 @@
                 current_price: Number(coin?.quotes?.USD?.price) || 0,
                 market_cap: Number(coin?.quotes?.USD?.market_cap) || 0,
                 total_volume: Number(coin?.quotes?.USD?.volume_24h) || 0,
-                price_change_percentage_24h: Number.isFinite(Number(coin?.quotes?.USD?.percent_change_24h)) ? Number(coin?.quotes?.USD?.percent_change_24h) : null
+                price_change_percentage_24h: Number.isFinite(Number(coin?.quotes?.USD?.percent_change_24h))
+                    ? Number(coin?.quotes?.USD?.percent_change_24h)
+                    : null
             }));
         }
+
         function resolvePriceMotionClass(coinId, currentPrice) {
             const prev = previousMarketSnapshot.get(coinId);
             if (typeof prev !== 'number') return '';
@@ -653,55 +1400,332 @@
             if (currentPrice < prev) return 'market-price-down';
             return '';
         }
+
         function renderCoinCell(coin) {
             const rank = coin.market_cap_rank > 0 ? `#${coin.market_cap_rank}` : '#--';
             const symbol = (coin.symbol || '---').toUpperCase();
             const name = coin.name || symbol;
             const fallbackAvatar = `https://dummyimage.com/44x44/eaf9f1/16c784.png&text=${encodeURIComponent(symbol.slice(0, 1))}`;
             const image = coin.image || fallbackAvatar;
-            return `<div class="coin-cell"><span class="rank-badge">${rank}</span><img class="coin-avatar" src="${image}" alt="${symbol}" onerror="this.src='${fallbackAvatar}'"><div class="coin-name-wrap"><span class="coin-name-line">${name}</span><span class="coin-symbol-line">${symbol}</span></div></div>`;
+            return `
+                <div class="coin-cell">
+                    <span class="rank-badge">${rank}</span>
+                    <img class="coin-avatar" src="${image}" alt="${symbol}" onerror="this.src='${fallbackAvatar}'">
+                    <div class="coin-name-wrap">
+                        <span class="coin-name-line">${name}</span>
+                        <span class="coin-symbol-line">${symbol}</span>
+                    </div>
+                </div>
+            `;
         }
 
-        // Chart functions (simplified – keep your existing implementation)
-        function buildSmaData(candles, period) { /* ... your existing code ... */ }
-        function calcSmaAt(candles, period, offset) { /* ... */ }
-        function getAiTrendSignal(candles) { /* ... */ }
-        function closeCoinChartModal() { /* ... */ }
-        function normalizeCandles(rows) { /* ... */ }
-        function buildFlatCandles(price, points) { /* ... */ }
-        async function fetchCoinGeckoCandles(coinId) { /* ... */ }
-        async function fetchCoinPaprikaCandles(coinId) { /* ... */ }
-        async function renderCoinChart(coinId, symbol, source, fallbackPrice) { /* ... */ }
-        async function openCoinChart(coinId, symbol, source, fallbackPrice) { /* ... */ }
+        function buildSmaData(candles, period) {
+            const series = [];
+            let rolling = 0;
+            for (let i = 0; i < candles.length; i += 1) {
+                rolling += candles[i].close;
+                if (i >= period) rolling -= candles[i - period].close;
+                if (i >= period - 1) {
+                    series.push({
+                        time: candles[i].time,
+                        value: rolling / period
+                    });
+                }
+            }
+            return series;
+        }
 
-        // (Include your full chart functions – I'm keeping them concise for space)
+        function calcSmaAt(candles, period, offset = 0) {
+            const end = candles.length - offset;
+            const start = end - period;
+            if (start < 0) return null;
+            let sum = 0;
+            for (let i = start; i < end; i += 1) sum += candles[i].close;
+            return sum / period;
+        }
+
+        function getAiTrendSignal(candles) {
+            const fastNow = calcSmaAt(candles, 9, 0);
+            const fastPrev = calcSmaAt(candles, 9, 1);
+            const slowNow = calcSmaAt(candles, 21, 0);
+            const slowPrev = calcSmaAt(candles, 21, 1);
+
+            if (fastNow === null || fastPrev === null || slowNow === null || slowPrev === null) {
+                return { trend: 'NEUTRAL', action: 'HOLD', period: 14, color: '#f59e0b' };
+            }
+
+            const isBull = fastNow > slowNow && fastNow >= fastPrev;
+            const isBear = fastNow < slowNow && fastNow <= slowPrev;
+
+            if (isBull) return { trend: 'BULL', action: 'BUY', period: 9, color: '#16c784' };
+            if (isBear) return { trend: 'BEAR', action: 'SELL', period: 21, color: '#ea3943' };
+            return { trend: 'NEUTRAL', action: 'HOLD', period: 14, color: '#f59e0b' };
+        }
+
+        function closeCoinChartModal() {
+            if (coinChartModal) coinChartModal.classList.remove('active');
+            if (coinChartRefreshTimer) {
+                clearInterval(coinChartRefreshTimer);
+                coinChartRefreshTimer = null;
+            }
+            activeChartCoin = null;
+        }
+
+        function normalizeCandles(rows) {
+            return rows
+                .map((row) => ({
+                    time: Number(row.time) || 0,
+                    open: Number(row.open) || 0,
+                    high: Number(row.high) || 0,
+                    low: Number(row.low) || 0,
+                    close: Number(row.close) || 0
+                }))
+                .filter((row) => row.time > 0)
+                .sort((a, b) => a.time - b.time);
+        }
+
+        function buildFlatCandles(price, points = 24) {
+            const safePrice = Number(price) || 0;
+            if (safePrice <= 0) return [];
+
+            const nowSec = Math.floor(Date.now() / 1000);
+            const oneHour = 60 * 60;
+            const out = [];
+            for (let i = points - 1; i >= 0; i -= 1) {
+                const t = nowSec - (i * oneHour);
+                out.push({
+                    time: t,
+                    open: safePrice,
+                    high: safePrice,
+                    low: safePrice,
+                    close: safePrice
+                });
+            }
+            return out;
+        }
+
+        async function fetchCoinGeckoCandles(coinId) {
+            const ohlcRes = await fetch(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(coinId)}/ohlc?vs_currency=usd&days=1`);
+            let candles = [];
+
+            if (ohlcRes.ok) {
+                const ohlcData = await ohlcRes.json();
+                candles = Array.isArray(ohlcData)
+                    ? ohlcData.map((row) => ({
+                        time: Math.floor((row[0] || 0) / 1000),
+                        open: Number(row[1]) || 0,
+                        high: Number(row[2]) || 0,
+                        low: Number(row[3]) || 0,
+                        close: Number(row[4]) || 0
+                    }))
+                    : [];
+            }
+
+            if (candles.length) return normalizeCandles(candles);
+
+            const fallbackRes = await fetch(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(coinId)}/market_chart?vs_currency=usd&days=1&interval=hourly`);
+            if (!fallbackRes.ok) throw new Error('coingecko chart fetch failed');
+            const fallbackData = await fallbackRes.json();
+            const prices = fallbackData?.prices || [];
+            candles = prices.map(([ts, price]) => ({
+                time: Math.floor((ts || 0) / 1000),
+                open: Number(price) || 0,
+                high: Number(price) || 0,
+                low: Number(price) || 0,
+                close: Number(price) || 0
+            }));
+
+            return normalizeCandles(candles);
+        }
+
+        async function fetchCoinPaprikaCandles(coinId) {
+            const end = new Date();
+            const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+            const qs = `start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`;
+            const paprikaRes = await fetch(`https://api.coinpaprika.com/v1/coins/${encodeURIComponent(coinId)}/ohlcv/historical?${qs}`);
+            if (!paprikaRes.ok) throw new Error('coinpaprika chart fetch failed');
+            const paprikaData = await paprikaRes.json();
+            const candles = Array.isArray(paprikaData)
+                ? paprikaData.map((row) => ({
+                    time: Math.floor(new Date(row.time_open || row.time_close || 0).getTime() / 1000),
+                    open: Number(row.open) || 0,
+                    high: Number(row.high) || 0,
+                    low: Number(row.low) || 0,
+                    close: Number(row.close) || 0
+                }))
+                : [];
+
+            return normalizeCandles(candles);
+        }
+
+        async function renderCoinChart(coinId, symbol, source = 'coingecko', fallbackPrice = null) {
+            if (!coinChartCanvas) return;
+            const t = getT();
+            try {
+                let candles = [];
+                let providerUsed = source;
+
+                if (source === 'coinpaprika') {
+                    try {
+                        candles = await fetchCoinPaprikaCandles(coinId);
+                    } catch (err) {
+                        // Keep provider label stable for this coin id source.
+                        candles = [];
+                    }
+                } else {
+                    try {
+                        candles = await fetchCoinGeckoCandles(coinId);
+                    } catch (err) {
+                        candles = [];
+                    }
+                }
+
+                if (!candles.length) {
+                    const lastPrice = Number.isFinite(Number(fallbackPrice)) && Number(fallbackPrice) > 0
+                        ? Number(fallbackPrice)
+                        : previousMarketSnapshot.get(coinId);
+                    candles = buildFlatCandles(lastPrice, 24);
+                    providerUsed = `${source} fallback`;
+                }
+
+                if (!candles.length) throw new Error('no chart points');
+
+                const chartWidth = coinChartCanvas.clientWidth || 700;
+                const chartHeight = coinChartCanvas.clientHeight || 340;
+
+                if (!coinChartInstance) {
+                    coinChartInstance = LightweightCharts.createChart(coinChartCanvas, {
+                        width: chartWidth,
+                        height: chartHeight,
+                        layout: {
+                            background: { color: '#ffffff' },
+                            textColor: '#334155'
+                        },
+                        grid: {
+                            vertLines: { color: 'rgba(148, 163, 184, 0.2)' },
+                            horzLines: { color: 'rgba(148, 163, 184, 0.2)' }
+                        },
+                        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+                        rightPriceScale: {
+                            borderColor: 'rgba(100, 116, 139, 0.35)'
+                        },
+                        timeScale: {
+                            borderColor: 'rgba(100, 116, 139, 0.35)',
+                            timeVisible: true,
+                            secondsVisible: false
+                        }
+                    });
+
+                    const candleStyle = {
+                        upColor: '#16c784',
+                        downColor: '#ea3943',
+                        borderDownColor: '#ea3943',
+                        borderUpColor: '#16c784',
+                        wickDownColor: '#ea3943',
+                        wickUpColor: '#16c784'
+                    };
+
+                    if (typeof coinChartInstance.addCandlestickSeries === 'function') {
+                        coinCandleSeries = coinChartInstance.addCandlestickSeries(candleStyle);
+                    } else {
+                        coinCandleSeries = coinChartInstance.addSeries(LightweightCharts.CandlestickSeries, candleStyle);
+                    }
+
+                    const maStyle = {
+                        color: '#16c784',
+                        lineWidth: 2,
+                        lineStyle: LightweightCharts.LineStyle.Solid,
+                        crosshairMarkerVisible: false,
+                        priceLineVisible: false,
+                        lastValueVisible: true
+                    };
+                    if (typeof coinChartInstance.addLineSeries === 'function') {
+                        coinMaSeries = coinChartInstance.addLineSeries(maStyle);
+                    } else {
+                        coinMaSeries = coinChartInstance.addSeries(LightweightCharts.LineSeries, maStyle);
+                    }
+                } else {
+                    coinChartInstance.resize(chartWidth, chartHeight);
+                }
+
+                coinCandleSeries.setData(candles);
+                const aiSignal = getAiTrendSignal(candles);
+                const maData = buildSmaData(candles, aiSignal.period);
+                if (coinMaSeries) {
+                    coinMaSeries.applyOptions({ color: aiSignal.color });
+                    coinMaSeries.setData(maData);
+                }
+                if (coinChartTitle) {
+                    coinChartTitle.innerText = `${symbol.toUpperCase()} • ${t.chartTitle} • AI BOT ${aiSignal.trend} (${aiSignal.action}) MA(${aiSignal.period}) • ${providerUsed}`;
+                }
+                coinChartInstance.timeScale().fitContent();
+            } catch (err) {
+                if (coinChartTitle) coinChartTitle.innerText = `${symbol.toUpperCase()} • ${t.chartError}`;
+            }
+        }
+
+        async function openCoinChart(coinId, symbol, source = 'coingecko', fallbackPrice = null) {
+            if (!coinChartModal || !coinChartTitle) return;
+            const t = getT();
+            activeChartCoin = { coinId, symbol, source, fallbackPrice };
+            coinChartTitle.innerText = `${symbol.toUpperCase()} • ${t.chartLoading}`;
+            coinChartModal.classList.add('active');
+            await renderCoinChart(coinId, symbol, source, fallbackPrice);
+
+            if (coinChartRefreshTimer) clearInterval(coinChartRefreshTimer);
+            coinChartRefreshTimer = setInterval(() => {
+                if (activeChartCoin) {
+                    renderCoinChart(
+                        activeChartCoin.coinId,
+                        activeChartCoin.symbol,
+                        activeChartCoin.source,
+                        activeChartCoin.fallbackPrice
+                    );
+                }
+            }, 60000);
+        }
 
         async function refreshCryptoMarket() {
             const marketSummary = document.getElementById('marketSummary');
             const marketBody = document.getElementById('marketTableBody');
             if (!marketSummary || !marketBody) return;
             const t = getT();
+
             try {
-                let data = [], sourceLabel = 'CoinGecko';
-                try { data = await fetchMarketFromCoinGecko(); } catch (e) { data = await fetchMarketFromCoinPaprika(); sourceLabel = 'CoinPaprika'; }
+                let data = [];
+                let sourceLabel = 'CoinGecko';
+                try {
+                    data = await fetchMarketFromCoinGecko();
+                } catch (primaryErr) {
+                    data = await fetchMarketFromCoinPaprika();
+                    sourceLabel = 'CoinPaprika';
+                }
+
                 const totalMcap = data.reduce((sum, coin) => sum + (coin.market_cap || 0), 0);
-                const leaders = data.slice(0,3).map(c => c.symbol.toUpperCase()).join(', ');
+                const leaders = data.slice(0, 3).map(c => c.symbol.toUpperCase()).join(', ');
                 marketSummary.innerText = `Top caps: ${leaders} | Total: ${formatCompactUsd(totalMcap)} | ${sourceLabel} | ${new Date().toLocaleTimeString()}`;
                 marketSummary.dataset.ready = '1';
+
                 marketBody.innerHTML = data.map(coin => {
                     const ch = typeof coin.price_change_percentage_24h === 'number' ? coin.price_change_percentage_24h : null;
                     const chText = ch === null ? '--' : `${ch >= 0 ? '+' : ''}${ch.toFixed(2)}%`;
                     const chColor = ch === null ? 'var(--muted)' : (ch >= 0 ? 'var(--cg-green)' : 'var(--cg-red)');
                     const motionClass = resolvePriceMotionClass(coin.id, coin.current_price || 0);
-                    return `<tr data-coin-id="${coin.id}" data-coin-symbol="${coin.symbol}" data-coin-source="${coin.chart_source || 'coingecko'}" data-coin-price="${coin.current_price || 0}" style="cursor:pointer;">
-                        <td style="padding:10px;border-bottom:1px solid rgba(77,124,255,0.12);">${renderCoinCell(coin)}</td>
-                        <td class="${motionClass}" style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);font-weight:600;">${formatUsd(coin.current_price || 0)}</td>
-                        <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);color:${chColor};font-weight:600;">${chText}</td>
-                        <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);">${formatCompactUsd(coin.market_cap || 0)}</td>
-                        <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);">${formatCompactUsd(coin.total_volume || 0)}</td>
-                    </tr>`;
+                    return `
+                        <tr data-coin-id="${coin.id}" data-coin-symbol="${coin.symbol}" data-coin-source="${coin.chart_source || 'coingecko'}" data-coin-price="${coin.current_price || 0}" style="cursor:pointer;">
+                            <td style="padding:10px;border-bottom:1px solid rgba(77,124,255,0.12);">${renderCoinCell(coin)}</td>
+                            <td class="${motionClass}" style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);font-weight:600;">${formatUsd(coin.current_price || 0)}</td>
+                            <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);color:${chColor};font-weight:600;">${chText}</td>
+                            <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);">${formatCompactUsd(coin.market_cap || 0)}</td>
+                            <td style="padding:10px;text-align:right;border-bottom:1px solid rgba(77,124,255,0.12);">${formatCompactUsd(coin.total_volume || 0)}</td>
+                        </tr>
+                    `;
                 }).join('');
-                for (const coin of data) previousMarketSnapshot.set(coin.id, coin.current_price || 0);
+
+                for (const coin of data) {
+                    previousMarketSnapshot.set(coin.id, coin.current_price || 0);
+                }
+
                 if (!marketBody.dataset.bound) {
                     marketBody.addEventListener('click', (e) => {
                         const row = e.target.closest('tr[data-coin-id]');
@@ -726,85 +1750,23 @@
             setInterval(refreshCryptoMarket, 5000);
         }
 
-        // ============ METAMASK ============
-        function updateWalletUI(data) {
-            const ui = document.getElementById('userInfo');
-            if (ui) {
-                ui.innerText = data.shortAddress || data.address.slice(0,6)+'...'+data.address.slice(-4);
-                ui.style.display = 'block';
-            }
-            const walletInfo = document.getElementById('walletInfo');
-            if (walletInfo && data.balance) {
-                walletInfo.innerText = `${data.balance} ETH`;
-                walletInfo.style.display = 'block';
-            }
-            document.getElementById('metamaskBtn').style.display = 'none';
-            document.getElementById('signOutBtn').style.display = 'inline-block';
-        }
+        // AUTO TRANSLATE WHEN DROPDOWN CHANGES
+        uiLangSelect.addEventListener('change', (e) => {
+            localStorage.setItem('uiLang', e.target.value);
+            window.speechSynthesis.cancel(); 
+            isSpeaking = false;
+            aiSpeechBtn.classList.remove('playing');
+            
+            updateUI();
+            syncTmdbDetails(); 
+        });
 
-        // ============ INIT ============
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (!localStorage.getItem('uiLang')) {
-                const browserLang = navigator.language || navigator.userLanguage;
-                if (browserLang.toLowerCase().includes('km')) localStorage.setItem('uiLang', 'km');
-                else if (browserLang.toLowerCase().includes('zh')) localStorage.setItem('uiLang', 'zh');
-                else localStorage.setItem('uiLang', 'en');
-            }
+        document.addEventListener('DOMContentLoaded', () => {
             updateUI();
             syncTmdbDetails();
             loadLicensedFrame();
             handleDashboardLoops();
-            setTimeout(dismissOverlay, 6000);
-
-            // Show MetaMask button
-            const metamaskBtn = document.getElementById('metamaskBtn');
-            if (metamaskBtn) metamaskBtn.style.display = 'inline-block';
-
-            // Restore session
-            const stored = localStorage.getItem('g_user');
-            if (stored) {
-                try {
-                    const data = JSON.parse(stored);
-                    if (data.type === 'web3' && data.verified) {
-                        const auth = new Web3Auth();
-                        if (auth.isMetaMaskInstalled()) {
-                            await auth.updateBalance();
-                            const refreshed = auth.getWalletData();
-                            if (refreshed) {
-                                localStorage.setItem('g_user', JSON.stringify({ ...data, balance: refreshed.balance, chainId: refreshed.chainId, chainName: refreshed.chainName }));
-                                updateWalletUI(refreshed);
-                            }
-                        } else {
-                            updateWalletUI(data);
-                        }
-                    }
-                } catch (e) { localStorage.removeItem('g_user'); }
-            }
-
-            // Sign out
-            document.getElementById('signOutBtn')?.addEventListener('click', () => {
-                localStorage.removeItem('g_user');
-                location.reload();
-            });
-
-            // Connect MetaMask
-            document.getElementById('metamaskBtn')?.addEventListener('click', async () => {
-                const auth = new Web3Auth();
-                const result = await auth.connect();
-                if (result) {
-                    localStorage.setItem('g_user', JSON.stringify({
-                        type: 'web3',
-                        verified: true,
-                        provider: 'MetaMask',
-                        address: result.address,
-                        shortAddress: result.shortAddress,
-                        balance: result.balance,
-                        chainId: result.chainId,
-                        chainName: result.chainName
-                    }));
-                    updateWalletUI(result);
-                }
-            });
+            setTimeout(dismissOverlay, 6000); 
         });
 
         coinChartClose?.addEventListener('click', closeCoinChartModal);
