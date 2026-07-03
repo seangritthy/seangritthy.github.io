@@ -221,6 +221,35 @@ app.get('/api/extract', async (req, res) => {
 // Lightweight health check (used by Render). Does NOT launch a browser.
 app.get('/healthz', (req, res) => res.status(200).json({ ok: true }));
 
+// Build/version marker so we can confirm which code Render is serving.
+const BUILD_ID = 'fastpath-1';
+app.get('/version', (req, res) => res.status(200).json({ build: BUILD_ID }));
+
+// Diagnostic: report exactly what a plain fetch of the embed page returns
+// from the server's IP (helps detect datacenter-IP blocking / challenges).
+app.get('/api/debug', async (req, res) => {
+  const { tmdb = '793387', type } = req.query;
+  const mediaType = type === 'tv' ? 'tv' : 'movie';
+  const embedUrl = buildEmbedUrl(tmdb, mediaType, req.query.season, req.query.episode);
+  const out = { build: BUILD_ID, embedUrl, hasGlobalFetch: typeof fetch === 'function' };
+  try {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 15000);
+    const r = await fetch(embedUrl, { headers: EMBED_HEADERS, signal: controller.signal });
+    clearTimeout(t);
+    const html = await r.text();
+    const m = html.match(RCP_RE);
+    out.status = r.status;
+    out.htmlLen = html.length;
+    out.rcpFound = Boolean(m);
+    out.rcpSample = m ? m[0].slice(0, 60) : null;
+    out.snippet = html.slice(0, 200);
+  } catch (e) {
+    out.fetchError = e?.name + ': ' + (e?.message || String(e));
+  }
+  return res.status(200).json(out);
+});
+
 // Serve the static site (play.html, index.html, assets, ...).
 app.use(express.static(path.join(__dirname)));
 
