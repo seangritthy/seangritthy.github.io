@@ -1046,6 +1046,9 @@
         })();
 
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
+        // Ad-free CloudNestra resolver deployed separately (e.g. Render).
+        // Leave empty to use a same-origin /api/extract (e.g. Vercel).
+        const EXTRACTOR_BASE = 'https://cloudnestra-resolver.onrender.com';
         const urlParams = new URLSearchParams(window.location.search);
         const tmdbId = urlParams.get('tmdb');
         const mediaType = urlParams.get('type') || 'movie';
@@ -1341,10 +1344,12 @@
 
                 // 1) Try the serverless extractor first — it scrapes the real
                 //    cloudorchestranova.com/rcp/<token> URL from vsembed.
-                //    (Only works where /api runs, e.g. Vercel — not GitHub Pages.)
-                if (!window.location.hostname.includes('github.io')) {
+                //    Uses EXTRACTOR_BASE (external resolver) when set, so it also
+                //    works on GitHub Pages; otherwise falls back to same-origin /api.
+                {
                     try {
-                        const apiUrl = `/api/extract?tmdb=${encodeURIComponent(tmdbId)}&type=${encodeURIComponent(mediaType)}`;
+                        const extractorBase = (EXTRACTOR_BASE || '').replace(/\/$/, '');
+                        const apiUrl = `${extractorBase}/api/extract?tmdb=${encodeURIComponent(tmdbId)}&type=${encodeURIComponent(mediaType)}`;
                         const res = await fetch(apiUrl, { method: 'GET' });
                         if (res.ok) {
                             const body = await res.json();

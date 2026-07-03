@@ -50,6 +50,40 @@ function getBrowser() {
 
 const RCP_RE = /(cloudorchestranova|cloudnestra)\.com\/rcp\/[A-Za-z0-9+/=_-]+/i;
 
+// Browser-like headers so vsembed serves the real embed HTML.
+const EMBED_HEADERS = {
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.9',
+  Referer: 'https://vsembed.ru/'
+};
+
+function normalizeRcp(match) {
+  if (!match) return null;
+  return match.startsWith('http') ? match : `https://${match}`;
+}
+
+// Fast path: fetch the embed HTML directly and pull the rcp URL out of it.
+// The ad-free cloudorchestranova.com/rcp/<token> iframe src is usually present
+// in the raw markup, so this avoids launching a browser at all.
+async function fetchRcpDirect(embedUrl) {
+  if (typeof fetch !== 'function') return null;
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(embedUrl, { headers: EMBED_HEADERS, signal: controller.signal });
+    if (!res.ok) return null;
+    const html = await res.text();
+    return normalizeRcp(html.match(RCP_RE)?.[0]);
+  } catch (e) {
+    return null;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+
 // Hosts we never need — abort them to speed things up and cut noise.
 const AD_HINTS = ['doubleclick', 'googlesyndication', 'google-analytics', 'googletagmanager',
   'adservice', 'popads', 'propeller', 'onclicka', 'adsterra', 'exoclick', 'juicyads',
@@ -159,7 +193,10 @@ app.get('/api/extract', async (req, res) => {
   const embedUrl = buildEmbedUrl(tmdb, mediaType, season, episode);
 
   try {
-    const url = await resolveRcp(embedUrl);
+    // 1) Fast path: plain fetch + regex (no browser).
+    let url = await fetchRcpDirect(embedUrl);
+    // 2) Fallback: headless Chromium (handles JS-rendered / bot-checked pages).
+    if (!url) url = await resolveRcp(embedUrl);
     if (url) {
       return res.status(200).json({
         success: true,
