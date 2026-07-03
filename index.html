@@ -1215,9 +1215,7 @@
         }
 
         function openWalletModal() {
-            if (!walletModal || !walletModalOverlay) return;
-            walletModal.style.display = 'flex';
-            walletModalOverlay.style.display = 'block';
+            connectMetaMaskWallet();
         }
 
         function shouldAutoMetaMaskLogin() {
