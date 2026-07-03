@@ -222,8 +222,34 @@ app.get('/api/extract', async (req, res) => {
 app.get('/healthz', (req, res) => res.status(200).json({ ok: true }));
 
 // Build/version marker so we can confirm which code Render is serving.
-const BUILD_ID = 'diag-2';
+const BUILD_ID = 'probe-1';
 app.get('/version', (req, res) => res.status(200).json({ build: BUILD_ID }));
+
+// Generic probe: fetch an arbitrary URL from the server IP and report status +
+// a snippet. Lets us test provider reachability without redeploying each time.
+app.get('/api/probe', async (req, res) => {
+  const target = req.query.url;
+  if (!target) return res.status(400).json({ error: 'url query param required' });
+  const out = { target };
+  try {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 20000);
+    const r = await fetch(target, { headers: EMBED_HEADERS, redirect: 'follow', signal: controller.signal });
+    clearTimeout(t);
+    const html = await r.text();
+    out.status = r.status;
+    out.server = r.headers.get('server');
+    out.contentType = r.headers.get('content-type');
+    out.htmlLen = html.length;
+    out.title = (html.match(/<title>([^<]*)<\/title>/i)?.[1] || '').slice(0, 100);
+    out.cf = cfMarkers(html);
+    out.iframeSrcs = [...html.matchAll(/<iframe[^>]+src=["']([^"']+)["']/gi)].map(m => m[1]).slice(0, 8);
+    out.snippet = html.slice(0, 300);
+  } catch (e) {
+    out.error = e?.name + ': ' + (e?.message || String(e));
+  }
+  return res.status(200).json(out);
+});
 
 function cfMarkers(html) {
   const low = (html || '').toLowerCase();
