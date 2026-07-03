@@ -937,109 +937,44 @@
         window.addEventListener('beforeunload', () => window.speechSynthesis.cancel());
 
         // ============ DYNAMIC CLOUDNESTRA EXTRACTION ============
-       async function loadLicensedFrame() {
+      async function loadLicensedFrame() {
     if (!tmdbId) return dismissOverlay();
     const frame = document.getElementById('stream-frame');
     const notice = document.getElementById('streamNotice');
     if (!frame) return dismissOverlay();
 
     try {
-        // Try multiple embed sources
-        const embedSources = [
-            `https://vsembed.ru/embed/${mediaType}/${tmdbId}/`,
-            `https://vidsrc.xyz/embed/${mediaType}/${tmdbId}`,
-            `https://embed.su/embed/${mediaType}/${tmdbId}`,
-            `https://2embed.cc/embed/${mediaType}/${tmdbId}`
-        ];
-        
-        let cloudnestraUrl = null;
+        // Call the backend API to get the stream URL
+        const response = await fetch(`/api/extract?tmdb=${tmdbId}&type=${mediaType}`);
+        const data = await response.json();
 
-        for (const embedUrl of embedSources) {
-            try {
-                console.log('Trying embed source:', embedUrl);
-                
-                const response = await fetch(embedUrl, {
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
-                        'Referer': 'https://vsembed.ru/',
-                        'Origin': 'https://vsembed.ru/',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                        'Accept-Language': 'en-US,en;q=0.9',
-                        'Cache-Control': 'no-cache',
-                        'Pragma': 'no-cache'
-                    }
-                });
-
-                if (!response.ok) {
-                    console.log(`Failed to fetch ${embedUrl}: ${response.status}`);
-                    continue;
-                }
-
-                const html = await response.text();
-                
-                // Extract Cloudnestra URL using multiple patterns
-                const patterns = [
-                    /https?:\/\/[^\s"']*cloudorchestranova\.com\/rcp\/[^\s"']*/i,
-                    /https?:\/\/[^\s"']*cloudnestra\.com\/rcp\/[^\s"']*/i,
-                    /https?:\/\/[^\s"']*\/rcp\/[a-zA-Z0-9]+/i,
-                    /<iframe[^>]*src=["']([^"']*cloudorchestranova[^"']*)["'][^>]*>/i,
-                    /<iframe[^>]*src=["']([^"']*\/rcp\/[^"']*)["'][^>]*>/i,
-                    /"url":"([^"]*cloudorchestranova[^"]*)"/i,
-                    /"file":"([^"]*cloudorchestranova[^"]*)"/i
-                ];
-
-                for (const pattern of patterns) {
-                    const match = html.match(pattern);
-                    if (match) {
-                        cloudnestraUrl = match[1] || match[0];
-                        console.log('Found Cloudnestra URL:', cloudnestraUrl);
-                        break;
-                    }
-                }
-
-                if (cloudnestraUrl) break;
-                
-            } catch (err) {
-                console.log(`Error with ${embedUrl}:`, err.message);
-            }
-        }
-
-        if (cloudnestraUrl) {
-            // Clean the URL
-            cloudnestraUrl = cloudnestraUrl.split('"')[0].split("'")[0];
-            console.log('Final Cloudnestra URL:', cloudnestraUrl);
-            
-            frame.src = cloudnestraUrl;
+        if (data.success && data.url) {
+            console.log('[player] Stream URL:', data.url);
+            frame.src = data.url;
             frame.style.display = 'block';
             if (notice) {
                 notice.style.display = 'none';
             }
         } else {
-            // No URL found - show error message
-            console.error('No Cloudnestra URL found in any embed source');
-            frame.style.display = 'none';
-            if (notice) {
-                notice.style.display = 'block';
-                notice.innerHTML = `
-                    <strong>❌ Stream Unavailable</strong><br>
-                    This movie doesn't have a stream available on any of our providers.<br><br>
-                    Try searching for another movie.
-                `;
-            }
+            // API returned error
+            throw new Error(data.error || 'No stream URL returned');
         }
-        
+
     } catch (err) {
-        console.error("Stream resolution failed:", err);
+        console.error('[player] Error:', err);
         frame.style.display = 'none';
         if (notice) {
             notice.style.display = 'block';
-            notice.innerText = "Stream unavailable. Please try again later.";
+            notice.innerHTML = `
+                <strong>❌ Stream Unavailable</strong><br>
+                ${err.message || 'Please try again later.'}<br>
+                <small style="color: #94a3b8;">Note: Not all movies have streams available.</small>
+            `;
         }
     } finally {
         dismissOverlay();
     }
 }
-
         function formatUsd(value) {
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',
