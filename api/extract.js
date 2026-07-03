@@ -1,3 +1,4 @@
+// /api/extract.js
 export default async function handler(req, res) {
     // CORS
     res.setHeader('Access-Control-Allow-Credentials', true);
@@ -15,8 +16,7 @@ export default async function handler(req, res) {
     try {
         const mediaType = type === 'tv' ? 'tv' : 'movie';
 
-        // === DYNAMIC EXTRACTION: NO HARDCODED STRINGS ===
-        // Try multiple embed providers
+        // Providers to try
         const embedSources = [
             `https://vsembed.ru/embed/${mediaType}/${tmdb}/`,
             `https://vidsrc.xyz/embed/${mediaType}/${tmdb}`,
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
 
                 const html = await response.text();
 
-                // Extract Cloudnestra URL using multiple regex patterns
+                // Extraction patterns
                 const patterns = [
                     /https?:\/\/[^\s"']*cloudorchestranova\.com\/rcp\/[a-zA-Z0-9]+/i,
                     /https?:\/\/[^\s"']*\/rcp\/[a-zA-Z0-9]+/i,
@@ -62,7 +62,6 @@ export default async function handler(req, res) {
                     const match = html.match(pattern);
                     if (match) {
                         cloudnestraUrl = match[1] || match[0];
-                        // Clean up
                         cloudnestraUrl = cloudnestraUrl.split('"')[0].split("'")[0].split('&')[0];
                         console.log(`[extract] Found: ${cloudnestraUrl}`);
                         break;
@@ -87,7 +86,7 @@ export default async function handler(req, res) {
         } else {
             return res.status(404).json({
                 success: false,
-                error: 'No Cloudnestra URL found for this movie on any provider.',
+                error: 'No stream URL found for this movie.',
                 details: lastError ? lastError.message : 'Not found'
             });
         }
