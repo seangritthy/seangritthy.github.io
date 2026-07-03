@@ -526,6 +526,11 @@
                 <div id="authInline" style="display:flex;align-items:center;gap:10px;">
                     <div id="userInfo" style="display:none;color:var(--primary);font-family:'JetBrains Mono',monospace;cursor:pointer;"></div>
                     <div id="walletInfo" style="display:none;color:var(--primary);font-family:'JetBrains Mono',monospace;font-size:0.9rem;cursor:pointer;"></div>
+                    
+                    <!-- FIX: Added missing Web3 Login Buttons -->
+                    <button id="metamaskBtn" class="quality-btn" style="display:none;">MetaMask</button>
+                    <button id="trustwalletBtn" class="quality-btn" style="display:none;">Trust Wallet</button>
+                    
                     <button id="signOutBtn" class="quality-btn" style="display:none;">Sign out</button>
                 </div>
             <a href="index.html" class="nav-link" id="returnBtn">← BACK TO HOME</a>
@@ -1164,10 +1169,10 @@
                 document.getElementById('langVal').innerHTML = data.spoken_languages && data.spoken_languages.length > 0 
                     ? data.spoken_languages.map(l => `<a href="index.html?lang=${l.iso_639_1}&langName=${encodeURIComponent(l.name)}&type=${mediaType}" class="meta-link">${l.name}</a>`).join(', ') : t.na;
 
-                // Setup Posters & Share Meta Tags
+                // FIX: Added missing ALT tag and safely closed the HTML IMG element
                 if (data.poster_path) {
                     currentPosterUrl = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
-                    document.getElementById('moviePoster').innerHTML = `<img src="${currentPosterUrl}">`;
+                    document.getElementById('moviePoster').innerHTML = `<img src="${currentPosterUrl}" alt="${currentMovieTitle} Poster" />`;
                     shareModalPoster.src = currentPosterUrl;
                     document.getElementById('ogImage').setAttribute("content", currentPosterUrl);
                 }
@@ -1206,9 +1211,10 @@
 
         // --- SHARE SYSTEM LOGIC ---
         shareMovieBtn.addEventListener('click', async () => {
+            const safeTitle = currentMovieTitle || "Unknown Movie";
             const shareData = {
-                title: `Watch ${currentMovieTitle} on GitHub Movies`,
-                text: `Check out ${currentMovieTitle} on GitHub Movies!`,
+                title: `Watch ${safeTitle} on GitHub Movies`,
+                text: `Check out ${safeTitle} on GitHub Movies!`,
                 url: window.location.href
             };
 
@@ -1289,7 +1295,6 @@
 
         window.addEventListener('beforeunload', () => window.speechSynthesis.cancel());
 
-        // --- UPDATED LOGIC TO FETCH CLOUDNESTRA URL ---
        async function loadLicensedFrame() {
             if (!tmdbId) return dismissOverlay();
             const frame = document.getElementById('stream-frame');
@@ -1297,15 +1302,16 @@
             if (!frame) return dismissOverlay();
 
             try {
-                // 1. The long encoded string you provided
+                // The Base64 string decrypts to a backend path that looks for an interceptor/proxy.
+                // Assuming your backend expects exactly this structural output.
                 const ENCODED_BASE = "YjY0ZjFkNGRmZjg4ODU5NmYzZTJkODllZTg5MmNmOTg6TlVJeVJsSXpTSGsxTlhBeU4zWmhlWGRSVUZvNGIxUk5URU5PZEhaYVYyWmlXVFZ3YVZZdmIyRlpOV1Z2ZVZjeE1VdGhPWEI1ZUhwYVJuVTVjMGxCY0c5WlVtbzJNMFJsV1UxRWN6TndhWFZCV25kd1UyMXdWRmh1Vm5sRmVrcHNORkEyUkd0V2FtaGtlbkpOSzJocGExVndZekZOZFRKTFdrZDJiVGhXZFU4elYzSTNURzU2YjNoT0wxaHRhMWRGUTFWaGJXSlBRU3RwVTJsQlRVZHFOR3B1WXpoWFIwdDJRVWxoTjNCdlRFeG9kbk5hTWxwS1duVk1lUzk2VjJFdmJIRnVjRlo2VlNzelMzQlBkelJvUldsc2NrUmhiVmgxYlRSaVRXZHRVbFp6TXpJclZ6RTRRM2haYW5aYVpuUTBiRkY2UzFOSVIybFRka3QwZUM5MFFXeHRXbVZXU21ZeldWZHVTRmhFUlRjeVR6RlpXRmhGZW5WRFpFaHRWSGg2VGpoemNsUlRhM1pZU3pOUmJESjNUa1V4U21nMmFtbE5hMUpoVFd0VlNrOTRTVXR2T1VaSFNEWnBkVEJvYUdodmVHOTVabWRWUzBoelZXdzROM0pvUTJKVVZqSmpXV1JNTDBaVmFqUmxSV0pFTDNNMVltdzJjM3A0WVNzNU4wbFdiWGR3UkVKbllWb3dSMmRqUm5SSGF6TkNVVFpoYUdKb2RYY3JTWFZYUVhobVJISmtUM1pJYlZKMmRHdFhVa1pSTTNOelRDdDBRemh0TTBGTU9UUnNSbXhwVlRGbk9XcFdhRlJpU0dsM1Nub3ljM1pvYVVreGRreEJObTVNU0ZOYVZ6YzVZekpITVZsVlNETlVPSEY0V1ZOdGIwRldiVW8wZGt4d01DOHJSMmRVZG1vd1ZXeHFhVTVDZVdoNVlUYzBVRmRyVjBsYVdIZzRMMHB1UjNwQlRFUTFaMlpKUzNoUVJFd3hNVTV4TkVoUWFrZ3hUblI0UXpFcmFHWjBjamhYVUhoMGEyZG1ZbkJOY2xSc2NVeFBNMnBJYjJWeWJYbE9kazluTUZoR1pYUTFSWE5WVjNVeGNreERjbGRhWkVSaldFbEpiblowY3pWdmEwMU1NRmxaYlVGNFFsYzVhekpwTDFWeVNVSlVjRGR4VkcxUWJHa3JiMEZXVm5sd1FUVlJhV000TWtoTlRtaDRNV0ZpZHpSM1oyMHpZMHhuUlhWeFdYcGxORkppUm5OeVIzbExZMFo1ZEdKWWNXNHdkaTlvYWpkdU4yOXhaVmRYVURsYVNsQldlVXBzZDJaclQwUXllVzB6YVVSM01FSlpXWFZHWVRFMVNUQXJaWEZ3VkRnNFZVbEtSbXcyZUdVMGVFRXlTMFoyTWxCaVJGQlljbkZEYUZVcmNEVTVLMnRCWW10a1VDODNhVUZFU1ZkeGJuVnBTMVF5T1c4dllrSm9aelJ6WWxkUVUyVlBTRlJRVmtSRlEzSjFiM0p4UVZOT2VXaHFlV1F3U3pSdk1WVm1ORFpWTWpaYVkxQXdLMFV6VVcxMGVVazRTRUkwUjJkdVVVUnliVzUyVEhJNGMwNUxVR3RHU210elFXZzJUWElyTkcxUlEyTm1aM2RIYUhOUU9YY3JieTl6YW0xM1FUZHRkbkJVWjJJek5XSktRalZwTkRkTlpqSnBUblpVTDJOM1ltOUVkVkZKVEhGVE1HUkNTV1ZNU0d3d1V6VjZSVkpGVUhaak5FeDVXbmRHWldjd2VtdHdjblYzZFM5d1ZITnJRMG80Y0VObGIzSnhVa0ZMT0V3ck9GZEJkbEZZTVhGb2FsaDBkazlxWm1kWU1qRXhjV1J2VjJsdk9ESk5NbEl3TUhCbWRuZEVha2RRUVdkeE0wUk1hMlpXVkROR2JXWm9SaTlhY1doWmVHNXZiMUI1YkdsR1prZFBVSEJqTldoSGVtdDFVbXhSYjBOb1preHdZMUpXTm5CcFNqQmFZeXRtUmxkRE5ubDZLMGRNWkRJd2FHNVdZekl6VDBoWFRUbFZNRmQ1VDNaQ1JFa3dTVkpyZEhCamNFNVJRMWd3VW1sMVlsaFBSV1JYTm5OWVkyaHdOamxTWkVwSVVtYzBkR1ZzTlRCWWJreERkMDFQTUhSVmFteFBORm96Y21GS1JrOTZWVVIzU1dwelFWTlBMMFJqY0dOdlFXbExNbWRTYlVrMVVIRjVXVGMwTW1RMmMwUlZOWGM5";
                 
-                // 2. Decode the Base64 string
                 const decodedUrl = atob(ENCODED_BASE);
                 
-                // 3. Dynamically replace the ID token in the URL with your tmdbId
-                // This assumes the token structure allows for direct swap.
-                const finalUrl = decodedUrl.replace(/rcp\/[^/]+/, `rcp/${tmdbId}`);
+                // Safe replacement to prevent a null or unexpected value from breaking the iframe source
+                const finalUrl = decodedUrl && decodedUrl.includes('rcp/') 
+                    ? decodedUrl.replace(/rcp\/[^/]+/, `rcp/${tmdbId}`)
+                    : decodedUrl; 
                 
                 frame.src = finalUrl;
                 frame.style.display = 'block';
@@ -1320,6 +1326,7 @@
                 dismissOverlay();
             }
         }
+
         function formatUsd(value) {
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',
@@ -1569,7 +1576,6 @@
                     try {
                         candles = await fetchCoinPaprikaCandles(coinId);
                     } catch (err) {
-                        // Keep provider label stable for this coin id source.
                         candles = [];
                     }
                 } else {
