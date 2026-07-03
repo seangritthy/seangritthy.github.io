@@ -64,23 +64,48 @@ function normalizeRcp(match) {
   return match.startsWith('http') ? match : `https://${match}`;
 }
 
-// Fast path: fetch the embed HTML directly and pull the rcp URL out of it.
-// The ad-free cloudorchestranova.com/rcp/<token> iframe src is usually present
-// in the raw markup, so this avoids launching a browser at all.
-async function fetchRcpDirect(embedUrl) {
-  if (typeof fetch !== 'function') return null;
+// Free public relays that fetch a target URL from THEIR IP (not ours) and
+// return the raw body. This routes around vsembed's Cloudflare 1020 ban on
+// datacenter IPs. Each entry maps a target URL to a relay request.
+const RELAYS = [
+  (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+  (u) => `https://thingproxy.freeboard.io/fetch/${u}`,
+  (u) => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}`
+];
+
+async function fetchText(url, timeoutMs = 20000) {
   const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), 15000);
+  const t = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(embedUrl, { headers: EMBED_HEADERS, signal: controller.signal });
+    const res = await fetch(url, { headers: EMBED_HEADERS, redirect: 'follow', signal: controller.signal });
     if (!res.ok) return null;
-    const html = await res.text();
-    return normalizeRcp(html.match(RCP_RE)?.[0]);
+    return await res.text();
   } catch (e) {
     return null;
   } finally {
     clearTimeout(t);
   }
+}
+
+// Fetch the embed HTML and pull the ad-free cloudorchestranova.com/rcp/<token>
+// URL out of it. Tries a direct request first, then falls back through the free
+// relays (whose IPs aren't blocked by vsembed's Cloudflare firewall).
+async function fetchRcpDirect(embedUrl) {
+  if (typeof fetch !== 'function') return null;
+
+  // 1) Direct (works from residential IPs / non-blocked hosts).
+  let html = await fetchText(embedUrl, 15000);
+  let m = html && html.match(RCP_RE);
+  if (m) return normalizeRcp(m[0]);
+
+  // 2) Via relays (each fetches vsembed from its own IP).
+  for (const relay of RELAYS) {
+    html = await fetchText(relay(embedUrl), 22000);
+    m = html && html.match(RCP_RE);
+    if (m) return normalizeRcp(m[0]);
+  }
+  return null;
 }
 
 
@@ -222,7 +247,7 @@ app.get('/api/extract', async (req, res) => {
 app.get('/healthz', (req, res) => res.status(200).json({ ok: true }));
 
 // Build/version marker so we can confirm which code Render is serving.
-const BUILD_ID = 'bprobe-1';
+const BUILD_ID = 'relay-1';
 app.get('/version', (req, res) => res.status(200).json({ build: BUILD_ID }));
 
 // Browser probe: load an arbitrary URL in headless Chromium, wait for any
