@@ -1245,6 +1245,25 @@
             window.location.replace(target.toString());
         }
 
+        function redirectToProfileIndex() {
+            const target = new URL(window.location.href);
+            target.pathname = target.pathname.replace(/[^/]*$/, 'index.html');
+            target.search = '';
+            target.hash = '';
+            target.searchParams.set('open_profile', '1');
+            window.location.replace(target.toString());
+        }
+
+        function clearTransientAuthParams() {
+            const current = new URL(window.location.href);
+            const hadMmLogin = current.searchParams.has('mm_login');
+            const hadOpenProfile = current.searchParams.has('open_profile');
+            if (!hadMmLogin && !hadOpenProfile) return;
+            current.searchParams.delete('mm_login');
+            current.searchParams.delete('open_profile');
+            window.history.replaceState({}, '', current.toString());
+        }
+
         function closeWalletModal() {
             if (!walletModal || !walletModalOverlay) return;
             walletModal.style.display = 'none';
@@ -1584,9 +1603,10 @@
                 closeWalletModal();
 
                 if (shouldAutoMetaMaskLogin()) {
-                    redirectToCleanIndex();
+                    redirectToProfileIndex();
                     return;
                 }
+                showProfileModal();
             }
         }
 
@@ -1673,10 +1693,7 @@
         restoreWalletSession().then(() => {
             if (shouldOpenProfileOnLoad()) {
                 showProfileModal();
-                const auth = getAuth();
-                if (auth && auth.isConnected()) {
-                    redirectToCleanIndex();
-                }
+                clearTransientAuthParams();
             }
         });
         if (shouldAutoMetaMaskLogin()) connectMetaMaskWallet();
