@@ -226,6 +226,148 @@
             box-shadow: 0 0 14px rgba(77, 124, 255, 0.32);
         }
 
+        .mm-profile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(6, 8, 18, 0.78);
+            z-index: 2100;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(8px);
+        }
+
+        .mm-profile-card {
+            width: 100%;
+            max-width: 430px;
+            background: linear-gradient(180deg, #1f2437 0%, #171b2a 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 26px 54px rgba(0, 0, 0, 0.45);
+            color: #f8fafc;
+        }
+
+        .mm-profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .mm-profile-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mm-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 30% 30%, #ff9f43, #d35400);
+            box-shadow: 0 0 0 2px rgba(255, 159, 67, 0.25);
+            font-size: 1rem;
+        }
+
+        .mm-avatar img {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            display: block;
+        }
+
+        #profileName {
+            font-family: 'Sora', sans-serif;
+            font-size: 1rem;
+            color: #f8fafc;
+        }
+
+        #profileEmail,
+        #walletAddress {
+            color: #cbd5e1;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            word-break: break-all;
+        }
+
+        #walletAssetsSection {
+            display: none;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        #walletBalance {
+            color: #f8fafc;
+            font-size: 1.24rem;
+            font-weight: 700;
+            margin: 8px 0 6px;
+            font-family: 'Sora', sans-serif;
+        }
+
+        #walletChain {
+            color: #94a3b8;
+            margin-bottom: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+        }
+
+        .mm-action-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .mm-action-grid .type-btn {
+            padding: 8px 6px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(148, 163, 184, 0.12);
+            color: #f8fafc;
+        }
+
+        #walletActionStatus {
+            display: none;
+            margin-bottom: 10px;
+            color: #93c5fd;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.76rem;
+        }
+
+        #walletSendPanel,
+        #walletReceivePanel {
+            display: none;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(15, 23, 42, 0.62);
+        }
+
+        #walletSendPanel input {
+            background: rgba(15, 23, 42, 0.72);
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            color: #f8fafc;
+        }
+
+        #walletSendSymbol {
+            background: rgba(77, 124, 255, 0.18);
+            border: 1px solid rgba(77, 124, 255, 0.36);
+            color: #c7d2fe;
+        }
+
+        .mm-primary-btn {
+            width: 100%;
+            margin-bottom: 10px;
+            border-radius: 10px;
+        }
+
         .filter-alert {
             background: rgba(217, 167, 134, 0.18);
             border-color: rgba(217, 167, 134, 0.75);
@@ -507,6 +649,13 @@
             justify-content: center;
         }
 
+        .wallet-icon img {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+            display: block;
+        }
+
         .wallet-name {
             font-family: 'Sora', 'Noto Sans SC', 'Battambang', sans-serif;
             font-weight: 700;
@@ -614,7 +763,9 @@
             <div class="wallet-modal-body">
                 <p style="color:var(--secondary);margin-bottom:20px;text-align:center;font-family:'JetBrains Mono',monospace;">Connect with MetaMask</p>
                 <button class="wallet-option" id="connectMetaMask">
-                    <div class="wallet-icon">🦊</div>
+                    <div class="wallet-icon">
+                        <img src="logo.svg" alt="Wallet logo" />
+                    </div>
                     <div class="wallet-name">MetaMask</div>
                     <div class="wallet-desc">Connect to your MetaMask wallet</div>
                 </button>
@@ -623,47 +774,52 @@
     </div>
     <div class="wallet-modal-overlay" id="walletModalOverlay" style="display:none;"></div>
 
-    <div id="profileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:2100;align-items:center;justify-content:center;padding:20px;">
-        <div style="max-width:420px;width:100%;background:var(--card-bg);border:1px solid var(--secondary);border-radius:10px;padding:18px;box-shadow:0 0 24px rgba(0,0,0,0.45);">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                <h2 id="profileName" style="font-family:'Sora',sans-serif;font-size:1.05rem;color:var(--primary);">Wallet Profile</h2>
-                <button id="profileClose" class="type-btn" style="padding:6px 10px;">✕</button>
-            </div>
-            <div id="profileEmail" style="color:var(--secondary);margin-bottom:10px;font-family:'JetBrains Mono',monospace;"></div>
-            <div id="walletAssetsSection" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--secondary);">
-                <h3 style="color:var(--primary);margin-bottom:10px;font-size:0.9rem;">💰 Wallet Assets</h3>
-                <div id="walletAddress" style="color:var(--secondary);font-family:'JetBrains Mono',monospace;font-size:0.8rem;margin-bottom:8px;"></div>
-                <div id="walletBalance" style="color:#ffd166;font-family:'JetBrains Mono',monospace;font-size:1rem;margin-bottom:8px;"></div>
-                <div id="walletChain" style="color:var(--primary);font-family:'JetBrains Mono',monospace;font-size:0.85rem;margin-bottom:10px;"></div>
-                <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px;">
-                    <button class="type-btn" id="walletBuyBtn" style="padding:8px 6px;">🛒 Buy</button>
-                    <button class="type-btn" id="walletSendBtn" style="padding:8px 6px;">📤 Send</button>
-                    <button class="type-btn" id="walletReceiveBtn" style="padding:8px 6px;">📥 Receive</button>
-                    <button class="type-btn" id="walletScanBtn" style="padding:8px 6px;">📷 Scan</button>
+    <div id="profileModal" class="mm-profile-overlay">
+        <div class="mm-profile-card">
+            <div class="mm-profile-header">
+                <div class="mm-profile-title">
+                    <span class="mm-avatar">
+                        <img src="logo.svg" alt="Wallet logo" />
+                    </span>
+                    <h2 id="profileName">Wallet Profile</h2>
                 </div>
-                <div id="walletActionStatus" style="display:none;color:var(--secondary);font-family:'JetBrains Mono',monospace;font-size:0.78rem;margin-bottom:10px;"></div>
-                <div id="walletSendPanel" style="display:none;background:rgba(77,124,255,0.08);border:1px solid rgba(77,124,255,0.32);border-radius:10px;padding:10px;margin-bottom:10px;">
-                    <div style="color:var(--primary);font-family:'Sora',sans-serif;font-size:0.84rem;margin-bottom:8px;">Send Native Token</div>
-                    <label for="walletSendTo" style="display:block;color:var(--secondary);font-family:'JetBrains Mono',monospace;font-size:0.75rem;margin-bottom:6px;">Recipient Address</label>
-                    <input id="walletSendTo" type="text" placeholder="0x..." style="width:100%;margin-bottom:8px;padding:9px 10px;background:rgba(255,255,255,0.96);border:1px solid rgba(111,92,255,0.28);border-radius:8px;color:#1b1f3b;font-family:'JetBrains Mono',monospace;font-size:0.78rem;outline:none;" />
-                    <label for="walletSendAmount" style="display:block;color:var(--secondary);font-family:'JetBrains Mono',monospace;font-size:0.75rem;margin-bottom:6px;">Amount</label>
+                <button id="profileClose" class="type-btn">✕</button>
+            </div>
+            <div id="profileEmail"></div>
+            <div id="walletAssetsSection">
+                <h3 style="color:#e2e8f0;margin-bottom:10px;font-size:0.88rem;">Assets</h3>
+                <div id="walletAddress"></div>
+                <div id="walletBalance"></div>
+                <div id="walletChain"></div>
+                <div class="mm-action-grid">
+                    <button class="type-btn" id="walletBuyBtn">🛒 Buy</button>
+                    <button class="type-btn" id="walletSendBtn">📤 Send</button>
+                    <button class="type-btn" id="walletReceiveBtn">📥 Receive</button>
+                    <button class="type-btn" id="walletScanBtn">📷 Scan</button>
+                </div>
+                <div id="walletActionStatus"></div>
+                <div id="walletSendPanel">
+                    <div style="color:#e2e8f0;font-family:'Sora',sans-serif;font-size:0.82rem;margin-bottom:8px;">Send Native Token</div>
+                    <label for="walletSendTo" style="display:block;color:#94a3b8;font-family:'JetBrains Mono',monospace;font-size:0.75rem;margin-bottom:6px;">Recipient Address</label>
+                    <input id="walletSendTo" type="text" placeholder="0x..." style="width:100%;margin-bottom:8px;padding:9px 10px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:0.78rem;outline:none;" />
+                    <label for="walletSendAmount" style="display:block;color:#94a3b8;font-family:'JetBrains Mono',monospace;font-size:0.75rem;margin-bottom:6px;">Amount</label>
                     <div style="display:flex;gap:8px;margin-bottom:8px;">
-                        <input id="walletSendAmount" type="text" inputmode="decimal" placeholder="0.001" style="flex:1;padding:9px 10px;background:rgba(255,255,255,0.96);border:1px solid rgba(111,92,255,0.28);border-radius:8px;color:#1b1f3b;font-family:'JetBrains Mono',monospace;font-size:0.78rem;outline:none;" />
-                        <div id="walletSendSymbol" style="min-width:58px;padding:9px 10px;background:rgba(111,92,255,0.12);border:1px solid rgba(111,92,255,0.24);border-radius:8px;color:var(--primary);font-family:'JetBrains Mono',monospace;font-size:0.76rem;text-align:center;">ETH</div>
+                        <input id="walletSendAmount" type="text" inputmode="decimal" placeholder="0.001" style="flex:1;padding:9px 10px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:0.78rem;outline:none;" />
+                        <div id="walletSendSymbol" style="min-width:58px;padding:9px 10px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:0.76rem;text-align:center;">ETH</div>
                     </div>
                     <div style="display:flex;gap:8px;">
-                        <button class="type-btn" id="walletSendSubmit" style="flex:1;">✅ Confirm Send</button>
+                        <button class="type-btn" id="walletSendSubmit" style="flex:1;">✅ Confirm</button>
                         <button class="type-btn" id="walletSendCancel" style="flex:1;">✖ Cancel</button>
                     </div>
                 </div>
-                <div id="walletReceivePanel" style="display:none;background:rgba(111,92,255,0.08);border:1px solid rgba(111,92,255,0.32);border-radius:10px;padding:10px;margin-bottom:10px;">
+                <div id="walletReceivePanel">
                     <div style="display:flex;justify-content:center;margin-bottom:8px;">
-                        <img id="walletQrImage" alt="Wallet QR" style="width:140px;height:140px;border-radius:8px;border:1px solid rgba(111,92,255,0.35);background:#fff;" />
+                        <img id="walletQrImage" alt="Wallet QR" style="width:140px;height:140px;border-radius:10px;border:1px solid rgba(148,163,184,0.35);background:#fff;" />
                     </div>
-                    <div id="walletReceiveAddress" style="color:var(--primary);font-family:'JetBrains Mono',monospace;font-size:0.76rem;word-break:break-all;margin-bottom:8px;"></div>
-                    <button class="type-btn" id="walletCopyAddress" style="width:100%;">📋 Copy Address</button>
+                    <div id="walletReceiveAddress" style="color:#cbd5e1;font-family:'JetBrains Mono',monospace;font-size:0.76rem;word-break:break-all;margin-bottom:8px;"></div>
+                    <button class="type-btn mm-primary-btn" id="walletCopyAddress">📋 Copy Address</button>
                 </div>
-                <button class="type-btn" id="walletRefresh" style="margin-bottom:10px;width:100%;">🔄 Refresh Balance</button>
+                <button class="type-btn mm-primary-btn" id="walletRefresh">🔄 Refresh Balance</button>
             </div>
             <button class="type-btn" id="profileSignOut" style="width:100%;">Sign out</button>
         </div>
