@@ -670,6 +670,7 @@
     </div>
     <input id="walletScanInput" type="file" accept="image/*" capture="environment" style="display:none;" />
 
+    <script src="https://unpkg.com/@metamask/detect-provider/dist/detect-provider.min.js"></script>
     <script src="web3-auth.js"></script>
     <script>
         // --- MENU TOGGLE LOGIC ---
@@ -1202,6 +1203,12 @@
         async function ensureWeb3AuthLoaded() {
             let auth = getAuth();
             if (auth) return auth;
+
+            try {
+                await loadScriptOnce('https://unpkg.com/@metamask/detect-provider/dist/detect-provider.min.js');
+            } catch (error) {
+                console.error('detect-provider load failed:', error);
+            }
 
             try {
                 await loadScriptOnce('web3-auth.js?v=20260707');

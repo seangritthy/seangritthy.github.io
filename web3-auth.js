@@ -1,5 +1,6 @@
 // ===== WEB3 WALLET AUTHENTICATION =====
 // Supports: MetaMask wallet authentication
+// Uses MetaMask's detect-provider when available.
 
 class Web3Auth {
     constructor() {
@@ -58,7 +59,24 @@ class Web3Auth {
         return typeof window.ethereum !== 'undefined';
     }
 
+    async detectProvider(options = {}) {
+        if (typeof window.detectEthereumProvider !== 'function') return null;
+        try {
+            return await window.detectEthereumProvider(options);
+        } catch (error) {
+            console.warn('detect-provider failed:', error);
+            return null;
+        }
+    }
+
     async waitForEthereum(timeoutMs = 6000) {
+        const detected = await this.detectProvider({
+            mustBeMetaMask: false,
+            silent: true,
+            timeout: timeoutMs
+        });
+        if (detected) return detected;
+
         if (window.ethereum) return window.ethereum;
 
         return new Promise((resolve) => {
@@ -109,7 +127,12 @@ class Web3Auth {
 
     async resolveProvider(preferred = 'any') {
         this.initProviderDiscovery();
-        const injected = await this.waitForEthereum();
+        const detected = await this.detectProvider({
+            mustBeMetaMask: preferred === 'metamask',
+            silent: true,
+            timeout: 5000
+        });
+        const injected = detected || await this.waitForEthereum();
         if (!injected && this.discoveredProviders.length === 0) return null;
 
         if (preferred === 'metamask') {
