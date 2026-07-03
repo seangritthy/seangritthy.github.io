@@ -1291,34 +1291,34 @@
 
         // --- UPDATED LOGIC TO FETCH CLOUDNESTRA URL ---
         async function loadLicensedFrame() {
-            if (!tmdbId) return dismissOverlay();
-            const frame = document.getElementById('stream-frame');
-            const notice = document.getElementById('streamNotice');
-            if (!frame) return dismissOverlay();
+    if (!tmdbId) return dismissOverlay();
+    const frame = document.getElementById('stream-frame');
+    const notice = document.getElementById('streamNotice');
+    if (!frame) return dismissOverlay();
 
-            try {
-                // Calls your API handler which resolves the provider URL
-                const res = await fetch(`/api/extract?tmdb=${encodeURIComponent(tmdbId)}&type=${encodeURIComponent(mediaType)}`);
-                const data = await res.json();
-
-                if (data.success && data.url) {
-                    frame.src = data.url;
-                    frame.style.display = 'block';
-                } else {
-                    throw new Error(data.error || 'Provider unavailable');
-                }
-            } catch (err) {
-                console.error("Stream resolution failed:", err);
-                frame.style.display = 'none';
-                if (notice) {
-                    notice.style.display = 'block';
-                    notice.innerText = getT().streamUnavailable;
-                }
-            } finally {
-                dismissOverlay();
-            }
+    try {
+        // 1. Your raw encoded string
+        const encodedUrl = "YOUR_LONG_ENCODED_STRING_HERE"; 
+        
+        // 2. Decode the Base64 string
+        // If it's a standard base64 string:
+        const decodedUrl = atob(encodedUrl); 
+        
+        // 3. Set the iframe source directly
+        frame.src = decodedUrl;
+        frame.style.display = 'block';
+        
+    } catch (err) {
+        console.error("Stream loading failed:", err);
+        frame.style.display = 'none';
+        if (notice) {
+            notice.style.display = 'block';
+            notice.innerText = "Error loading stream.";
         }
-
+    } finally {
+        dismissOverlay();
+    }
+}
         function formatUsd(value) {
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',
