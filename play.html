@@ -334,77 +334,6 @@
         line-height: 1.6;
     }
 
-    .external-play {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-        margin: 14px 12px 0;
-    }
-    #playNewWindowBtn {
-        cursor: pointer;
-        border: none;
-        border-radius: 10px;
-        padding: 12px 20px;
-        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
-        font-weight: 700;
-        font-size: 0.95rem;
-        color: #fff;
-        background: linear-gradient(90deg, var(--primary), var(--secondary));
-        box-shadow: 0 6px 18px rgba(77, 124, 255, 0.35);
-        transition: transform 0.15s ease, opacity 0.15s ease;
-    }
-    #playNewWindowBtn:hover { transform: translateY(-1px); }
-    #playNewWindowBtn:disabled { opacity: 0.6; cursor: progress; transform: none; }
-    .external-play-status {
-        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
-        font-size: 0.85rem;
-        color: var(--text-muted, #6b7280);
-    }
-
-    .adfree-url-box {
-        display: none;
-        margin: 10px 12px 0;
-        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
-    }
-    .adfree-url-box label {
-        display: block;
-        font-size: 0.8rem;
-        color: var(--text-muted, #6b7280);
-        margin-bottom: 6px;
-    }
-    .adfree-url-row {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-    #adfreeUrl {
-        flex: 1 1 260px;
-        min-width: 0;
-        padding: 10px 12px;
-        border-radius: 8px;
-        border: 1px solid rgba(120, 120, 120, 0.35);
-        background: rgba(0, 0, 0, 0.04);
-        font-family: inherit;
-        font-size: 0.82rem;
-        color: inherit;
-    }
-    #copyAdfreeUrlBtn, #openAdfreeUrl {
-        cursor: pointer;
-        border: none;
-        border-radius: 8px;
-        padding: 10px 16px;
-        font-family: inherit;
-        font-weight: 700;
-        font-size: 0.82rem;
-        color: #fff;
-        text-decoration: none;
-        background: linear-gradient(90deg, var(--secondary), var(--accent));
-        white-space: nowrap;
-    }
-    #openAdfreeUrl { background: linear-gradient(90deg, var(--primary), var(--secondary)); }
-
     .cc-notice {
         background: rgba(77, 124, 255, 0.08);
         border: 1px solid rgba(77, 124, 255, 0.25);
@@ -635,19 +564,6 @@
         <div class="player-container">
             <iframe id="stream-frame" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             <div class="stream-notice" id="streamNotice"></div>
-        </div>
-
-        <div class="external-play">
-            <button id="playNewWindowBtn" type="button">▶ Play ad-free in new window</button>
-            <span id="playNewWindowStatus" class="external-play-status"></span>
-        </div>
-        <div class="adfree-url-box" id="adfreeUrlBox">
-            <label for="adfreeUrl">Ad-free stream URL (copy &amp; open manually):</label>
-            <div class="adfree-url-row">
-                <input type="text" id="adfreeUrl" readonly />
-                <button id="copyAdfreeUrlBtn" type="button">Copy</button>
-                <a id="openAdfreeUrl" href="#" target="_blank" rel="noopener">Open</a>
-            </div>
         </div>
 
         <div class="cc-notice" id="ccNotice">
@@ -1121,7 +1037,38 @@
         };
 
         (function applyOriginGuard() {
-            window.open = function() { console.warn("🛡️ Web3 Gateway: Blocked popup"); return { focus: function(){}, close: function(){} }; };
+            const trustedOpen = window.open.bind(window);
+            window.__trustedOpen = trustedOpen;
+            const blockedPopupHostHints = [
+                'doubleclick',
+                'googlesyndication',
+                'adservice',
+                'popads',
+                'propeller',
+                'onclicka',
+                'adsterra',
+                'exoclick',
+                'juicyads'
+            ];
+            window.open = function(url, target, features) {
+                const nextUrl = String(url || '');
+                if (!nextUrl || nextUrl === 'about:blank') {
+                    return trustedOpen(url, target, features);
+                }
+                let parsed = null;
+                try {
+                    parsed = new URL(nextUrl, window.location.href);
+                } catch (e) {}
+                const host = (parsed?.hostname || '').toLowerCase();
+                const path = (parsed?.pathname || '').toLowerCase();
+                const isBlockedHost = blockedPopupHostHints.some((hint) => host.includes(hint));
+                const isBlockedPath = /\/(ads?|bet)\b/i.test(path);
+                if (isBlockedHost || isBlockedPath) {
+                    console.warn("🛡️ Web3 Gateway: Blocked popup");
+                    return { focus: function(){}, close: function(){} };
+                }
+                return trustedOpen(url, target, features);
+            };
             window.onbeforeunload = function(e) { if (document.activeElement && document.activeElement.tagName === 'IFRAME') return "Web3 gateway active."; };
             document.addEventListener('click', function(e) {
                 if (e.target.closest('.genre-tag') || e.target.closest('.cast-card') || e.target.closest('.meta-link') || e.target.closest('.ai-audio-btn') || e.target.closest('.share-btn')) return; 
@@ -1130,9 +1077,6 @@
         })();
 
         const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
-        // Ad-free CloudNestra resolver deployed separately (e.g. Render).
-        // Leave empty to use a same-origin /api/extract (e.g. Vercel).
-        const EXTRACTOR_BASE = 'https://cloudnestra-resolver.onrender.com';
         const urlParams = new URLSearchParams(window.location.search);
         const tmdbId = urlParams.get('tmdb');
         const mediaType = urlParams.get('type') || 'movie';
@@ -1426,9 +1370,7 @@
                     frame.style.display = 'block';
                 };
 
-                // Load the vsembed embed directly (fast). The ad-free
-                // cloudorchestranova.com/rcp stream is available on demand via the
-                // "Play ad-free in new window" button, which uses the resolver.
+                // Load the vsembed embed directly.
                 playSource();
             } catch (err) {
                 console.error("Stream resolution failed:", err);
@@ -1442,77 +1384,6 @@
             }
         }
 
-        // Resolve the ad-free cloudorchestranova.com/rcp URL via the resolver.
-        async function resolveAdFreeUrl() {
-            const extractorBase = (EXTRACTOR_BASE || '').replace(/\/$/, '');
-            const apiUrl = `${extractorBase}/api/extract?tmdb=${encodeURIComponent(tmdbId)}&type=${encodeURIComponent(mediaType)}`;
-            const res = await fetch(apiUrl, { method: 'GET' });
-            if (!res.ok) throw new Error('resolver ' + res.status);
-            const body = await res.json();
-            if (body && body.success && body.url) return body.url;
-            throw new Error(body && body.error ? body.error : 'no url');
-        }
-
-        // "Play ad-free in new window" button.
-        (function initPlayNewWindow() {
-            const btn = document.getElementById('playNewWindowBtn');
-            const status = document.getElementById('playNewWindowStatus');
-            if (!btn) return;
-            btn.addEventListener('click', async () => {
-                if (!tmdbId) { if (status) status.innerText = 'No title selected.'; return; }
-                // Open the tab synchronously so the browser doesn't block the popup,
-                // then point it at the resolved ad-free URL.
-                const win = window.open('', '_blank');
-                if (win && win.document) {
-                    win.document.write('<title>Loading ad-free stream…</title><body style="background:#000;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><div>Resolving ad-free stream… this can take up to a minute.</div></body>');
-                }
-                btn.disabled = true;
-                if (status) status.innerText = 'Resolving ad-free stream…';
-                try {
-                    const url = await resolveAdFreeUrl();
-                    if (win) { win.location.href = url; }
-                    else { window.open(url, '_blank'); }
-                    showAdfreeUrl(url);
-                    if (status) status.innerText = 'Opened ad-free stream in a new window.';
-                } catch (err) {
-                    console.warn('Ad-free resolve failed:', err);
-                    if (win && !win.closed) {
-                        win.document.body.innerHTML = '<div style="text-align:center">Ad-free stream is unavailable right now.<br>Please use the player on the previous tab.</div>';
-                    }
-                    if (status) status.innerText = 'Ad-free stream unavailable right now.';
-                } finally {
-                    btn.disabled = false;
-                }
-            });
-        })();
-
-        // Show the resolved ad-free URL so the user can copy / open it manually.
-        function showAdfreeUrl(url) {
-            const box = document.getElementById('adfreeUrlBox');
-            const input = document.getElementById('adfreeUrl');
-            const openLink = document.getElementById('openAdfreeUrl');
-            if (!box || !input) return;
-            input.value = url;
-            if (openLink) openLink.href = url;
-            box.style.display = 'block';
-        }
-        (function initCopyAdfreeUrl() {
-            const copyBtn = document.getElementById('copyAdfreeUrlBtn');
-            const input = document.getElementById('adfreeUrl');
-            if (!copyBtn || !input) return;
-            copyBtn.addEventListener('click', async () => {
-                if (!input.value) return;
-                try {
-                    await navigator.clipboard.writeText(input.value);
-                } catch (e) {
-                    input.select();
-                    document.execCommand('copy');
-                }
-                const prev = copyBtn.innerText;
-                copyBtn.innerText = 'Copied!';
-                setTimeout(() => { copyBtn.innerText = prev; }, 1500);
-            });
-        })();
         function formatUsd(value) {
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',
