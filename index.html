@@ -605,7 +605,6 @@
         </div>
     </main>
 
-    <!-- Wallet Selection Modal (Like OpenSea) -->
     <div class="wallet-modal" id="walletModal" style="display:none;">
         <div class="wallet-modal-content">
             <div class="wallet-modal-header">
@@ -692,20 +691,16 @@
         const mainHeader = document.getElementById('mainHeader');
         
         window.addEventListener('scroll', () => {
-            // Only hide header if scrolled past its own height (so it doesn't glitch at the top)
             if (window.scrollY > lastScrollY && window.scrollY > mainHeader.offsetHeight) {
-                // Scrolling DOWN - Hide Header (also closes the menu if left open)
                 mainHeader.classList.add('header-hidden');
                 menuContainer.classList.remove('active');
                 menuToggleBtn.classList.remove('active');
             } else {
-                // Scrolling UP - Show Header
                 mainHeader.classList.remove('header-hidden');
             }
             lastScrollY = window.scrollY;
         });
 
-        // Automatic Browser Language Detection on First Visit
         if (!localStorage.getItem('uiLang')) {
             const browserLang = navigator.language || navigator.userLanguage;
             if (browserLang.toLowerCase().includes('km')) localStorage.setItem('uiLang', 'km');
@@ -1041,6 +1036,7 @@
         const walletQrImage = document.getElementById('walletQrImage');
         const walletReceiveAddress = document.getElementById('walletReceiveAddress');
         const walletScanInput = document.getElementById('walletScanInput');
+        const topSignOutBtn = document.getElementById('signOutBtn');
 
         function getAuth() {
             if (window.web3Auth) return window.web3Auth;
@@ -1259,10 +1255,20 @@
 
         function showProfileModal() {
             const auth = getAuth();
-            if (!profileModal || !auth || !auth.isConnected()) return;
-            const data = auth.getWalletData();
+            if (!profileModal || !auth) return;
+            
+            // Safely fetch data regardless of adapter version
+            const data = (typeof auth.getWalletData === 'function') ? auth.getWalletData() : {
+                address: auth.address,
+                balance: auth.balance,
+                chainName: auth.chainName,
+                shortAddress: auth.address ? `${auth.address.slice(0, 6)}...${auth.address.slice(-4)}` : ''
+            };
+
+            if (!data || !data.address) return;
+
             const symbol = getNativeTokenSymbol(data.chainName);
-            if (profileName) profileName.innerText = `Wallet Profile (${data.shortAddress})`;
+            if (profileName) profileName.innerText = `Wallet Profile (${data.shortAddress || 'Connected'})`;
             if (profileEmail) profileEmail.innerText = `Connected with ${auth.provider || 'Web3 Wallet'}`;
             if (walletAddress) walletAddress.innerText = `Address: ${data.address || 'N/A'}`;
             if (walletBalance) walletBalance.innerText = `Balance: ${data.balance || '0.0000'} ${symbol}`;
@@ -1508,6 +1514,7 @@
             }
             if (menuLoginBtn) menuLoginBtn.style.display = 'none';
             if (menuProfileBtn) menuProfileBtn.style.display = 'inline-block';
+            if (topSignOutBtn) topSignOutBtn.style.display = 'inline-block';
         }
 
         function persistWalletSession(walletData, providerLabel) {
@@ -1609,23 +1616,25 @@
             }
             if (menuLoginBtn) menuLoginBtn.style.display = 'inline-block';
             if (menuProfileBtn) menuProfileBtn.style.display = 'none';
+            if (topSignOutBtn) topSignOutBtn.style.display = 'none';
             hideProfileModal();
         }
 
-        if (menuLoginBtn) {
-            menuLoginBtn.addEventListener('click', async () => {
-                // App-first login flow always starts MetaMask handoff when outside app.
-                await connectMetaMaskWallet();
-            });
-        }
+        // Action Listeners
+        if (menuLoginBtn) menuLoginBtn.addEventListener('click', openWalletModal);
         if (menuProfileBtn) menuProfileBtn.addEventListener('click', showProfileModal);
         if (walletInfo) walletInfo.addEventListener('click', showProfileModal);
+        
         document.getElementById('walletModalClose')?.addEventListener('click', closeWalletModal);
         if (walletModalOverlay) walletModalOverlay.addEventListener('click', closeWalletModal);
+        
         document.getElementById('connectMetaMask')?.addEventListener('click', connectMetaMaskWallet);
         document.getElementById('connectTrustWallet')?.addEventListener('click', connectTrustWalletProvider);
+        
         document.getElementById('profileClose')?.addEventListener('click', hideProfileModal);
         document.getElementById('profileSignOut')?.addEventListener('click', signOutWallet);
+        document.getElementById('signOutBtn')?.addEventListener('click', signOutWallet);
+        
         document.getElementById('walletBuyBtn')?.addEventListener('click', handleWalletBuy);
         document.getElementById('walletSendBtn')?.addEventListener('click', () => handleWalletSend());
         document.getElementById('walletReceiveBtn')?.addEventListener('click', handleWalletReceive);
@@ -1635,9 +1644,10 @@
             if (walletSendPanel) walletSendPanel.style.display = 'none';
             setWalletActionStatus('');
         });
+        
         document.getElementById('walletCopyAddress')?.addEventListener('click', async () => {
             const auth = getAuth();
-            const address = auth?.getWalletData?.()?.address;
+            const address = auth?.getWalletData?.()?.address || auth?.address;
             if (!address) {
                 setWalletActionStatus('Wallet address not available.', true);
                 return;
@@ -1650,27 +1660,29 @@
                 setWalletActionStatus('Could not copy automatically. Copy from the address text.', true);
             }
         });
+        
         walletScanInput?.addEventListener('change', async (event) => {
             const file = event.target?.files?.[0] || null;
             await processWalletScanFile(file);
         });
+        
         document.getElementById('walletRefresh')?.addEventListener('click', async () => {
             const auth = getAuth();
-            if (!auth || !auth.isConnected()) return;
-            await auth.refreshBalance();
+            if (!auth) return;
+            await auth.refreshBalance?.();
             showProfileModal();
         });
 
         // Keep UI synced with wallet events
         window.addEventListener('walletAccountChanged', () => {
             const auth = getAuth();
-            if (!auth || !auth.isConnected()) return signOutWallet();
-            updateWalletUI(auth.getWalletData());
+            if (!auth || !auth.isConnected?.()) return signOutWallet();
+            updateWalletUI(auth.getWalletData?.());
         });
         window.addEventListener('walletChainChanged', () => {
             const auth = getAuth();
-            if (!auth || !auth.isConnected()) return;
-            updateWalletUI(auth.getWalletData());
+            if (!auth || !auth.isConnected?.()) return;
+            updateWalletUI(auth.getWalletData?.());
         });
 
         updateUI();
