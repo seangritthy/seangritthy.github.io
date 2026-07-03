@@ -1290,35 +1290,36 @@
         window.addEventListener('beforeunload', () => window.speechSynthesis.cancel());
 
         // --- UPDATED LOGIC TO FETCH CLOUDNESTRA URL ---
-        async function loadLicensedFrame() {
-    if (!tmdbId) return dismissOverlay();
-    const frame = document.getElementById('stream-frame');
-    const notice = document.getElementById('streamNotice');
-    if (!frame) return dismissOverlay();
+       async function loadLicensedFrame() {
+            if (!tmdbId) return dismissOverlay();
+            const frame = document.getElementById('stream-frame');
+            const notice = document.getElementById('streamNotice');
+            if (!frame) return dismissOverlay();
 
-    try {
-        // 1. Your raw encoded string
-        const encodedUrl = "YOUR_LONG_ENCODED_STRING_HERE"; 
-        
-        // 2. Decode the Base64 string
-        // If it's a standard base64 string:
-        const decodedUrl = atob(encodedUrl); 
-        
-        // 3. Set the iframe source directly
-        frame.src = decodedUrl;
-        frame.style.display = 'block';
-        
-    } catch (err) {
-        console.error("Stream loading failed:", err);
-        frame.style.display = 'none';
-        if (notice) {
-            notice.style.display = 'block';
-            notice.innerText = "Error loading stream.";
+            try {
+                // 1. The long encoded string you provided
+                const ENCODED_BASE = "YjY0ZjFkNGRmZjg4ODU5NmYzZTJkODllZTg5MmNmOTg6TlVJeVJsSXpTSGsxTlhBeU4zWmhlWGRSVUZvNGIxUk5URU5PZEhaYVYyWmlXVFZ3YVZZdmIyRlpOV1Z2ZVZjeE1VdGhPWEI1ZUhwYVJuVTVjMGxCY0c5WlVtbzJNMFJsV1UxRWN6TndhWFZCV25kd1UyMXdWRmh1Vm5sRmVrcHNORkEyUkd0V2FtaGtlbkpOSzJocGExVndZekZOZFRKTFdrZDJiVGhXZFU4elYzSTNURzU2YjNoT0wxaHRhMWRGUTFWaGJXSlBRU3RwVTJsQlRVZHFOR3B1WXpoWFIwdDJRVWxoTjNCdlRFeG9kbk5hTWxwS1duVk1lUzk2VjJFdmJIRnVjRlo2VlNzelMzQlBkelJvUldsc2NrUmhiVmgxYlRSaVRXZHRVbFp6TXpJclZ6RTRRM2haYW5aYVpuUTBiRkY2UzFOSVIybFRka3QwZUM5MFFXeHRXbVZXU21ZeldWZHVTRmhFUlRjeVR6RlpXRmhGZW5WRFpFaHRWSGg2VGpoemNsUlRhM1pZU3pOUmJESjNUa1V4U21nMmFtbE5hMUpoVFd0VlNrOTRTVXR2T1VaSFNEWnBkVEJvYUdodmVHOTVabWRWUzBoelZXdzROM0pvUTJKVVZqSmpXV1JNTDBaVmFqUmxSV0pFTDNNMVltdzJjM3A0WVNzNU4wbFdiWGR3UkVKbllWb3dSMmRqUm5SSGF6TkNVVFpoYUdKb2RYY3JTWFZYUVhobVJISmtUM1pJYlZKMmRHdFhVa1pSTTNOelRDdDBRemh0TTBGTU9UUnNSbXhwVlRGbk9XcFdhRlJpU0dsM1Nub3ljM1pvYVVreGRreEJObTVNU0ZOYVZ6YzVZekpITVZsVlNETlVPSEY0V1ZOdGIwRldiVW8wZGt4d01DOHJSMmRVZG1vd1ZXeHFhVTVDZVdoNVlUYzBVRmRyVjBsYVdIZzRMMHB1UjNwQlRFUTFaMlpKUzNoUVJFd3hNVTV4TkVoUWFrZ3hUblI0UXpFcmFHWjBjamhYVUhoMGEyZG1ZbkJOY2xSc2NVeFBNMnBJYjJWeWJYbE9kazluTUZoR1pYUTFSWE5WVjNVeGNreERjbGRhWkVSaldFbEpiblowY3pWdmEwMU1NRmxaYlVGNFFsYzVhekpwTDFWeVNVSlVjRGR4VkcxUWJHa3JiMEZXVm5sd1FUVlJhV000TWtoTlRtaDRNV0ZpZHpSM1oyMHpZMHhuUlhWeFdYcGxORkppUm5OeVIzbExZMFo1ZEdKWWNXNHdkaTlvYWpkdU4yOXhaVmRYVURsYVNsQldlVXBzZDJaclQwUXllVzB6YVVSM01FSlpXWFZHWVRFMVNUQXJaWEZ3VkRnNFZVbEtSbXcyZUdVMGVFRXlTMFoyTWxCaVJGQlljbkZEYUZVcmNEVTVLMnRCWW10a1VDODNhVUZFU1ZkeGJuVnBTMVF5T1c4dllrSm9aelJ6WWxkUVUyVlBTRlJRVmtSRlEzSjFiM0p4UVZOT2VXaHFlV1F3U3pSdk1WVm1ORFpWTWpaYVkxQXdLMFV6VVcxMGVVazRTRUkwUjJkdVVVUnliVzUyVEhJNGMwNUxVR3RHU210elFXZzJUWElyTkcxUlEyTm1aM2RIYUhOUU9YY3JieTl6YW0xM1FUZHRkbkJVWjJJek5XSktRalZwTkRkTlpqSnBUblpVTDJOM1ltOUVkVkZKVEhGVE1HUkNTV1ZNU0d3d1V6VjZSVkpGVUhaak5FeDVXbmRHWldjd2VtdHdjblYzZFM5d1ZITnJRMG80Y0VObGIzSnhVa0ZMT0V3ck9GZEJkbEZZTVhGb2FsaDBkazlxWm1kWU1qRXhjV1J2VjJsdk9ESk5NbEl3TUhCbWRuZEVha2RRUVdkeE0wUk1hMlpXVkROR2JXWm9SaTlhY1doWmVHNXZiMUI1YkdsR1prZFBVSEJqTldoSGVtdDFVbXhSYjBOb1preHdZMUpXTm5CcFNqQmFZeXRtUmxkRE5ubDZLMGRNWkRJd2FHNVdZekl6VDBoWFRUbFZNRmQ1VDNaQ1JFa3dTVkpyZEhCamNFNVJRMWd3VW1sMVlsaFBSV1JYTm5OWVkyaHdOamxTWkVwSVVtYzBkR1ZzTlRCWWJreERkMDFQTUhSVmFteFBORm96Y21GS1JrOTZWVVIzU1dwelFWTlBMMFJqY0dOdlFXbExNbWRTYlVrMVVIRjVXVGMwTW1RMmMwUlZOWGM5";
+                
+                // 2. Decode the Base64 string
+                const decodedUrl = atob(ENCODED_BASE);
+                
+                // 3. Dynamically replace the ID token in the URL with your tmdbId
+                // This assumes the token structure allows for direct swap.
+                const finalUrl = decodedUrl.replace(/rcp\/[^/]+/, `rcp/${tmdbId}`);
+                
+                frame.src = finalUrl;
+                frame.style.display = 'block';
+            } catch (err) {
+                console.error("Stream resolution failed:", err);
+                frame.style.display = 'none';
+                if (notice) {
+                    notice.style.display = 'block';
+                    notice.innerText = "Stream unavailable.";
+                }
+            } finally {
+                dismissOverlay();
+            }
         }
-    } finally {
-        dismissOverlay();
-    }
-}
         function formatUsd(value) {
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',
