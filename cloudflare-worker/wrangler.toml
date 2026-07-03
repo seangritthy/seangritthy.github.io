@@ -1,0 +1,7 @@
+name = "cloudnestra-resolver"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Browser Rendering binding (headless Chromium). Required for @cloudflare/puppeteer.
+browser = { binding = "BROWSER" }

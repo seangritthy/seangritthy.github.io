@@ -98,6 +98,43 @@ Optional token API integration:
 Example for tokenized `rcp` routes:
 - `CLOUDNESTRA_PATH_TEMPLATE=/rcp/{token}`
 
+## Ad-free CloudNestra Resolver (GitHub Pages + Render)
+
+The site is static (GitHub Pages) and can't run a backend, so the ad-free
+`cloudorchestranova.com/rcp/<token>` URL is resolved by a small headless-browser
+service you deploy separately. `play.html` calls it via `EXTRACTOR_BASE`.
+
+**Files**
+- `server.js` — Express + Playwright resolver. `GET /api/extract?tmdb=<id>&type=movie|tv[&season=&episode=]`
+- `Dockerfile` — official Playwright image (Chromium + libs preinstalled)
+- `render.yaml` — Render Blueprint (Docker web service, free plan, autoDeploy, `/healthz`)
+- `cloudflare-worker/` — alternative resolver for Cloudflare Workers (Browser Rendering)
+
+### Deploy to Render (auto-deploy on push)
+1. Push this repo to GitHub.
+2. Go to https://dashboard.render.com → **New → Blueprint** → select the repo
+   (Render reads `render.yaml` and provisions the `cloudnestra-resolver` web service).
+   - Or **New → Web Service**, connect the repo, set **Runtime = Docker**, leave
+     build/start blank. **Auto-Deploy = Yes** (default) means every push redeploys.
+3. After it builds you get a URL like `https://cloudnestra-resolver.onrender.com`.
+4. Test: open
+   `https://cloudnestra-resolver.onrender.com/api/extract?tmdb=793387&type=movie`
+   → expect JSON with `"url":"https://cloudorchestranova.com/rcp/..."`.
+5. In `play.html` set:
+   ```js
+   const EXTRACTOR_BASE = 'https://cloudnestra-resolver.onrender.com';
+   ```
+   Commit + push. GitHub Pages serves the site; Render serves the resolver.
+
+### Notes / maintenance
+- **Free tier sleeps** after ~15 min idle; first request wakes it in ~30–60s.
+- **Provider churn:** hosts rotate (e.g. `cloudnestra.com` → `cloudorchestranova.com`).
+  If it breaks, update the `RCP_RE` regex / embed URL in `server.js`
+  (and `cloudflare-worker/src/index.js`).
+- **Anti-bot:** vsembed is behind Cloudflare; if datacenter IPs get challenged,
+  add a residential proxy to the Playwright launch.
+- Health check path is `/healthz` (does not launch a browser).
+
 ## License
 
 Free to use and modify!

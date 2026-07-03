@@ -1,0 +1,16 @@
+{
+  "name": "github-movies-extractor",
+  "private": true,
+  "version": "1.0.0",
+  "type": "commonjs",
+  "description": "Local dev server + Playwright CloudNestra (cloudorchestranova) resolver.",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "postinstall": "playwright install chromium"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "playwright": "^1.47.0"
+  }
+}
