@@ -1,5 +1,5 @@
 // ===== WEB3 WALLET AUTHENTICATION =====
-// Supports: MetaMask, Trust Wallet, and other EVM-compatible wallets
+// Supports: MetaMask wallet authentication
 
 class Web3Auth {
     constructor() {
@@ -418,36 +418,10 @@ class Web3Auth {
         }
     }
 
-    // Connect to Trust Wallet (via WalletConnect or direct)
+    // Compatibility stub: Trust Wallet login is disabled (MetaMask-only policy).
     async connectTrustWallet() {
-        try {
-            const eth = await this.resolveProvider('trust');
-            if (!eth) {
-                alert('Trust Wallet is not available. Please open this in Trust Wallet app or install MetaMask.');
-                return null;
-            }
-
-            // Trust Wallet works through MetaMask API
-            const accounts = await eth.request({
-                method: 'eth_requestAccounts'
-            });
-            if (!accounts || !accounts.length) return null;
-
-            await this.syncWalletState(accounts[0], 'Trust Wallet', eth);
-
-            const signature = await this.requestSignature(this.address, eth);
-            if (!signature) {
-                alert('Wallet signature is required to log in.');
-                this.disconnect();
-                return null;
-            }
-
-            return this.buildWalletData();
-        } catch (error) {
-            console.error('Trust Wallet connection error:', error);
-            alert('Failed to connect Trust Wallet: ' + this.getErrorMessage(error, 'Unknown wallet error'));
-            return null;
-        }
+        alert('Only MetaMask is supported for wallet login.');
+        return null;
     }
 
     async restoreSession(expectedAddress = null) {

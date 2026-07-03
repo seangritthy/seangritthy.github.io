@@ -37,7 +37,6 @@ if (menuProfileBtn) menuProfileBtn.addEventListener('click', openProfileModal);
 const walletModalClose = document.getElementById('walletModalClose');
 const walletModalOverlay = document.getElementById('walletModalOverlay');
 const connectMetaMask = document.getElementById('connectMetaMask');
-const connectTrustWallet = document.getElementById('connectTrustWallet');
 
 if (walletModalClose) walletModalClose.addEventListener('click', closeWalletModal);
 if (walletModalOverlay) walletModalOverlay.addEventListener('click', closeWalletModal);
@@ -48,14 +47,6 @@ if (connectMetaMask) {
         closeWalletModal();
         const result = await web3Auth.connectMetaMask();
         if (result) handleWeb3Login(result, 'MetaMask');
-    });
-}
-
-if (connectTrustWallet) {
-    connectTrustWallet.addEventListener('click', async () => {
-        closeWalletModal();
-        const result = await web3Auth.connectTrustWallet();
-        if (result) handleWeb3Login(result, 'Trust Wallet');
     });
 }
 

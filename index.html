@@ -612,16 +612,11 @@
                 <span class="wallet-modal-close" id="walletModalClose">&times;</span>
             </div>
             <div class="wallet-modal-body">
-                <p style="color:var(--secondary);margin-bottom:20px;text-align:center;font-family:'JetBrains Mono',monospace;">Select a wallet to connect</p>
+                <p style="color:var(--secondary);margin-bottom:20px;text-align:center;font-family:'JetBrains Mono',monospace;">Connect with MetaMask</p>
                 <button class="wallet-option" id="connectMetaMask">
                     <div class="wallet-icon">🦊</div>
                     <div class="wallet-name">MetaMask</div>
                     <div class="wallet-desc">Connect to your MetaMask wallet</div>
-                </button>
-                <button class="wallet-option" id="connectTrustWallet">
-                    <div class="wallet-icon">💎</div>
-                    <div class="wallet-name">Trust Wallet</div>
-                    <div class="wallet-desc">Connect to your Trust Wallet</div>
                 </button>
             </div>
         </div>
@@ -1014,7 +1009,7 @@
             if (currentPage < totalPages) { currentPage++; fetchDashboardData(); window.scrollTo({top: 0, behavior: 'smooth'}); }
         });
 
-        // --- Web3 Wallet Login (MetaMask / Trust Wallet) ---
+        // --- Web3 Wallet Login (MetaMask only) ---
         const menuLoginBtn = document.getElementById('menuLoginBtn');
         const menuProfileBtn = document.getElementById('menuProfileBtn');
         const walletInfo = document.getElementById('walletInfo');
@@ -1167,8 +1162,8 @@
                     return this.getWalletData();
                 },
                 async connectTrustWallet() {
-                    this.provider = 'Trust Wallet';
-                    return this.connectMetaMask();
+                    alert('Only MetaMask is supported for wallet login.');
+                    return null;
                 },
                 disconnect() {
                     this.address = null;
@@ -1228,6 +1223,11 @@
         function shouldAutoMetaMaskLogin() {
             const params = new URLSearchParams(window.location.search);
             return params.get('mm_login') === '1';
+        }
+
+        function shouldOpenProfileOnLoad() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('open_profile') === '1';
         }
 
         function getIndexLoginUrl() {
@@ -1592,20 +1592,6 @@
             }
         }
 
-        async function connectTrustWalletProvider() {
-            const auth = await ensureWeb3AuthLoaded();
-            if (!auth) {
-                alert('Web3 module not loaded. Please refresh the page.');
-                return;
-            }
-            const walletData = await auth.connectTrustWallet();
-            if (walletData) {
-                updateWalletUI(walletData);
-                persistWalletSession(walletData, 'Trust Wallet');
-                closeWalletModal();
-            }
-        }
-
         function signOutWallet() {
             const auth = getAuth();
             if (auth) auth.disconnect();
@@ -1629,7 +1615,6 @@
         if (walletModalOverlay) walletModalOverlay.addEventListener('click', closeWalletModal);
         
         document.getElementById('connectMetaMask')?.addEventListener('click', connectMetaMaskWallet);
-        document.getElementById('connectTrustWallet')?.addEventListener('click', connectTrustWalletProvider);
         
         document.getElementById('profileClose')?.addEventListener('click', hideProfileModal);
         document.getElementById('profileSignOut')?.addEventListener('click', signOutWallet);
@@ -1687,7 +1672,15 @@
 
         updateUI();
         fetchDashboardData();
-        restoreWalletSession();
+        restoreWalletSession().then(() => {
+            if (shouldOpenProfileOnLoad()) {
+                showProfileModal();
+                const auth = getAuth();
+                if (auth && auth.isConnected()) {
+                    redirectToCleanIndex();
+                }
+            }
+        });
         if (shouldAutoMetaMaskLogin()) connectMetaMaskWallet();
     </script>
 </body>

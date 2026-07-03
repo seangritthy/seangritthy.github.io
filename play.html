@@ -752,8 +752,8 @@
                     return this.getWalletData();
                 },
                 async connectTrustWallet() {
-                    this.provider = 'Trust Wallet';
-                    return this.connectMetaMask();
+                    alert('Only MetaMask is supported for wallet login.');
+                    return null;
                 },
                 disconnect() {
                     this.address = null;
@@ -851,22 +851,33 @@
             }
         }
 
+        function redirectToIndexProfile() {
+            const target = new URL(window.location.href);
+            target.pathname = target.pathname.replace(/[^/]*$/, 'index.html');
+            target.search = '';
+            target.hash = '';
+            target.searchParams.set('open_profile', '1');
+            window.location.href = target.toString();
+        }
+
         // --- Web3 Wallet Login for Player Page ---
         window.addEventListener('DOMContentLoaded', async () => {
             // Show Web3 buttons
             const metamaskBtn = document.getElementById('metamaskBtn');
-            const trustwalletBtn = document.getElementById('trustwalletBtn');
             if (metamaskBtn) metamaskBtn.style.display = 'inline-block';
-            if (trustwalletBtn) trustwalletBtn.style.display = 'inline-block';
 
             const restored = await restoreWalletSession();
             if (restored) {
                 const ui = document.getElementById('userInfo');
                 if (ui) { ui.innerText = restored.shortAddress; ui.style.display = 'block'; }
+                const walletInfo = document.getElementById('walletInfo');
+                if (walletInfo) {
+                    walletInfo.innerText = `Connected via ${restored.provider || 'Web3 Wallet'}`;
+                    walletInfo.style.display = 'inline-block';
+                }
                 const out = document.getElementById('signOutBtn');
                 if (out) out.style.display = 'inline-block';
                 if (metamaskBtn) metamaskBtn.style.display = 'none';
-                if (trustwalletBtn) trustwalletBtn.style.display = 'none';
             }
             const outBtn = document.getElementById('signOutBtn');
             if (outBtn) outBtn.addEventListener('click', () => { 
@@ -875,6 +886,8 @@
                 localStorage.removeItem('g_user'); 
                 location.reload(); 
             });
+            document.getElementById('userInfo')?.addEventListener('click', redirectToIndexProfile);
+            document.getElementById('walletInfo')?.addEventListener('click', redirectToIndexProfile);
         });
 
         // Web3 button handlers
@@ -900,33 +913,16 @@
                 persistWalletSession(result, 'MetaMask');
                 const ui = document.getElementById('userInfo');
                 if (ui) { ui.innerText = result.shortAddress; ui.style.display = 'block'; }
+                const walletInfo = document.getElementById('walletInfo');
+                if (walletInfo) {
+                    walletInfo.innerText = 'Connected via MetaMask';
+                    walletInfo.style.display = 'inline-block';
+                }
                 const out = document.getElementById('signOutBtn');
                 if (out) out.style.display = 'inline-block';
                 const metamaskBtn = document.getElementById('metamaskBtn');
-                const trustwalletBtn = document.getElementById('trustwalletBtn');
                 if (metamaskBtn) metamaskBtn.style.display = 'none';
-                if (trustwalletBtn) trustwalletBtn.style.display = 'none';
                 window.location.replace('index.html');
-            }
-        });
-
-        document.getElementById('trustwalletBtn')?.addEventListener('click', async () => {
-            const auth = await ensureWeb3AuthLoaded();
-            if (!auth) {
-                alert('Web3 module not loaded. Please refresh the page.');
-                return;
-            }
-            const result = await auth.connectTrustWallet();
-            if (result) {
-                persistWalletSession(result, 'Trust Wallet');
-                const ui = document.getElementById('userInfo');
-                if (ui) { ui.innerText = result.shortAddress; ui.style.display = 'block'; }
-                const out = document.getElementById('signOutBtn');
-                if (out) out.style.display = 'inline-block';
-                const metamaskBtn = document.getElementById('metamaskBtn');
-                const trustwalletBtn = document.getElementById('trustwalletBtn');
-                if (metamaskBtn) metamaskBtn.style.display = 'none';
-                if (trustwalletBtn) trustwalletBtn.style.display = 'none';
             }
         });
 
