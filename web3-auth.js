@@ -380,8 +380,7 @@ class Web3Auth {
             if (eth && !providerCandidates.includes(eth)) providerCandidates.unshift(eth);
 
             if (!providerCandidates.length) {
-                alert('MetaMask was not found in this browser. Redirecting to MetaMask app.');
-                this.openMetaMaskApp();
+                alert('MetaMask is not available in this browser. Please use a browser where MetaMask is installed and enabled.');
                 return null;
             }
 
@@ -404,15 +403,13 @@ class Web3Auth {
             }
 
             if (!eth) {
-                alert('MetaMask is not available in this browser context. Redirecting to MetaMask app.');
-                this.openMetaMaskApp();
+                alert('MetaMask is not available in this browser context. Please use a browser where MetaMask is installed and enabled.');
                 return null;
             }
 
             if (!accounts || !accounts.length) {
                 if (sawInternalMetaMaskError && this.isProbablyMobile()) {
-                    alert('MetaMask had an internal error in this browser. Redirecting to MetaMask app.');
-                    this.openMetaMaskApp();
+                    alert('MetaMask had an internal error in this browser. Please try again in your regular browser.');
                     return null;
                 }
                 throw lastError || new Error('No wallet account returned');

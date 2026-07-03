@@ -719,7 +719,7 @@
                 },
                 async connectMetaMask() {
                     if (!window.ethereum) {
-                        this.openMetaMaskApp();
+                        alert('MetaMask is not available in this browser. Please use a browser where MetaMask is installed and enabled.');
                         return null;
                     }
                     this.provider = 'MetaMask';
@@ -733,11 +733,11 @@
                                 if (Array.isArray(existing) && existing.length) {
                                     accounts = existing;
                                 } else {
-                                    this.openMetaMaskApp();
+                                    alert('MetaMask is not available in this browser. Please use a browser where MetaMask is installed and enabled.');
                                     return null;
                                 }
                             } catch (_) {
-                                this.openMetaMaskApp();
+                                alert('MetaMask is not available in this browser. Please use a browser where MetaMask is installed and enabled.');
                                 return null;
                             }
                         } else {
@@ -905,13 +905,8 @@
                 return;
             }
 
-            const loginTarget = new URL(window.location.href);
-            loginTarget.pathname = loginTarget.pathname.replace(/[^/]*$/, 'index.html');
-            loginTarget.search = '?mm_login=1';
-            loginTarget.hash = '';
-
-            if (!auth.isMetaMaskAvailable?.() && typeof auth.openMetaMaskApp === 'function') {
-                auth.openMetaMaskApp(loginTarget.toString());
+            if (!auth.isMetaMaskAvailable?.()) {
+                alert('MetaMask is not available in this browser. Please use a browser where MetaMask is installed and enabled.');
                 return;
             }
 
