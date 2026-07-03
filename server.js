@@ -222,8 +222,54 @@ app.get('/api/extract', async (req, res) => {
 app.get('/healthz', (req, res) => res.status(200).json({ ok: true }));
 
 // Build/version marker so we can confirm which code Render is serving.
-const BUILD_ID = 'probe-1';
+const BUILD_ID = 'bprobe-1';
 app.get('/version', (req, res) => res.status(200).json({ build: BUILD_ID }));
+
+// Browser probe: load an arbitrary URL in headless Chromium, wait for any
+// Cloudflare "Just a moment" challenge to clear, then report the resulting
+// title, iframe srcs, and whether an rcp/prorcp URL appeared.
+app.get('/api/bprobe', async (req, res) => {
+  const target = req.query.url;
+  if (!target) return res.status(400).json({ error: 'url query param required' });
+  const waitMs = Math.min(parseInt(req.query.wait || '12000', 10) || 12000, 25000);
+  const out = { target };
+  const browser = await getBrowser();
+  const context = await browser.newContext({
+    userAgent:
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+    viewport: { width: 1280, height: 720 },
+    locale: 'en-US'
+  });
+  await context.addInitScript(() => {
+    Object.defineProperty(navigator, 'webdriver', { get: () => false });
+    Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+    Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3] });
+  });
+  const page = await context.newPage();
+  const seen = [];
+  const rcpLike = /(cloudorchestranova|cloudnestra)\.com\/(rcp|prorcp)\/[A-Za-z0-9+/=_-]+/i;
+  const note = (u) => { if (u && rcpLike.test(u) && !seen.includes(u)) seen.push(u.match(rcpLike)[0]); };
+  page.on('request', (r) => note(r.url()));
+  page.on('response', (r) => note(r.url()));
+  page.on('frameattached', (f) => note(f.url()));
+  try {
+    await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {});
+    await page.waitForTimeout(waitMs);
+    const html = await page.content().catch(() => '');
+    out.title = await page.title().catch(() => '');
+    out.finalUrl = page.url();
+    out.stillChallenged = /just a moment/i.test(out.title) || /just a moment/i.test(html);
+    out.iframeSrcs = [...html.matchAll(/<iframe[^>]+src=["']([^"']+)["']/gi)].map(m => m[1]).slice(0, 10);
+    note(html.match(rcpLike)?.[0] || '');
+    for (const f of page.frames()) note(f.url());
+    out.rcpSeen = seen.slice(0, 5);
+  } catch (e) {
+    out.error = e?.name + ': ' + (e?.message || String(e));
+  } finally {
+    await context.close().catch(() => {});
+  }
+  return res.status(200).json(out);
+});
 
 // Generic probe: fetch an arbitrary URL from the server IP and report status +
 // a snippet. Lets us test provider reachability without redeploying each time.
