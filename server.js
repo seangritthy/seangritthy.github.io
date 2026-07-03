@@ -222,31 +222,56 @@ app.get('/api/extract', async (req, res) => {
 app.get('/healthz', (req, res) => res.status(200).json({ ok: true }));
 
 // Build/version marker so we can confirm which code Render is serving.
-const BUILD_ID = 'fastpath-1';
+const BUILD_ID = 'diag-2';
 app.get('/version', (req, res) => res.status(200).json({ build: BUILD_ID }));
 
-// Diagnostic: report exactly what a plain fetch of the embed page returns
-// from the server's IP (helps detect datacenter-IP blocking / challenges).
+function cfMarkers(html) {
+  const low = (html || '').toLowerCase();
+  return {
+    justAMoment: low.includes('just a moment'),
+    challengePlatform: low.includes('challenge-platform') || low.includes('cf-challenge'),
+    attentionRequired: low.includes('attention required'),
+    error1020: low.includes('error 1020') || low.includes('ray id'),
+    cfmail: low.includes('cloudflare')
+  };
+}
+
+// Diagnostic: compare a plain fetch vs a real headless-browser fetch from the
+// server's IP, and classify any Cloudflare block (challenge vs hard ban).
 app.get('/api/debug', async (req, res) => {
   const { tmdb = '793387', type } = req.query;
   const mediaType = type === 'tv' ? 'tv' : 'movie';
   const embedUrl = buildEmbedUrl(tmdb, mediaType, req.query.season, req.query.episode);
-  const out = { build: BUILD_ID, embedUrl, hasGlobalFetch: typeof fetch === 'function' };
+  const out = { build: BUILD_ID, embedUrl };
+
+  // (a) plain fetch
+  out.fetch = {};
   try {
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), 15000);
     const r = await fetch(embedUrl, { headers: EMBED_HEADERS, signal: controller.signal });
     clearTimeout(t);
     const html = await r.text();
-    const m = html.match(RCP_RE);
-    out.status = r.status;
-    out.htmlLen = html.length;
-    out.rcpFound = Boolean(m);
-    out.rcpSample = m ? m[0].slice(0, 60) : null;
-    out.snippet = html.slice(0, 200);
+    out.fetch.status = r.status;
+    out.fetch.server = r.headers.get('server');
+    out.fetch.htmlLen = html.length;
+    out.fetch.rcpFound = RCP_RE.test(html);
+    out.fetch.cf = cfMarkers(html);
+    out.fetch.title = (html.match(/<title>([^<]*)<\/title>/i)?.[1] || '').slice(0, 80);
   } catch (e) {
-    out.fetchError = e?.name + ': ' + (e?.message || String(e));
+    out.fetch.error = e?.name + ': ' + (e?.message || String(e));
   }
+
+  // (b) real browser (Playwright) — can solve JS challenges if it's not a hard ban
+  out.browser = {};
+  try {
+    const url = await resolveRcp(embedUrl);
+    out.browser.rcpFound = Boolean(url);
+    out.browser.rcpSample = url ? url.slice(0, 60) : null;
+  } catch (e) {
+    out.browser.error = e?.name + ': ' + (e?.message || String(e));
+  }
+
   return res.status(200).json(out);
 });
 
