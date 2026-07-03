@@ -967,8 +967,7 @@
                 shareBtn: "🔗 SHARE MOVIE",
                 shareTitle: "SHARE THIS MOVIE",
                 copyBtn: "COPY",
-                copiedBtn: "COPIED!"
-                ,
+                copiedBtn: "COPIED!",
                 streamUnavailable: "Full playback requires a configured provider. Set LICENSED_STREAM_ORIGIN or CLOUDNESTRA_ORIGIN on your API host."
             },
             km: {
@@ -1000,8 +999,7 @@
                 shareBtn: "🔗 ចែករំលែក",
                 shareTitle: "ចែករំលែកភាពយន្តនេះ",
                 copyBtn: "ចម្លង",
-                copiedBtn: "បានចម្លង!"
-                ,
+                copiedBtn: "បានចម្លង!",
                 streamUnavailable: "ការចាក់ពេញត្រូវការអ្នកផ្គត់ផ្គង់ដែលបានកំណត់។ សូមកំណត់ LICENSED_STREAM_ORIGIN ឬ CLOUDNESTRA_ORIGIN នៅម៉ាស៊ីន API របស់អ្នក។"
             },
             zh: {
@@ -1033,8 +1031,7 @@
                 shareBtn: "🔗 分享电影",
                 shareTitle: "分享此电影",
                 copyBtn: "复制",
-                copiedBtn: "已复制!"
-                ,
+                copiedBtn: "已复制!",
                 streamUnavailable: "完整播放需要已配置的播放源。请在 API 主机中设置 LICENSED_STREAM_ORIGIN 或 CLOUDNESTRA_ORIGIN。"
             }
         };
@@ -1292,26 +1289,34 @@
 
         window.addEventListener('beforeunload', () => window.speechSynthesis.cancel());
 
+        // --- UPDATED LOGIC TO FETCH CLOUDNESTRA URL ---
         async function loadLicensedFrame() {
             if (!tmdbId) return dismissOverlay();
             const frame = document.getElementById('stream-frame');
             const notice = document.getElementById('streamNotice');
             if (!frame) return dismissOverlay();
 
-            const targetEmbed = mediaType === 'tv'
-                ? `https://vsembed.ru/embed/tv/${tmdbId}/1/1`
-                : `https://vsembed.ru/embed/movie/${tmdbId}`;
+            try {
+                // Calls your API handler which resolves the provider URL
+                const res = await fetch(`/api/extract?tmdb=${encodeURIComponent(tmdbId)}&type=${encodeURIComponent(mediaType)}`);
+                const data = await res.json();
 
-            frame.style.display = 'block';
-            if (notice) {
-                notice.style.display = 'none';
-                notice.innerText = '';
+                if (data.success && data.url) {
+                    frame.src = data.url;
+                    frame.style.display = 'block';
+                } else {
+                    throw new Error(data.error || 'Provider unavailable');
+                }
+            } catch (err) {
+                console.error("Stream resolution failed:", err);
+                frame.style.display = 'none';
+                if (notice) {
+                    notice.style.display = 'block';
+                    notice.innerText = getT().streamUnavailable;
+                }
+            } finally {
+                dismissOverlay();
             }
-            frame.src = targetEmbed;
-            frame.onload = dismissOverlay;
-
-            // Failsafe in case iframe load event is delayed or blocked
-            setTimeout(dismissOverlay, 5000);
         }
 
         function formatUsd(value) {
