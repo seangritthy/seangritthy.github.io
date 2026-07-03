@@ -362,6 +362,49 @@
         color: var(--text-muted, #6b7280);
     }
 
+    .adfree-url-box {
+        display: none;
+        margin: 10px 12px 0;
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
+    }
+    .adfree-url-box label {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--text-muted, #6b7280);
+        margin-bottom: 6px;
+    }
+    .adfree-url-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    #adfreeUrl {
+        flex: 1 1 260px;
+        min-width: 0;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(120, 120, 120, 0.35);
+        background: rgba(0, 0, 0, 0.04);
+        font-family: inherit;
+        font-size: 0.82rem;
+        color: inherit;
+    }
+    #copyAdfreeUrlBtn, #openAdfreeUrl {
+        cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 16px;
+        font-family: inherit;
+        font-weight: 700;
+        font-size: 0.82rem;
+        color: #fff;
+        text-decoration: none;
+        background: linear-gradient(90deg, var(--secondary), var(--accent));
+        white-space: nowrap;
+    }
+    #openAdfreeUrl { background: linear-gradient(90deg, var(--primary), var(--secondary)); }
+
     .cc-notice {
         background: rgba(77, 124, 255, 0.08);
         border: 1px solid rgba(77, 124, 255, 0.25);
@@ -597,6 +640,14 @@
         <div class="external-play">
             <button id="playNewWindowBtn" type="button">▶ Play ad-free in new window</button>
             <span id="playNewWindowStatus" class="external-play-status"></span>
+        </div>
+        <div class="adfree-url-box" id="adfreeUrlBox">
+            <label for="adfreeUrl">Ad-free stream URL (copy &amp; open manually):</label>
+            <div class="adfree-url-row">
+                <input type="text" id="adfreeUrl" readonly />
+                <button id="copyAdfreeUrlBtn" type="button">Copy</button>
+                <a id="openAdfreeUrl" href="#" target="_blank" rel="noopener">Open</a>
+            </div>
         </div>
 
         <div class="cc-notice" id="ccNotice">
@@ -1421,6 +1472,7 @@
                     const url = await resolveAdFreeUrl();
                     if (win) { win.location.href = url; }
                     else { window.open(url, '_blank'); }
+                    showAdfreeUrl(url);
                     if (status) status.innerText = 'Opened ad-free stream in a new window.';
                 } catch (err) {
                     console.warn('Ad-free resolve failed:', err);
@@ -1431,6 +1483,34 @@
                 } finally {
                     btn.disabled = false;
                 }
+            });
+        })();
+
+        // Show the resolved ad-free URL so the user can copy / open it manually.
+        function showAdfreeUrl(url) {
+            const box = document.getElementById('adfreeUrlBox');
+            const input = document.getElementById('adfreeUrl');
+            const openLink = document.getElementById('openAdfreeUrl');
+            if (!box || !input) return;
+            input.value = url;
+            if (openLink) openLink.href = url;
+            box.style.display = 'block';
+        }
+        (function initCopyAdfreeUrl() {
+            const copyBtn = document.getElementById('copyAdfreeUrlBtn');
+            const input = document.getElementById('adfreeUrl');
+            if (!copyBtn || !input) return;
+            copyBtn.addEventListener('click', async () => {
+                if (!input.value) return;
+                try {
+                    await navigator.clipboard.writeText(input.value);
+                } catch (e) {
+                    input.select();
+                    document.execCommand('copy');
+                }
+                const prev = copyBtn.innerText;
+                copyBtn.innerText = 'Copied!';
+                setTimeout(() => { copyBtn.innerText = prev; }, 1500);
             });
         })();
         function formatUsd(value) {
