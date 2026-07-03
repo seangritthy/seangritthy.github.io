@@ -1375,34 +1375,9 @@
                     frame.style.display = 'block';
                 };
 
-                // 1) Try the serverless extractor first — it scrapes the real
-                //    cloudorchestranova.com/rcp/<token> URL from vsembed.
-                //    Uses EXTRACTOR_BASE (external resolver) when set, so it also
-                //    works on GitHub Pages; otherwise falls back to same-origin /api.
-                {
-                    try {
-                        const extractorBase = (EXTRACTOR_BASE || '').replace(/\/$/, '');
-                        const apiUrl = `${extractorBase}/api/extract?tmdb=${encodeURIComponent(tmdbId)}&type=${encodeURIComponent(mediaType)}`;
-                        const res = await fetch(apiUrl, { method: 'GET' });
-                        if (res.ok) {
-                            const body = await res.json();
-                            if (body && body.success && body.url) {
-                                frame.onload = () => dismissOverlay();
-                                frame.src = body.url;
-                                frame.style.display = 'block';
-                                if (notice) {
-                                    notice.style.display = 'block';
-                                    notice.innerText = 'Playing direct CloudNestra stream (no ads).';
-                                }
-                                return;
-                            }
-                        }
-                    } catch (extractErr) {
-                        console.warn('Extractor unavailable, using direct embed:', extractErr);
-                    }
-                }
-
-                // 2) Fallback: load the CloudNestra-backed embed directly.
+                // Load the vsembed embed directly (fast). The ad-free
+                // cloudorchestranova.com/rcp stream is available on demand via the
+                // "Play ad-free in new window" button, which uses the resolver.
                 playSource();
             } catch (err) {
                 console.error("Stream resolution failed:", err);
