@@ -334,6 +334,34 @@
         line-height: 1.6;
     }
 
+    .external-play {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 14px 12px 0;
+    }
+    #playNewWindowBtn {
+        cursor: pointer;
+        border: none;
+        border-radius: 10px;
+        padding: 12px 20px;
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #fff;
+        background: linear-gradient(90deg, var(--primary), var(--secondary));
+        box-shadow: 0 6px 18px rgba(77, 124, 255, 0.35);
+        transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    #playNewWindowBtn:hover { transform: translateY(-1px); }
+    #playNewWindowBtn:disabled { opacity: 0.6; cursor: progress; transform: none; }
+    .external-play-status {
+        font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace;
+        font-size: 0.85rem;
+        color: var(--text-muted, #6b7280);
+    }
+
     .cc-notice {
         background: rgba(77, 124, 255, 0.08);
         border: 1px solid rgba(77, 124, 255, 0.25);
@@ -564,6 +592,11 @@
         <div class="player-container">
             <iframe id="stream-frame" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             <div class="stream-notice" id="streamNotice"></div>
+        </div>
+
+        <div class="external-play">
+            <button id="playNewWindowBtn" type="button">▶ Play ad-free in new window</button>
+            <span id="playNewWindowStatus" class="external-play-status"></span>
         </div>
 
         <div class="cc-notice" id="ccNotice">
@@ -1382,6 +1415,49 @@
                 dismissOverlay();
             }
         }
+
+        // Resolve the ad-free cloudorchestranova.com/rcp URL via the resolver.
+        async function resolveAdFreeUrl() {
+            const extractorBase = (EXTRACTOR_BASE || '').replace(/\/$/, '');
+            const apiUrl = `${extractorBase}/api/extract?tmdb=${encodeURIComponent(tmdbId)}&type=${encodeURIComponent(mediaType)}`;
+            const res = await fetch(apiUrl, { method: 'GET' });
+            if (!res.ok) throw new Error('resolver ' + res.status);
+            const body = await res.json();
+            if (body && body.success && body.url) return body.url;
+            throw new Error(body && body.error ? body.error : 'no url');
+        }
+
+        // "Play ad-free in new window" button.
+        (function initPlayNewWindow() {
+            const btn = document.getElementById('playNewWindowBtn');
+            const status = document.getElementById('playNewWindowStatus');
+            if (!btn) return;
+            btn.addEventListener('click', async () => {
+                if (!tmdbId) { if (status) status.innerText = 'No title selected.'; return; }
+                // Open the tab synchronously so the browser doesn't block the popup,
+                // then point it at the resolved ad-free URL.
+                const win = window.open('', '_blank');
+                if (win && win.document) {
+                    win.document.write('<title>Loading ad-free stream…</title><body style="background:#000;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><div>Resolving ad-free stream… this can take up to a minute.</div></body>');
+                }
+                btn.disabled = true;
+                if (status) status.innerText = 'Resolving ad-free stream…';
+                try {
+                    const url = await resolveAdFreeUrl();
+                    if (win) { win.location.href = url; }
+                    else { window.open(url, '_blank'); }
+                    if (status) status.innerText = 'Opened ad-free stream in a new window.';
+                } catch (err) {
+                    console.warn('Ad-free resolve failed:', err);
+                    if (win && !win.closed) {
+                        win.document.body.innerHTML = '<div style="text-align:center">Ad-free stream is unavailable right now.<br>Please use the player on the previous tab.</div>';
+                    }
+                    if (status) status.innerText = 'Ad-free stream unavailable right now.';
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        })();
         function formatUsd(value) {
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',
