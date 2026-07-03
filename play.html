@@ -1290,77 +1290,77 @@
         window.addEventListener('beforeunload', () => window.speechSynthesis.cancel());
 
         // ============ DYNAMIC CLOUDNESTRA EXTRACTION ============
-        async function loadLicensedFrame() {
+       async function loadLicensedFrame() {
     if (!tmdbId) return dismissOverlay();
     const frame = document.getElementById('stream-frame');
     const notice = document.getElementById('streamNotice');
     if (!frame) return dismissOverlay();
 
     try {
-        // Try multiple embed sources
-        const embedSources = [
-            `https://vsembed.ru/embed/${mediaType}/${tmdbId}/`,
-            `https://vidsrc.xyz/embed/${mediaType}/${tmdbId}`,
-            `https://embed.su/embed/${mediaType}/${tmdbId}`
-        ];
+        // Build the embed URL dynamically
+        const embedUrl = `https://vsembed.ru/embed/${mediaType}/${tmdbId}/`;
+        console.log('Fetching embed page:', embedUrl);
         
+        // Fetch the embed page
+        const response = await fetch(embedUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+                'Referer': 'https://vsembed.ru/',
+                'Origin': 'https://vsembed.ru/',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch embed: ${response.status}`);
+        }
+
+        const html = await response.text();
+        console.log('Embed HTML fetched, searching for Cloudnestra URL...');
+        
+        // Extract the Cloudnestra URL from the HTML
         let cloudnestraUrl = null;
-        let lastError = null;
-
-        for (const embedUrl of embedSources) {
-            try {
-                console.log('Trying embed source:', embedUrl);
-                
-                const response = await fetch(embedUrl, {
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
-                        'Referer': 'https://vsembed.ru/',
-                        'Origin': 'https://vsembed.ru/',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                        'Accept-Language': 'en-US,en;q=0.9',
-                        'Cache-Control': 'no-cache',
-                        'Pragma': 'no-cache'
-                    }
-                });
-
-                if (!response.ok) {
-                    console.log(`Failed to fetch ${embedUrl}: ${response.status}`);
-                    continue;
-                }
-
-                const html = await response.text();
-                
-                // Extract Cloudnestra URL using multiple patterns
-                const patterns = [
-                    /https?:\/\/[^\s"']*cloudorchestranova\.com\/rcp\/[^\s"']*/i,
-                    /https?:\/\/[^\s"']*cloudnestra\.com\/rcp\/[^\s"']*/i,
-                    /https?:\/\/[^\s"']*\/rcp\/[a-zA-Z0-9]+/i,
-                    /<iframe[^>]*src=["']([^"']*cloudorchestranova[^"']*)["'][^>]*>/i,
-                    /<iframe[^>]*src=["']([^"']*\/rcp\/[^"']*)["'][^>]*>/i,
-                    /"url":"([^"]*cloudorchestranova[^"]*)"/i,
-                    /"file":"([^"]*cloudorchestranova[^"]*)"/i
-                ];
-
-                for (const pattern of patterns) {
-                    const match = html.match(pattern);
-                    if (match) {
-                        cloudnestraUrl = match[1] || match[0];
-                        console.log('Found Cloudnestra URL:', cloudnestraUrl);
-                        break;
-                    }
-                }
-
-                if (cloudnestraUrl) break;
-                
-            } catch (err) {
-                console.log(`Error with ${embedUrl}:`, err.message);
-                lastError = err;
+        
+        // Look for rcp/ pattern with the full URL
+        const rcpMatches = html.match(/https?:\/\/[^\s"']*\/rcp\/[^\s"']*/gi);
+        if (rcpMatches && rcpMatches.length > 0) {
+            cloudnestraUrl = rcpMatches[0];
+            console.log('Found RCP URL:', cloudnestraUrl);
+        }
+        
+        // If not found, look for iframe with rcp
+        if (!cloudnestraUrl) {
+            const iframeMatch = html.match(/<iframe[^>]*src=["']([^"']*\/rcp\/[^"']*)["'][^>]*>/i);
+            if (iframeMatch) {
+                cloudnestraUrl = iframeMatch[1];
+                console.log('Found RCP in iframe:', cloudnestraUrl);
+            }
+        }
+        
+        // If still not found, look for any URL with cloudnestra or cloudorchestra
+        if (!cloudnestraUrl) {
+            const cloudMatch = html.match(/https?:\/\/[^\s"']*(?:cloudnestra|cloudorchestra)[^\s"']*\/rcp\/[^\s"']*/i);
+            if (cloudMatch) {
+                cloudnestraUrl = cloudMatch[0];
+                console.log('Found Cloud URL:', cloudnestraUrl);
+            }
+        }
+        
+        // If still not found, look for any URL with rcp
+        if (!cloudnestraUrl) {
+            const anyRcpMatch = html.match(/https?:\/\/[^\s"']*\/rcp\/[a-zA-Z0-9]+/i);
+            if (anyRcpMatch) {
+                cloudnestraUrl = anyRcpMatch[0];
+                console.log('Found any RCP URL:', cloudnestraUrl);
             }
         }
 
         if (cloudnestraUrl) {
             // Clean the URL
-            cloudnestraUrl = cloudnestraUrl.split('"')[0].split("'")[0];
+            cloudnestraUrl = cloudnestraUrl.split('"')[0].split("'")[0].split('&')[0];
             console.log('Final Cloudnestra URL:', cloudnestraUrl);
             
             frame.src = cloudnestraUrl;
@@ -1369,29 +1369,13 @@
                 notice.style.display = 'none';
             }
         } else {
-            // Fallback: Try direct Cloudnestra URL construction
-            console.log('No Cloudnestra URL found, trying direct construction...');
-            
-            // Try the direct URL format
-            const directUrl = `https://cloudorchestranova.com/rcp/${tmdbId}`;
-            console.log('Trying direct URL:', directUrl);
-            
-            // Test if the direct URL works
-            try {
-                const testResponse = await fetch(directUrl, { method: 'HEAD' });
-                if (testResponse.ok) {
-                    frame.src = directUrl;
-                    frame.style.display = 'block';
-                    if (notice) {
-                        notice.style.display = 'none';
-                    }
-                    return;
-                }
-            } catch (e) {
-                console.log('Direct URL failed:', e.message);
+            // No URL found - show error message
+            console.error('No Cloudnestra URL found in embed page');
+            frame.style.display = 'none';
+            if (notice) {
+                notice.style.display = 'block';
+                notice.innerText = "Stream unavailable. The video source could not be found for this movie.";
             }
-            
-            throw new Error('No Cloudnestra URL found in any embed source');
         }
         
     } catch (err) {
