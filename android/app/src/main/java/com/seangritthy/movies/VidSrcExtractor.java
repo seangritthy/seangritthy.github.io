@@ -29,6 +29,12 @@ public class VidSrcExtractor {
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(Uri.parse(url), "video/*");
+            
+            // Add Referer for vsembed or cloudorchestra streams so download managers like 1DM can access them
+            android.os.Bundle headers = new android.os.Bundle();
+            headers.putString("Referer", "https://vsembed.ru/");
+            intent.putExtra(android.provider.Browser.EXTRA_HEADERS, headers);
+            
             activity.startActivity(Intent.createChooser(intent, "Download Video with..."));
         } catch (Exception e) {
             e.printStackTrace();
