@@ -768,13 +768,7 @@
                     <div class="wallet-name">MetaMask</div>
                     <div class="wallet-desc">Connect to your MetaMask wallet</div>
                 </button>
-                <button class="wallet-option" id="connectLocalProfile" style="border-color: var(--accent); background: rgba(20, 184, 166, 0.04);">
-                    <div class="wallet-icon" style="background: rgba(20, 184, 166, 0.15);">
-                        <img src="logo.svg" alt="Profile logo" style="filter: hue-rotate(180deg);" />
-                    </div>
-                    <div class="wallet-name" style="color: var(--accent);">In-App Profile</div>
-                    <div class="wallet-desc" style="color: rgba(255, 255, 255, 0.7);">Create or load a local in-app profile</div>
-                </button>
+
             </div>
         </div>
     </div>
@@ -1864,26 +1858,7 @@
             }
         }
 
-        async function connectLocalProfileWallet() {
-            const auth = await ensureWeb3AuthLoaded();
-            if (!auth) {
-                alert('Web3 module not loaded. Please refresh the page.');
-                return;
-            }
 
-            const walletData = await auth.connectLocalProfile();
-            if (walletData) {
-                updateWalletUI(walletData);
-                persistWalletSession(walletData, 'In-App Profile');
-                closeWalletModal();
-
-                if (shouldAutoMetaMaskLogin()) {
-                    redirectToProfileIndex();
-                    return;
-                }
-                showProfileModal();
-            }
-        }
 
         function signOutWallet() {
             const auth = getAuth();
@@ -1908,7 +1883,6 @@
         if (walletModalOverlay) walletModalOverlay.addEventListener('click', closeWalletModal);
         
         document.getElementById('connectMetaMask')?.addEventListener('click', connectMetaMaskWallet);
-        document.getElementById('connectLocalProfile')?.addEventListener('click', connectLocalProfileWallet);
         
         document.getElementById('profileClose')?.addEventListener('click', hideProfileModal);
         document.getElementById('profileSignOut')?.addEventListener('click', signOutWallet);

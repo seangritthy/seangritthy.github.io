@@ -828,6 +828,10 @@
             }));
         }
 
+        function getPublicLoginUrl() {
+            return "https://seangritthy.github.io/index.html?app_redirect=1&mm_login=1";
+        }
+
         async function restoreWalletSession() {
             const raw = localStorage.getItem('g_user');
             if (!raw) return null;
@@ -910,24 +914,16 @@
                 return;
             }
 
-            const loginTarget = new URL(window.location.href);
-            loginTarget.pathname = loginTarget.pathname.replace(/[^/]*$/, 'index.html');
-            loginTarget.search = '?mm_login=1';
-            loginTarget.hash = '';
+            const loginTarget = getPublicLoginUrl();
 
-            let result = null;
             if (!auth.isMetaMaskAvailable?.()) {
-                const useLocal = confirm('MetaMask is not available. Would you like to log in using an In-App Profile instead?');
-                if (useLocal) {
-                    result = await auth.connectLocalProfile();
-                } else if (typeof auth.openMetaMaskApp === 'function') {
-                    auth.openMetaMaskApp(loginTarget.toString());
-                    return;
+                if (typeof auth.openMetaMaskApp === 'function') {
+                    auth.openMetaMaskApp(loginTarget);
                 }
-            } else {
-                result = await auth.connectMetaMask();
+                return;
             }
 
+            const result = await auth.connectMetaMask();
             if (result) {
                 persistWalletSession(result, result.provider || 'MetaMask');
                 const ui = document.getElementById('userInfo');
