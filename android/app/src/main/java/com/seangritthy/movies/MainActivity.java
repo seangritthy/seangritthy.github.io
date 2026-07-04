@@ -147,6 +147,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        webView.setDownloadListener(new android.webkit.DownloadListener() {
+            @Override
+            public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
+                android.content.Intent i = new android.content.Intent(android.content.Intent.ACTION_VIEW);
+                i.setData(android.net.Uri.parse(url));
+                startActivity(i);
+            }
+        });
+
         // Load the main index.html file through the secure appassets domain
         webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");
 
