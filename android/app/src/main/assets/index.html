@@ -724,6 +724,7 @@
                 <button id="menuLoginBtn" class="type-btn">🗝️ Login</button>
                 <button id="menuProfileBtn" class="type-btn" style="display:none;">👤 Profile</button>
                 <button id="menuUpdateBtn" class="type-btn" style="background-color: var(--primary); color: white;">🔄 Check for Updates</button>
+                <button id="menuUpdateBtn" class="type-btn" style="background-color: var(--primary); color: white;">🔄 Check for Updates</button>
             </div>
             
             <div class="type-selector">
@@ -1888,6 +1889,7 @@
         // Action Listeners
         if (menuLoginBtn) menuLoginBtn.addEventListener('click', openWalletModal);
         if (menuProfileBtn) menuProfileBtn.addEventListener('click', showProfileModal);
+        document.getElementById('userInfo')?.addEventListener('click', showProfileModal);
         if (userInfo) userInfo.addEventListener('click', showProfileModal);
         if (walletInfo) walletInfo.addEventListener('click', showProfileModal);
         
