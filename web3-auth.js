@@ -487,6 +487,36 @@ class Web3Auth {
         }
     }
 
+    // Quick connect for app-redirect flow: skips signature for speed
+    async connectMetaMaskQuick() {
+        try {
+            await this.waitForEthereum();
+            let eth = await this.resolveProvider('metamask');
+            const providerCandidates = this.getProviderCandidates('metamask')
+                .filter((provider) => !!provider?.isMetaMask || provider === eth);
+            if (eth && !providerCandidates.includes(eth)) providerCandidates.unshift(eth);
+
+            if (!providerCandidates.length) return null;
+
+            for (const provider of providerCandidates) {
+                try {
+                    const nextAccounts = await this.requestMetaMaskAccounts(provider);
+                    if (Array.isArray(nextAccounts) && nextAccounts.length) {
+                        eth = provider;
+                        await this.syncWalletState(nextAccounts[0], 'MetaMask', eth);
+                        return this.buildWalletData();
+                    }
+                } catch (error) {
+                    if (error?.code === 4001) throw error;
+                }
+            }
+            return null;
+        } catch (error) {
+            console.error('MetaMask quick connect error:', error);
+            return null;
+        }
+    }
+
     async connectLocalProfile() {
         let storedLocal = localStorage.getItem('local_profile_wallet');
         let walletData;

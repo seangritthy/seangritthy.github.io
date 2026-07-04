@@ -1823,12 +1823,21 @@
             }
         }
 
+         function buildAppRedirectUrl(walletData) {
+            // Use Android intent:// URI format — works in MetaMask's browser
+            const params = `address=${encodeURIComponent(walletData.address)}&balance=${encodeURIComponent(walletData.balance)}&chainId=${encodeURIComponent(walletData.chainId)}&provider=MetaMask`;
+            return `intent://login?${params}#Intent;scheme=githubmovies;package=com.seangritthy.movies;end`;
+         }
+
          async function connectMetaMaskWallet() {
             const auth = await ensureWeb3AuthLoaded();
             if (!auth) {
                 alert('Web3 module not loaded. Please refresh the page.');
                 return;
             }
+
+            const params = new URLSearchParams(window.location.search);
+            const isAppRedirect = params.get('app_redirect') === '1';
 
             if (!auth.isMetaMaskAvailable?.()) {
                 if (typeof auth.openMetaMaskApp === 'function') {
@@ -1837,15 +1846,39 @@
                 return;
             }
 
+            // For app redirect flow: use quick connect (no signature), then intent:// redirect
+            if (isAppRedirect) {
+                const walletData = await auth.connectMetaMaskQuick();
+                if (walletData && walletData.address) {
+                    const intentUrl = buildAppRedirectUrl(walletData);
+                    // Try intent:// first
+                    window.location.href = intentUrl;
+                    // Fallback: after 2s if still here, try custom scheme
+                    setTimeout(() => {
+                        const fallbackUrl = `githubmovies://login?address=${encodeURIComponent(walletData.address)}&balance=${encodeURIComponent(walletData.balance)}&chainId=${encodeURIComponent(walletData.chainId)}&provider=MetaMask`;
+                        window.location.href = fallbackUrl;
+                    }, 2000);
+                    // Fallback: after 4s show manual link
+                    setTimeout(() => {
+                        const manualUrl = buildAppRedirectUrl(walletData);
+                        document.body.innerHTML = `
+                            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#fff;font-family:sans-serif;padding:20px;text-align:center">
+                                <h2 style="color:#a78bfa">✅ Wallet Connected!</h2>
+                                <p style="color:#94a3b8;margin:10px 0">Address: ${walletData.shortAddress || walletData.address}</p>
+                                <p style="color:#94a3b8;margin:10px 0">Balance: ${walletData.balance} ETH</p>
+                                <a href="${manualUrl}" style="display:inline-block;margin-top:20px;padding:16px 32px;background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;text-decoration:none;border-radius:12px;font-size:18px;font-weight:600">
+                                    Open GitHub Movies App →
+                                </a>
+                                <p style="color:#64748b;margin-top:16px;font-size:14px">Tap the button above to return to the app</p>
+                            </div>`;
+                    }, 4000);
+                }
+                return;
+            }
+
+            // Normal flow (not app redirect)
             const walletData = await auth.connectMetaMask();
             if (walletData) {
-                const params = new URLSearchParams(window.location.search);
-                if (params.get('app_redirect') === '1') {
-                    const appUrl = `githubmovies://login?address=${walletData.address}&balance=${walletData.balance}&chainId=${walletData.chainId}&provider=MetaMask`;
-                    window.location.href = appUrl;
-                    return;
-                }
-
                 updateWalletUI(walletData);
                 persistWalletSession(walletData, 'MetaMask');
                 closeWalletModal();

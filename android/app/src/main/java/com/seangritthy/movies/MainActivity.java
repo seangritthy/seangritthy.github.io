@@ -56,15 +56,39 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
-                if (url.startsWith("http://") || url.startsWith("https://")) {
-                    return false; // Load in WebView
+                String host = request.getUrl().getHost();
+
+                // MetaMask deep link domains must open externally so Android
+                // resolves them to the MetaMask app (or Play Store).
+                if (host != null && (host.equals("metamask.app.link") || host.endsWith(".metamask.io"))) {
+                    try {
+                        android.content.Intent intent = new android.content.Intent(
+                            android.content.Intent.ACTION_VIEW, request.getUrl());
+                        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        // If no handler, send to Play Store
+                        startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW,
+                            android.net.Uri.parse("market://details?id=io.metamask")));
+                    }
+                    return true;
                 }
+
+                // Normal http/https URLs load inside WebView
+                if (url.startsWith("http://") || url.startsWith("https://")) {
+                    return false;
+                }
+
+                // Custom schemes (metamask://, intent://, etc.)
                 try {
                     android.content.Intent intent = android.content.Intent.parseUri(url, android.content.Intent.URI_INTENT_SCHEME);
                     if (intent.resolveActivity(getPackageManager()) != null) {
                         startActivity(intent);
                     } else {
                         String packageName = intent.getPackage();
+                        if (packageName == null && url.startsWith("metamask://")) {
+                            packageName = "io.metamask";
+                        }
                         if (packageName != null) {
                             startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, 
                                 android.net.Uri.parse("market://details?id=" + packageName)));
@@ -74,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     return true;
                 } catch (Exception e) {
-                    return true; // Handle and prevent error page loading
+                    return true;
                 }
             }
         });
