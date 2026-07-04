@@ -324,18 +324,42 @@
         }
 
         .mm-action-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 8px;
-            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            margin-top: 15px;
         }
 
-        .mm-action-grid .type-btn {
-            padding: 8px 6px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            background: rgba(148, 163, 184, 0.12);
-            color: #f8fafc;
+        .mm-action-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .mm-action-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: opacity 0.2s;
+        }
+
+        .mm-action-item:hover .mm-action-icon {
+            opacity: 0.8;
+        }
+
+        .mm-action-label {
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
         }
 
         #walletActionStatus {
@@ -796,14 +820,26 @@
             <div id="walletAssetsSection">
                 <h3 style="color:#e2e8f0;margin-bottom:10px;font-size:0.88rem;">Assets</h3>
                 <div id="walletAddress"></div>
+                <div class="mm-action-grid">
+                    <div class="mm-action-item" id="walletBuyBtn">
+                        <div class="mm-action-icon">💸</div>
+                        <span class="mm-action-label">Buy</span>
+                    </div>
+                    <div class="mm-action-item" id="walletSendBtn">
+                        <div class="mm-action-icon">📤</div>
+                        <span class="mm-action-label">Send</span>
+                    </div>
+                    <div class="mm-action-item" id="walletReceiveBtn">
+                        <div class="mm-action-icon">📥</div>
+                        <span class="mm-action-label">Receive</span>
+                    </div>
+                    <div class="mm-action-item" id="walletScanBtn">
+                        <div class="mm-action-icon">📸</div>
+                        <span class="mm-action-label">Scan</span>
+                    </div>
+                </div>
                 <div id="walletBalance"></div>
                 <div id="walletChain"></div>
-                <div class="mm-action-grid">
-                    <button class="type-btn" id="walletBuyBtn">🛒 Buy</button>
-                    <button class="type-btn" id="walletSendBtn">📤 Send</button>
-                    <button class="type-btn" id="walletReceiveBtn">📥 Receive</button>
-                    <button class="type-btn" id="walletScanBtn">📷 Scan</button>
-                </div>
                 <div id="walletActionStatus"></div>
                 <div id="walletSendPanel">
                     <div style="color:#e2e8f0;font-family:'Sora',sans-serif;font-size:0.82rem;margin-bottom:8px;">Send Native Token</div>
@@ -1962,7 +1998,7 @@
         });
         
         // --- OTA Updater ---
-        const APP_VERSION = 'v1.0.19';
+        const APP_VERSION = 'v1.0.20';
         async function checkForUpdates(manual = false) {
             try {
                 const response = await fetch('https://api.github.com/repos/seangritthy/seangritthy.github.io/releases/latest');
