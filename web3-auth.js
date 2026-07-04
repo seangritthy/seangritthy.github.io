@@ -60,13 +60,59 @@ class Web3Auth {
     }
 
     async detectProvider(options = {}) {
-        if (typeof window.detectEthereumProvider !== 'function') return null;
-        try {
-            return await window.detectEthereumProvider(options);
-        } catch (error) {
-            console.warn('detect-provider failed:', error);
-            return null;
+        const { mustBeMetaMask = false, silent = false, timeout = 3000 } = options;
+
+        if (typeof mustBeMetaMask !== 'boolean') {
+            throw new Error('detect-provider: Expected option "mustBeMetaMask" to be a boolean.');
         }
+        if (typeof silent !== 'boolean') {
+            throw new Error('detect-provider: Expected option "silent" to be a boolean.');
+        }
+        if (typeof timeout !== 'number') {
+            throw new Error('detect-provider: Expected option "timeout" to be a number.');
+        }
+
+        if (typeof window === 'undefined') return null;
+
+        let handled = false;
+
+        return new Promise((resolve) => {
+            if (window.ethereum) {
+                handleEthereum();
+            } else {
+                window.addEventListener(
+                    'ethereum#initialized',
+                    handleEthereum,
+                    { once: true }
+                );
+
+                setTimeout(() => {
+                    handleEthereum();
+                }, timeout);
+            }
+
+            function handleEthereum() {
+                if (handled) return;
+                handled = true;
+
+                window.removeEventListener('ethereum#initialized', handleEthereum);
+
+                const { ethereum } = window;
+
+                if (ethereum && (!mustBeMetaMask || ethereum.isMetaMask)) {
+                    resolve(ethereum);
+                } else {
+                    const message = mustBeMetaMask
+                        ? 'Non-MetaMask provider detected.'
+                        : 'Unable to detect window.ethereum.';
+
+                    if (!silent) {
+                        console.error('@metamask/detect-provider:', message);
+                    }
+                    resolve(null);
+                }
+            }
+        });
     }
 
     async waitForEthereum(timeoutMs = 6000) {
