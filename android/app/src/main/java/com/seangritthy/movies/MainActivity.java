@@ -22,7 +22,7 @@ import java.util.Locale;
 public class MainActivity extends Activity {
     private WebView myWebView;
     private ValueCallback<Uri[]> mFilePathCallback;
-    private String mCameraPhotoPath;
+    private Uri mCameraPhotoUri;
     private static final int INPUT_FILE_REQUEST_CODE = 1;
 
     @Override
@@ -40,7 +40,7 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
-                if (url.startsWith("http://") || url.startsWith("https://")) {
+                if (url.startsWith("file://")) {
                     return false;
                 }
                 
@@ -59,10 +59,9 @@ public class MainActivity extends Activity {
                 }
             }
             
-            // For older Android versions
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if (url.startsWith("http://") || url.startsWith("https://")) {
+                if (url.startsWith("file://")) {
                     return false;
                 }
                 
@@ -94,17 +93,15 @@ public class MainActivity extends Activity {
                     File photoFile = null;
                     try {
                         photoFile = createImageFile();
-                        takePictureIntent.putExtra("PhotoPath", mCameraPhotoPath);
                     } catch (IOException ex) {
-                        // Error occurred while creating the File
+                        // Error
                     }
 
                     if (photoFile != null) {
-                        mCameraPhotoPath = "file:" + photoFile.getAbsolutePath();
-                        Uri photoURI = FileProvider.getUriForFile(MainActivity.this,
+                        mCameraPhotoUri = FileProvider.getUriForFile(MainActivity.this,
                                 getPackageName() + ".fileprovider",
                                 photoFile);
-                        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCameraPhotoUri);
                     } else {
                         takePictureIntent = null;
                     }
@@ -151,16 +148,16 @@ public class MainActivity extends Activity {
 
         Uri[] results = null;
         if (resultCode == Activity.RESULT_OK) {
-            if (data == null) {
-                if (mCameraPhotoPath != null) {
-                    results = new Uri[]{Uri.parse(mCameraPhotoPath)};
+            if (data == null || data.getData() == null) {
+                if (mCameraPhotoUri != null) {
+                    results = new Uri[]{mCameraPhotoUri};
                 }
             } else {
                 String dataString = data.getDataString();
                 if (dataString != null) {
                     results = new Uri[]{Uri.parse(dataString)};
-                } else if (mCameraPhotoPath != null) {
-                    results = new Uri[]{Uri.parse(mCameraPhotoPath)};
+                } else if (mCameraPhotoUri != null) {
+                    results = new Uri[]{mCameraPhotoUri};
                 }
             }
         }
