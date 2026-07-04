@@ -14,17 +14,6 @@ android {
         versionName "1.0"
     }
 
-    flavorDimensions "device"
-    
-    productFlavors {
-        mobile {
-            dimension "device"
-        }
-        tv {
-            dimension "device"
-        }
-    }
-
     buildTypes {
         release {
             minifyEnabled false
