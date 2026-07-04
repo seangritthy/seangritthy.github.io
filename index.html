@@ -11,6 +11,11 @@
         });
     </script>
     <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Movies">
+    <link rel="apple-touch-icon" href="logo.svg">
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&family=Sora:wght@500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -2222,10 +2227,14 @@
                     e.preventDefault();
                     const apkUrl = 'https://github.com/seangritthy/seangritthy.github.io/releases/latest/download/GitHubMovies.apk';
                     const isAndroid = /Android/i.test(navigator.userAgent);
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                    
                     if (isAndroid) {
                         const fallbackUrl = encodeURIComponent(apkUrl);
                         const intentUrl = `intent://github.com/seangritthy/seangritthy.github.io/releases/latest/download/GitHubMovies.apk#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${fallbackUrl};end`;
                         window.location.href = intentUrl;
+                    } else if (isIOS) {
+                        alert("To install on iOS:\n\n1. Tap the Share button at the bottom of Safari.\n2. Scroll down and tap 'Add to Home Screen'.");
                     } else {
                         window.open(apkUrl, '_blank');
                     }
@@ -2233,6 +2242,11 @@
             }
         }
 
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(err => console.error('SW registration failed:', err));
+            });
+        }
 
     </script>
     <script src="wc-connect.js"></script><script>
