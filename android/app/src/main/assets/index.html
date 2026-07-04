@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GitHub Movies | Secure Stream</title>
     <script>
+        window.process = { env: { NODE_ENV: 'production' } };
         window.addEventListener('error', function(e) {
+            alert('Global JS Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
+        });
+    </script>
             alert('Global JS Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
         });
     </script>
