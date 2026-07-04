@@ -721,8 +721,9 @@
             </div>
 
             <div style="display:flex;justify-content:center;gap:10px;margin-top:12px;">
-                <button id="menuLoginBtn" class="type-btn">🔐 Login</button>
+                <button id="menuLoginBtn" class="type-btn">🗝️ Login</button>
                 <button id="menuProfileBtn" class="type-btn" style="display:none;">👤 Profile</button>
+                <button id="menuUpdateBtn" class="type-btn" style="background-color: var(--primary); color: white;">🔄 Check for Updates</button>
             </div>
             
             <div class="type-selector">
@@ -1887,6 +1888,7 @@
         // Action Listeners
         if (menuLoginBtn) menuLoginBtn.addEventListener('click', openWalletModal);
         if (menuProfileBtn) menuProfileBtn.addEventListener('click', showProfileModal);
+        if (userInfo) userInfo.addEventListener('click', showProfileModal);
         if (walletInfo) walletInfo.addEventListener('click', showProfileModal);
         
         document.getElementById('walletModalClose')?.addEventListener('click', closeWalletModal);
@@ -1957,7 +1959,56 @@
                 clearTransientAuthParams();
             }
         });
-        // Auto-login removed — user must tap Connect MetaMask button
+        
+        // --- OTA Updater ---
+        const APP_VERSION = 'v1.0.15';
+        async function checkForUpdates(manual = false) {
+            try {
+                const response = await fetch('https://api.github.com/repos/seangritthy/seangritthy.github.io/releases/latest');
+                const release = await response.json();
+                if (release.tag_name && release.tag_name !== APP_VERSION) {
+                    const current = parseFloat(APP_VERSION.replace('v', '').split('.').join('.'));
+                    const latest = parseFloat(release.tag_name.replace('v', '').split('.').join('.'));
+                    if (latest > current) {
+                        showUpdatePrompt(release);
+                    } else if (manual) {
+                        alert('You are already on the latest version (' + APP_VERSION + ').');
+                    }
+                } else if (manual) {
+                    alert('You are already on the latest version (' + APP_VERSION + ').');
+                }
+            } catch (e) {
+                console.error('Failed to check for updates:', e);
+                if (manual) alert('Failed to check for updates. Please try again later.');
+            }
+        }
+
+        function showUpdatePrompt(release) {
+            const apkAsset = release.assets.find(a => a.name.endsWith('.apk'));
+            const downloadUrl = apkAsset ? apkAsset.browser_download_url : release.html_url;
+            
+            const updateModal = document.createElement('div');
+            updateModal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.8); z-index: 99999;
+                display: flex; align-items: center; justify-content: center;
+                backdrop-filter: blur(5px);
+            `;
+            updateModal.innerHTML = `
+                <div style="background: #1e1e2d; padding: 30px; border-radius: 12px; text-align: center; max-width: 90%; width: 400px; border: 1px solid #333; font-family: 'Inter', sans-serif;">
+                    <h2 style="color: #fff; margin-bottom: 15px; font-family: 'Space Grotesk', sans-serif;">New Update Available!</h2>
+                    <p style="color: #aaa; margin-bottom: 25px;">Version ${release.tag_name} is now available.</p>
+                    <button onclick="window.location.href='${downloadUrl}'" style="display: inline-block; background: #6f5cff; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; width: 100%; box-sizing: border-box; margin-bottom: 15px; border:none; cursor:pointer;">Download Update</button>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background: transparent; border: 1px solid #555; color: #888; padding: 10px 24px; border-radius: 8px; cursor: pointer; width: 100%;">Remind Me Later</button>
+                </div>
+            `;
+            document.body.appendChild(updateModal);
+        }
+
+        document.getElementById('menuUpdateBtn')?.addEventListener('click', () => checkForUpdates(true));
+        
+        checkForUpdates(false);
+
     </script>
     <script src="wc-connect.js"></script>
 </body>
