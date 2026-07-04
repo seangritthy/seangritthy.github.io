@@ -147,12 +147,60 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Setup Download Manager for in-app updates
+        final android.content.BroadcastReceiver onDownloadComplete = new android.content.BroadcastReceiver() {
+            @Override
+            public void onReceive(android.content.Context context, android.content.Intent intent) {
+                long id = intent.getLongExtra(android.app.DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+                android.app.DownloadManager dm = (android.app.DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+                android.database.Cursor cursor = dm.query(new android.app.DownloadManager.Query().setFilterById(id));
+                
+                if (cursor != null && cursor.moveToFirst()) {
+                    int statusIndex = cursor.getColumnIndex(android.app.DownloadManager.COLUMN_STATUS);
+                    if (statusIndex >= 0 && android.app.DownloadManager.STATUS_SUCCESSFUL == cursor.getInt(statusIndex)) {
+                        int uriIndex = cursor.getColumnIndex(android.app.DownloadManager.COLUMN_LOCAL_URI);
+                        if (uriIndex >= 0) {
+                            String uriString = cursor.getString(uriIndex);
+                            android.net.Uri apkUri = android.net.Uri.parse(uriString);
+                            
+                            // Convert file:// URI to content:// URI using FileProvider
+                            java.io.File file = new java.io.File(apkUri.getPath());
+                            android.net.Uri contentUri = androidx.core.content.FileProvider.getUriForFile(context, getApplicationContext().getPackageName() + ".fileprovider", file);
+                            
+                            android.content.Intent installIntent = new android.content.Intent(android.content.Intent.ACTION_VIEW);
+                            installIntent.setDataAndType(contentUri, "application/vnd.android.package-archive");
+                            installIntent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            startActivity(installIntent);
+                        }
+                    }
+                    cursor.close();
+                }
+            }
+        };
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(onDownloadComplete, new android.content.IntentFilter(android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE), RECEIVER_EXPORTED);
+        } else {
+            registerReceiver(onDownloadComplete, new android.content.IntentFilter(android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+        }
+
         webView.setDownloadListener(new android.webkit.DownloadListener() {
             @Override
             public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
-                android.content.Intent i = new android.content.Intent(android.content.Intent.ACTION_VIEW);
-                i.setData(android.net.Uri.parse(url));
-                startActivity(i);
+                android.app.DownloadManager.Request request = new android.app.DownloadManager.Request(android.net.Uri.parse(url));
+                request.setMimeType(mimetype);
+                String cookies = android.webkit.CookieManager.getInstance().getCookie(url);
+                request.addRequestHeader("cookie", cookies);
+                request.addRequestHeader("User-Agent", userAgent);
+                request.setDescription("Downloading App Update...");
+                request.setTitle("GitHubMovies.apk");
+                
+                // Save to external files dir (no storage permission needed)
+                request.setDestinationInExternalFilesDir(MainActivity.this, android.os.Environment.DIRECTORY_DOWNLOADS, "GitHubMovies.apk");
+                
+                android.app.DownloadManager dm = (android.app.DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+                dm.enqueue(request);
+                android.widget.Toast.makeText(getApplicationContext(), "Downloading update...", android.widget.Toast.LENGTH_LONG).show();
             }
         });
 
