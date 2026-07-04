@@ -325,7 +325,8 @@
 
         .mm-action-grid {
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
+            padding: 0 10px;
             margin-bottom: 20px;
             margin-top: 15px;
         }
@@ -336,13 +337,14 @@
             align-items: center;
             gap: 8px;
             cursor: pointer;
+            width: 60px;
         }
 
         .mm-action-icon {
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: var(--primary);
+            background: #037dd6; /* MetaMask Blue */
             color: white;
             display: flex;
             align-items: center;
@@ -356,10 +358,67 @@
         }
 
         .mm-action-label {
-            color: var(--primary);
-            font-size: 0.75rem;
+            color: #037dd6;
+            font-size: 0.85rem;
             font-family: 'Inter', sans-serif;
             font-weight: 500;
+        }
+
+        /* MetaMask Tabs & Asset List */
+        .mm-tabs {
+            display: flex;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 10px;
+        }
+        .mm-tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            color: #94a3b8;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .mm-tab.active {
+            color: #3b82f6;
+            border-bottom: 2px solid #3b82f6;
+        }
+        .mm-asset-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 10px 5px;
+        }
+        .mm-asset-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+        }
+        .mm-asset-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .mm-asset-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .mm-asset-symbol {
+            color: #f8fafc;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .mm-asset-balance {
+            color: #94a3b8;
+            font-size: 0.85rem;
         }
 
         #walletActionStatus {
@@ -807,39 +866,47 @@
 
     <div id="profileModal" class="mm-profile-overlay">
         <div class="mm-profile-card">
-            <div class="mm-profile-header">
-                <div class="mm-profile-title">
-                    <span class="mm-avatar">
-                        <img src="logo.svg" alt="Wallet logo" />
-                    </span>
-                    <h2 id="profileName">Wallet Profile</h2>
-                </div>
-                <button id="profileClose" class="type-btn">✕</button>
+            <div class="mm-profile-header" style="justify-content: space-between; margin-bottom: 5px;">
+                <h2 id="profileName" style="font-size: 1rem; margin:0;">Account 1</h2>
+                <button id="profileClose" class="type-btn" style="background:transparent;border:none;font-size:1.2rem;padding:0;">✕</button>
             </div>
-            <div id="profileEmail"></div>
+            
+            <div id="walletAddress" style="background:#1e293b; color:#94a3b8; font-size:0.75rem; padding:6px 12px; border-radius:12px; display:inline-block; margin-bottom:20px; cursor:pointer;">0x...</div>
+
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div id="walletBalance" style="font-size: 2.2rem; font-weight: bold; color: #f8fafc;">0.00 ETH</div>
+                <div id="walletChain" style="color: #94a3b8; font-size: 0.85rem;">Ethereum Mainnet</div>
+            </div>
+
             <div id="walletAssetsSection">
-                <h3 style="color:#e2e8f0;margin-bottom:10px;font-size:0.88rem;">Assets</h3>
-                <div id="walletAddress"></div>
                 <div class="mm-action-grid">
                     <div class="mm-action-item" id="walletBuyBtn">
-                        <div class="mm-action-icon">💸</div>
+                        <div class="mm-action-icon">➕</div>
                         <span class="mm-action-label">Buy</span>
                     </div>
                     <div class="mm-action-item" id="walletSendBtn">
-                        <div class="mm-action-icon">📤</div>
+                        <div class="mm-action-icon">↗️</div>
                         <span class="mm-action-label">Send</span>
                     </div>
                     <div class="mm-action-item" id="walletReceiveBtn">
-                        <div class="mm-action-icon">📥</div>
+                        <div class="mm-action-icon">↙️</div>
                         <span class="mm-action-label">Receive</span>
                     </div>
                     <div class="mm-action-item" id="walletScanBtn">
-                        <div class="mm-action-icon">📸</div>
+                        <div class="mm-action-icon">📷</div>
                         <span class="mm-action-label">Scan</span>
                     </div>
                 </div>
-                <div id="walletBalance"></div>
-                <div id="walletChain"></div>
+
+                <div class="mm-tabs">
+                    <div class="mm-tab active">Tokens</div>
+                    <div class="mm-tab">NFTs</div>
+                    <div class="mm-tab">Activity</div>
+                </div>
+                
+                <div class="mm-asset-list" id="walletTokenList">
+                    <!-- Tokens will be injected here -->
+                </div>
                 <div id="walletActionStatus"></div>
                 <div id="walletSendPanel">
                     <div style="color:#e2e8f0;font-family:'Sora',sans-serif;font-size:0.82rem;margin-bottom:8px;">Send Native Token</div>
@@ -1557,13 +1624,40 @@
             if (!data || !data.address) return;
 
             const symbol = getNativeTokenSymbol(data.chainName);
-            if (profileName) profileName.innerText = `Wallet Profile (${data.shortAddress || 'Connected'})`;
-            if (profileEmail) profileEmail.innerText = `Connected with ${auth.provider || 'Web3 Wallet'}`;
-            if (walletAddress) walletAddress.innerText = `Address: ${data.address || 'N/A'}`;
-            if (walletBalance) walletBalance.innerText = `Balance: ${data.balance || '0.0000'} ${symbol}`;
-            if (walletChain) walletChain.innerText = `Network: ${data.chainName || 'Unknown'}`;
+            if (profileName) profileName.innerText = `Account (${data.shortAddress || 'Connected'})`;
+            
+            // Allow user to click the small address badge to copy it
+            if (walletAddress) {
+                walletAddress.innerText = data.shortAddress || 'N/A';
+                walletAddress.onclick = async () => {
+                    try {
+                        await navigator.clipboard.writeText(data.address);
+                        setWalletActionStatus('Address copied to clipboard.');
+                    } catch (_) {
+                        setWalletActionStatus('Could not copy automatically.', true);
+                    }
+                };
+            }
+            
+            if (walletBalance) walletBalance.innerText = `${data.balance || '0.0000'} ${symbol}`;
+            if (walletChain) walletChain.innerText = `${data.chainName || 'Unknown'}`;
             if (walletSendSymbol) walletSendSymbol.innerText = symbol;
             if (walletAssetsSection) walletAssetsSection.style.display = 'block';
+
+            // Populate the Tokens list
+            const tokenList = document.getElementById('walletTokenList');
+            if (tokenList) {
+                tokenList.innerHTML = `
+                    <div class="mm-asset-item">
+                        <div class="mm-asset-icon">${symbol[0]}</div>
+                        <div class="mm-asset-details">
+                            <span class="mm-asset-symbol">${symbol}</span>
+                            <span class="mm-asset-balance">${data.balance || '0.0000'} ${symbol}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
             hideWalletActionPanels();
             if (walletSendTo) walletSendTo.value = '';
             if (walletSendAmount) walletSendAmount.value = '';
@@ -1998,7 +2092,7 @@
         });
         
         // --- OTA Updater ---
-        const APP_VERSION = 'v1.0.21';
+        const APP_VERSION = 'v1.0.22';
         async function checkForUpdates(manual = false) {
             try {
                 const response = await fetch('https://api.github.com/repos/seangritthy/seangritthy.github.io/releases/latest');
