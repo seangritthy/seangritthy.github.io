@@ -13,7 +13,7 @@
  *   https://cloud.walletconnect.com
  */
 
-const WC_PROJECT_ID = 'YOUR_WALLETCONNECT_PROJECT_ID';
+const WC_PROJECT_ID = '1ff46d6d57a18d4bdc3c81a6bbecb5a0';
 
 const WC_METADATA = {
     name: 'GitHub Movies',
