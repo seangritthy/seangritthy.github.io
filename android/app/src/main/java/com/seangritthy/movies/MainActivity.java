@@ -43,7 +43,6 @@ public class MainActivity extends Activity {
         setContentView(myWebView);
 
         myWebView.getSettings().setJavaScriptEnabled(true);
-        myWebView.getSettings().setCacheMode(android.webkit.WebSettings.LOAD_NO_CACHE);
         myWebView.getSettings().setDomStorageEnabled(true);
         myWebView.getSettings().setAllowFileAccess(true);
 
@@ -235,7 +234,6 @@ public class MainActivity extends Activity {
         mFilePathCallback = null;
     }
 }
-
 
 
 
