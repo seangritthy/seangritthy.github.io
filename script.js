@@ -1,7 +1,7 @@
 const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
-const APP_VERSION = 'v1.0.14';
+const APP_VERSION = 'v1.0.33';
 
 const moviesGrid = document.getElementById('moviesGrid');
 const searchInput = document.getElementById('searchInput');
