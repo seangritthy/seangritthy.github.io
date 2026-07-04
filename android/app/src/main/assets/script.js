@@ -1,7 +1,7 @@
 const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
-const APP_VERSION = 'v1.0.14';
+const APP_VERSION = 'v1.0.39';
 
 const moviesGrid = document.getElementById('moviesGrid');
 const searchInput = document.getElementById('searchInput');
@@ -24,17 +24,20 @@ function openProfileModal() {
 }
 
 function openWalletModal() {
-    document.getElementById('walletModal').style.display = 'block';
-    document.getElementById('walletModalOverlay').style.display = 'block';
+    // Deprecated: Modal bypassed
 }
 
 function closeWalletModal() {
-    document.getElementById('walletModal').style.display = 'none';
-    document.getElementById('walletModalOverlay').style.display = 'none';
+    // Deprecated: Modal bypassed
 }
 
 // Wire menu buttons if present
-if (menuLoginBtn) menuLoginBtn.addEventListener('click', openWalletModal);
+if (menuLoginBtn) {
+    menuLoginBtn.addEventListener('click', async () => {
+        const result = await web3Auth.connectMetaMask();
+        if (result) handleWeb3Login(result, 'MetaMask');
+    });
+}
 if (menuProfileBtn) menuProfileBtn.addEventListener('click', openProfileModal);
 
 // Wallet modal listeners
@@ -243,9 +246,22 @@ async function checkForUpdates() {
         const response = await fetch('https://api.github.com/repos/seangritthy/seangritthy.github.io/releases/latest');
         const release = await response.json();
         if (release.tag_name && release.tag_name !== APP_VERSION) {
-            const current = parseFloat(APP_VERSION.replace('v', '').split('.').join('.'));
-            const latest = parseFloat(release.tag_name.replace('v', '').split('.').join('.'));
-            if (latest > current) {
+            const currentParts = APP_VERSION.replace('v', '').split('.').map(Number);
+            const latestParts = release.tag_name.replace('v', '').split('.').map(Number);
+            
+            let isNewer = false;
+            for (let i = 0; i < Math.max(currentParts.length, latestParts.length); i++) {
+                const curr = currentParts[i] || 0;
+                const lat = latestParts[i] || 0;
+                if (lat > curr) {
+                    isNewer = true;
+                    break;
+                } else if (lat < curr) {
+                    break;
+                }
+            }
+            
+            if (isNewer) {
                 showUpdatePrompt(release);
             }
         }
@@ -269,8 +285,8 @@ function showUpdatePrompt(release) {
         <div style="background: #1e1e2d; padding: 30px; border-radius: 12px; text-align: center; max-width: 90%; width: 400px; border: 1px solid #333; font-family: 'Inter', sans-serif;">
             <h2 style="color: #fff; margin-bottom: 15px; font-family: 'Space Grotesk', sans-serif;">New Update Available!</h2>
             <p style="color: #aaa; margin-bottom: 25px;">Version ${release.tag_name} is now available. Please update to enjoy the latest features and bug fixes.</p>
-            <a href="${downloadUrl}" target="_blank" style="display: inline-block; background: #6f5cff; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; width: 100%; box-sizing: border-box; margin-bottom: 15px;">Download Update</a>
-            <button onclick="this.parentElement.parentElement.remove()" style="background: transparent; border: 1px solid #555; color: #888; padding: 10px 24px; border-radius: 8px; cursor: pointer; width: 100%;">Remind Me Later</button>
+            <button onclick="window.location.href='${downloadUrl}'" style="display: inline-block; background: #6f5cff; border: none; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; width: 100%; box-sizing: border-box; margin-bottom: 15px; font-family: 'Inter', sans-serif; font-size: 1rem; cursor: pointer;">Download Update</button>
+            <button onclick="this.parentElement.parentElement.remove()" style="background: transparent; border: 1px solid #555; color: #888; padding: 10px 24px; border-radius: 8px; cursor: pointer; width: 100%; font-family: 'Inter', sans-serif; font-size: 1rem;">Remind Me Later</button>
         </div>
     `;
     document.body.appendChild(updateModal);

@@ -60,7 +60,7 @@ class Web3Auth {
     }
 
     async detectProvider(options = {}) {
-        const { mustBeMetaMask = false, silent = false, timeout = 3000 } = options;
+        const { mustBeMetaMask = false, silent = false, timeout = 500 } = options;
 
         if (typeof mustBeMetaMask !== 'boolean') {
             throw new Error('detect-provider: Expected option "mustBeMetaMask" to be a boolean.');
@@ -115,7 +115,7 @@ class Web3Auth {
         });
     }
 
-    async waitForEthereum(timeoutMs = 6000) {
+    async waitForEthereum(timeoutMs = 500) {
         const detected = await this.detectProvider({
             mustBeMetaMask: false,
             silent: true,
@@ -176,7 +176,7 @@ class Web3Auth {
         const detected = await this.detectProvider({
             mustBeMetaMask: preferred === 'metamask',
             silent: true,
-            timeout: 5000
+            timeout: 500
         });
         const injected = detected || await this.waitForEthereum();
         if (!injected && this.discoveredProviders.length === 0) return null;
@@ -426,7 +426,6 @@ class Web3Auth {
             if (eth && !providerCandidates.includes(eth)) providerCandidates.unshift(eth);
 
             if (!providerCandidates.length) {
-                alert('MetaMask was not found in this browser. Redirecting to MetaMask app.');
                 this.openMetaMaskApp();
                 return null;
             }
@@ -450,14 +449,12 @@ class Web3Auth {
             }
 
             if (!eth) {
-                alert('MetaMask is not available in this browser context. Redirecting to MetaMask app.');
                 this.openMetaMaskApp();
                 return null;
             }
 
             if (!accounts || !accounts.length) {
                 if (sawInternalMetaMaskError && this.isProbablyMobile()) {
-                    alert('MetaMask had an internal error in this browser. Redirecting to MetaMask app.');
                     this.openMetaMaskApp();
                     return null;
                 }
