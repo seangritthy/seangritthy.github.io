@@ -24,6 +24,10 @@ import android.os.Environment;
 import android.webkit.DownloadListener;
 import android.webkit.CookieManager;
 import android.webkit.URLUtil;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
+import android.database.Cursor;
 
 public class MainActivity extends Activity {
     private WebView myWebView;
@@ -92,6 +96,34 @@ public class MainActivity extends Activity {
                 }
             }
         });
+
+        // Register DownloadManager BroadcastReceiver to auto-install APK
+        BroadcastReceiver onDownloadComplete = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+                if (id != -1) {
+                    DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+                    Uri downloadUri = dm.getUriForDownloadedFile(id);
+                    if (downloadUri != null) {
+                        try {
+                            Intent installIntent = new Intent(Intent.ACTION_VIEW);
+                            installIntent.setDataAndType(downloadUri, "application/vnd.android.package-archive");
+                            installIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            startActivity(installIntent);
+                        } catch (ActivityNotFoundException e) {
+                            Toast.makeText(context, "Cannot open file", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            }
+        };
+        // Register receiver for Android 13+ and below
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(onDownloadComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), Context.RECEIVER_EXPORTED);
+        } else {
+            registerReceiver(onDownloadComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+        }
 
         myWebView.setDownloadListener(new DownloadListener() {
             @Override
@@ -202,5 +234,6 @@ public class MainActivity extends Activity {
         mFilePathCallback = null;
     }
 }
+
 
 
