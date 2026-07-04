@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "CyberCinema"
+rootProject.name = "GitHub Movies"
 include ':app'

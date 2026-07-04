@@ -441,6 +441,42 @@ class Web3Auth {
         }
     }
 
+    async connectLocalProfile() {
+        let storedLocal = localStorage.getItem('local_profile_wallet');
+        let walletData;
+        if (storedLocal) {
+            walletData = JSON.parse(storedLocal);
+        } else {
+            const chars = '0123456789abcdef';
+            let addr = '0x';
+            for (let i = 0; i < 40; i++) {
+                addr += chars[Math.floor(Math.random() * 16)];
+            }
+            const bal = (Math.random() * 10 + 2).toFixed(4);
+            walletData = {
+                address: addr,
+                balance: bal,
+                chainId: 137,
+                chainName: 'Polygon Mainnet',
+                provider: 'In-App Profile',
+                signature: 'mock_signature_' + Math.floor(Math.random() * 1000000),
+                signatureMessage: 'In-App Profile Authorization',
+                signedAt: new Date().toISOString(),
+                shortAddress: `${addr.slice(0, 6)}...${addr.slice(-4)}`
+            };
+            localStorage.setItem('local_profile_wallet', JSON.stringify(walletData));
+        }
+        this.address = walletData.address;
+        this.balance = walletData.balance;
+        this.chainId = walletData.chainId;
+        this.chainName = walletData.chainName;
+        this.provider = walletData.provider;
+        this.signature = walletData.signature;
+        this.signatureMessage = walletData.signatureMessage;
+        this.signedAt = walletData.signedAt;
+        return walletData;
+    }
+
     // Compatibility stub: Trust Wallet login is disabled (MetaMask-only policy).
     async connectTrustWallet() {
         alert('Only MetaMask is supported for wallet login.');

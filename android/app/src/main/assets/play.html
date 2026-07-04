@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -829,9 +829,6 @@
         }
 
         async function restoreWalletSession() {
-            const auth = await ensureWeb3AuthLoaded();
-            if (!auth) return null;
-
             const raw = localStorage.getItem('g_user');
             if (!raw) return null;
 
@@ -841,6 +838,14 @@
                     localStorage.removeItem('g_user');
                     return null;
                 }
+
+                if (stored.provider === 'In-App Profile') {
+                    persistWalletSession(stored, 'In-App Profile');
+                    return stored;
+                }
+
+                const auth = await ensureWeb3AuthLoaded();
+                if (!auth) return null;
 
                 const walletData = await auth.restoreSession(stored.address);
                 if (!walletData) {
@@ -910,19 +915,26 @@
             loginTarget.search = '?mm_login=1';
             loginTarget.hash = '';
 
-            if (!auth.isMetaMaskAvailable?.() && typeof auth.openMetaMaskApp === 'function') {
-                auth.openMetaMaskApp(loginTarget.toString());
-                return;
+            let result = null;
+            if (!auth.isMetaMaskAvailable?.()) {
+                const useLocal = confirm('MetaMask is not available. Would you like to log in using an In-App Profile instead?');
+                if (useLocal) {
+                    result = await auth.connectLocalProfile();
+                } else if (typeof auth.openMetaMaskApp === 'function') {
+                    auth.openMetaMaskApp(loginTarget.toString());
+                    return;
+                }
+            } else {
+                result = await auth.connectMetaMask();
             }
 
-            const result = await auth.connectMetaMask();
             if (result) {
-                persistWalletSession(result, 'MetaMask');
+                persistWalletSession(result, result.provider || 'MetaMask');
                 const ui = document.getElementById('userInfo');
                 if (ui) { ui.innerText = result.shortAddress; ui.style.display = 'block'; }
                 const walletInfo = document.getElementById('walletInfo');
                 if (walletInfo) {
-                    walletInfo.innerText = 'Connected via MetaMask';
+                    walletInfo.innerText = `Connected via ${result.provider || 'MetaMask'}`;
                     walletInfo.style.display = 'inline-block';
                 }
                 const out = document.getElementById('signOutBtn');
