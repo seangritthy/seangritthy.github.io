@@ -1614,14 +1614,24 @@
             if (!profileModal || !auth) return;
             
             // Safely fetch data regardless of adapter version
-            const data = (typeof auth.getWalletData === 'function') ? auth.getWalletData() : {
+            let data = (typeof auth.getWalletData === 'function') ? auth.getWalletData() : {
                 address: auth.address,
                 balance: auth.balance,
                 chainName: auth.chainName,
                 shortAddress: auth.address ? `${auth.address.slice(0, 6)}...${auth.address.slice(-4)}` : ''
             };
 
-            if (!data || !data.address) return;
+            if (!data || !data.address) {
+                const stored = localStorage.getItem('g_user');
+                if (stored) {
+                    try { data = JSON.parse(stored); } catch (e) {}
+                }
+            }
+
+            if (!data || !data.address) {
+                profileModal.style.display = 'flex';
+                return;
+            }
 
             const symbol = getNativeTokenSymbol(data.chainName);
             if (profileName) profileName.innerText = `Account (${data.shortAddress || 'Connected'})`;
@@ -2092,7 +2102,7 @@
         });
         
         // --- OTA Updater ---
-        const APP_VERSION = 'v1.0.22';
+        const APP_VERSION = 'v1.0.23';
         async function checkForUpdates(manual = false) {
             try {
                 const response = await fetch('https://api.github.com/repos/seangritthy/seangritthy.github.io/releases/latest');
