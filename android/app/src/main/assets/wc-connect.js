@@ -37,7 +37,8 @@ async function loadWCProvider() {
     wcInitPromise = (async () => {
         await loadScript('https://unpkg.com/@walletconnect/ethereum-provider@2.17.0/dist/index.umd.js');
 
-        const EthereumProvider = window.EthereumProvider?.EthereumProvider || window.EthereumProvider;
+        const wcModule = window['@walletconnect/ethereum-provider'];
+        const EthereumProvider = wcModule?.EthereumProvider || window.EthereumProvider?.EthereumProvider || window.EthereumProvider;
         if (!EthereumProvider) {
             throw new Error('WalletConnect EthereumProvider not found after script load');
         }
