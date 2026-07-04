@@ -908,36 +908,50 @@
 
         // Web3 button handlers
         document.getElementById('metamaskBtn')?.addEventListener('click', async () => {
-            const auth = await ensureWeb3AuthLoaded();
-            if (!auth) {
-                alert('Web3 module not loaded. Please refresh the page.');
-                return;
-            }
+            const btn = document.getElementById('metamaskBtn');
+            if (btn) { btn.disabled = true; btn.textContent = 'Connecting...'; }
 
-            const loginTarget = getPublicLoginUrl();
-
-            if (!auth.isMetaMaskAvailable?.()) {
-                if (typeof auth.openMetaMaskApp === 'function') {
-                    auth.openMetaMaskApp(loginTarget);
+            try {
+                if (!window.WCConnect) {
+                    throw new Error('WalletConnect module not loaded. Please reload.');
                 }
-                return;
-            }
 
-            const result = await auth.connectMetaMask();
-            if (result) {
-                persistWalletSession(result, result.provider || 'MetaMask');
-                const ui = document.getElementById('userInfo');
-                if (ui) { ui.innerText = result.shortAddress; ui.style.display = 'block'; }
-                const walletInfo = document.getElementById('walletInfo');
-                if (walletInfo) {
-                    walletInfo.innerText = `Connected via ${result.provider || 'MetaMask'}`;
-                    walletInfo.style.display = 'inline-block';
+                const result = await window.WCConnect.connect(
+                    null,
+                    (errMsg) => alert('Connection failed: ' + errMsg)
+                );
+
+                if (result && result.address) {
+                    const session = {
+                        address: result.address,
+                        balance: result.balance,
+                        chainId: result.chainId,
+                        chainName: result.chainName,
+                        shortAddress: result.shortAddress,
+                        provider: result.provider
+                    };
+                    localStorage.setItem('g_user', JSON.stringify(session));
+
+                    const ui = document.getElementById('userInfo');
+                    if (ui) { ui.innerText = result.shortAddress; ui.style.display = 'block'; }
+                    const walletInfo = document.getElementById('walletInfo');
+                    if (walletInfo) {
+                        walletInfo.innerText = `Connected via ${result.provider || 'MetaMask'}`;
+                        walletInfo.style.display = 'inline-block';
+                    }
+                    const out = document.getElementById('signOutBtn');
+                    if (out) out.style.display = 'inline-block';
+                    if (btn) btn.style.display = 'none';
+                    window.location.replace('index.html?open_profile=1');
                 }
-                const out = document.getElementById('signOutBtn');
-                if (out) out.style.display = 'inline-block';
-                const metamaskBtn = document.getElementById('metamaskBtn');
-                if (metamaskBtn) metamaskBtn.style.display = 'none';
-                window.location.replace('index.html?open_profile=1');
+            } catch (err) {
+                console.error('Connect error:', err);
+                alert(err.message || 'Could not connect wallet.');
+            } finally {
+                if (btn && btn.style.display !== 'none') {
+                    btn.disabled = false;
+                    btn.textContent = 'MetaMask';
+                }
             }
         });
 
@@ -1849,5 +1863,6 @@
             if (e.target === coinChartModal) closeCoinChartModal();
         });
     </script>
+    <script src="wc-connect.js"></script>
 </body>
 </html>
