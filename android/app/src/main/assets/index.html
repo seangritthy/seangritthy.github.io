@@ -1962,15 +1962,22 @@
         });
         
         // --- OTA Updater ---
-        const APP_VERSION = 'v1.0.15';
+        const APP_VERSION = 'v1.0.19';
         async function checkForUpdates(manual = false) {
             try {
                 const response = await fetch('https://api.github.com/repos/seangritthy/seangritthy.github.io/releases/latest');
                 const release = await response.json();
                 if (release.tag_name && release.tag_name !== APP_VERSION) {
-                    const current = parseFloat(APP_VERSION.replace('v', '').split('.').join('.'));
-                    const latest = parseFloat(release.tag_name.replace('v', '').split('.').join('.'));
-                    if (latest > current) {
+                    const currentParts = APP_VERSION.replace('v', '').split('.').map(Number);
+                    const latestParts = release.tag_name.replace('v', '').split('.').map(Number);
+                    let isNewer = false;
+                    for (let i = 0; i < Math.max(currentParts.length, latestParts.length); i++) {
+                        const curr = currentParts[i] || 0;
+                        const lat = latestParts[i] || 0;
+                        if (lat > curr) { isNewer = true; break; }
+                        if (lat < curr) { break; }
+                    }
+                    if (isNewer) {
                         showUpdatePrompt(release);
                     } else if (manual) {
                         alert('You are already on the latest version (' + APP_VERSION + ').');
