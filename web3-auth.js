@@ -60,7 +60,7 @@ class Web3Auth {
     }
 
     async detectProvider(options = {}) {
-        const { mustBeMetaMask = false, silent = false, timeout = 500 } = options;
+        const { mustBeMetaMask = false, silent = false, timeout = 3000 } = options;
 
         if (typeof mustBeMetaMask !== 'boolean') {
             throw new Error('detect-provider: Expected option "mustBeMetaMask" to be a boolean.');
@@ -115,7 +115,7 @@ class Web3Auth {
         });
     }
 
-    async waitForEthereum(timeoutMs = 500) {
+    async waitForEthereum(timeoutMs = 6000) {
         const detected = await this.detectProvider({
             mustBeMetaMask: false,
             silent: true,
@@ -176,7 +176,7 @@ class Web3Auth {
         const detected = await this.detectProvider({
             mustBeMetaMask: preferred === 'metamask',
             silent: true,
-            timeout: 500
+            timeout: 5000
         });
         const injected = detected || await this.waitForEthereum();
         if (!injected && this.discoveredProviders.length === 0) return null;

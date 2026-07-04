@@ -47,7 +47,7 @@ async function loadWCProvider() {
             projectId: WC_PROJECT_ID,
             chains: WC_CHAINS,
             optionalChains: WC_CHAINS,
-            showQrModal: false,
+            showQrModal: true,
             qrModalOptions: {
                 themeMode: 'dark',
                 themeVariables: {
@@ -61,11 +61,6 @@ async function loadWCProvider() {
                 enableExplorer: true,
             },
             metadata: WC_METADATA
-        });
-
-        provider.on('display_uri', (uri) => {
-            const deepLink = `metamask://wc?uri=${encodeURIComponent(uri)}`;
-            window.location.href = deepLink;
         });
 
         provider.on('disconnect', () => {

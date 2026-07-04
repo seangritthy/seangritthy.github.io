@@ -29,60 +29,25 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.database.Cursor;
 
-import android.widget.FrameLayout;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
-import android.content.pm.ActivityInfo;
-
 public class MainActivity extends Activity {
     private WebView myWebView;
     private ValueCallback<Uri[]> mFilePathCallback;
     private Uri mCameraPhotoUri;
-    private View mCustomView;
-    private WebChromeClient.CustomViewCallback mCustomViewCallback;
-    private FrameLayout rootLayout;
     private static final int INPUT_FILE_REQUEST_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        rootLayout = new FrameLayout(this);
-        rootLayout.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        
         myWebView = new WebView(this);
-        myWebView.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        
-        rootLayout.addView(myWebView);
-        setContentView(rootLayout);
+        setContentView(myWebView);
 
         myWebView.getSettings().setJavaScriptEnabled(true);
         myWebView.getSettings().setCacheMode(android.webkit.WebSettings.LOAD_NO_CACHE);
         myWebView.getSettings().setDomStorageEnabled(true);
-        myWebView.clearCache(true); // Always clear cache on startup to ensure updates reflect
         myWebView.getSettings().setAllowFileAccess(true);
 
-        // Inject Native Extractor Bridge
-        myWebView.addJavascriptInterface(new VidSrcExtractor(this, myWebView), "AndroidExtractor");
-
         myWebView.setWebViewClient(new WebViewClient() {
-            @Override
-            public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-                String url = request.getUrl().toString();
-                String lowUrl = url.toLowerCase();
-                
-                if ((lowUrl.contains(".m3u8") || lowUrl.contains(".mp4") || lowUrl.contains("/playlist") || lowUrl.contains("/manifest")) &&
-                    !lowUrl.contains("telemetry") && !lowUrl.contains("segment") && !lowUrl.contains(".ts")) {
-                    
-                    final String streamUrl = url;
-                    runOnUiThread(() -> {
-                        myWebView.evaluateJavascript("javascript:if(window.onDirectStreamFound) window.onDirectStreamFound('" + streamUrl.replace("'", "\\'") + "');", null);
-                    });
-                }
-                return super.shouldInterceptRequest(view, request);
-            }
-
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
@@ -186,53 +151,6 @@ public class MainActivity extends Activity {
         });
         
         myWebView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onShowCustomView(View view, CustomViewCallback callback) {
-                if (mCustomView != null) {
-                    callback.onCustomViewHidden();
-                    return;
-                }
-                mCustomView = view;
-                mCustomViewCallback = callback;
-                
-                myWebView.setVisibility(View.GONE);
-                mCustomView.setBackgroundColor(0xFF000000); // Black background
-                rootLayout.addView(mCustomView, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                
-                // Hide system UI and set landscape
-                getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-                View decorView = getWindow().getDecorView();
-                decorView.setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-            }
-
-            @Override
-            public void onHideCustomView() {
-                if (mCustomView == null) {
-                    return;
-                }
-                rootLayout.removeView(mCustomView);
-                mCustomView = null;
-                
-                myWebView.setVisibility(View.VISIBLE);
-                if (mCustomViewCallback != null) {
-                    mCustomViewCallback.onCustomViewHidden();
-                    mCustomViewCallback = null;
-                }
-                
-                // Restore system UI and portrait
-                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-                View decorView = getWindow().getDecorView();
-                decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-            }
-
             public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
                 if (mFilePathCallback != null) {
                     mFilePathCallback.onReceiveValue(null);
@@ -317,6 +235,7 @@ public class MainActivity extends Activity {
         mFilePathCallback = null;
     }
 }
+
 
 
 
