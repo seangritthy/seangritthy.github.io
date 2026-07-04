@@ -1,12 +1,16 @@
 const TMDB_API_KEY = '5e10bf06e4f15dae6e9ff35ff35e8df2';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+const APP_VERSION = 'v1.0.14';
 
 const moviesGrid = document.getElementById('moviesGrid');
 const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
 
-window.addEventListener('DOMContentLoaded', fetchPopularMovies);
+window.addEventListener('DOMContentLoaded', () => {
+    fetchPopularMovies();
+    setTimeout(checkForUpdates, 2000);
+});
 searchBtn.addEventListener('click', searchMovies);
 searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchMovies(); });
 
@@ -206,13 +210,19 @@ function updateProfileModal() {
 
 // Open profile modal from wallet info
 document.getElementById('userInfo')?.addEventListener('click', () => {
-    updateProfileModal();
-    document.getElementById('profileModal').classList.add('active');
+    const pm = document.getElementById('profileModal');
+    if (pm) {
+        updateProfileModal();
+        pm.classList.add('active');
+    }
 });
 
 document.getElementById('walletInfo')?.addEventListener('click', () => {
-    updateProfileModal();
-    document.getElementById('profileModal').classList.add('active');
+    const pm = document.getElementById('profileModal');
+    if (pm) {
+        updateProfileModal();
+        pm.classList.add('active');
+    }
 });
 
 // Refresh wallet balance
@@ -228,4 +238,40 @@ document.getElementById('walletRefresh')?.addEventListener('click', async () => 
         localStorage.setItem('g_user', JSON.stringify(userData));
     }
 });
-});
+async function checkForUpdates() {
+    try {
+        const response = await fetch('https://api.github.com/repos/seangritthy/seangritthy.github.io/releases/latest');
+        const release = await response.json();
+        if (release.tag_name && release.tag_name !== APP_VERSION) {
+            const current = parseFloat(APP_VERSION.replace('v', '').split('.').join('.'));
+            const latest = parseFloat(release.tag_name.replace('v', '').split('.').join('.'));
+            if (latest > current) {
+                showUpdatePrompt(release);
+            }
+        }
+    } catch (e) {
+        console.error('Failed to check for updates:', e);
+    }
+}
+
+function showUpdatePrompt(release) {
+    const apkAsset = release.assets.find(a => a.name.endsWith('.apk'));
+    const downloadUrl = apkAsset ? apkAsset.browser_download_url : release.html_url;
+    
+    const updateModal = document.createElement('div');
+    updateModal.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.8); z-index: 99999;
+        display: flex; align-items: center; justify-content: center;
+        backdrop-filter: blur(5px);
+    `;
+    updateModal.innerHTML = `
+        <div style="background: #1e1e2d; padding: 30px; border-radius: 12px; text-align: center; max-width: 90%; width: 400px; border: 1px solid #333; font-family: 'Inter', sans-serif;">
+            <h2 style="color: #fff; margin-bottom: 15px; font-family: 'Space Grotesk', sans-serif;">New Update Available!</h2>
+            <p style="color: #aaa; margin-bottom: 25px;">Version ${release.tag_name} is now available. Please update to enjoy the latest features and bug fixes.</p>
+            <a href="${downloadUrl}" target="_blank" style="display: inline-block; background: #6f5cff; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; width: 100%; box-sizing: border-box; margin-bottom: 15px;">Download Update</a>
+            <button onclick="this.parentElement.parentElement.remove()" style="background: transparent; border: 1px solid #555; color: #888; padding: 10px 24px; border-radius: 8px; cursor: pointer; width: 100%;">Remind Me Later</button>
+        </div>
+    `;
+    document.body.appendChild(updateModal);
+}

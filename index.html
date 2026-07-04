@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Movies</title>
+    <title>GitHub Movies | Secure Stream</title>
+    <script>
+        window.process = { env: { NODE_ENV: 'production' } };
+        window.addEventListener('error', function(e) {
+            alert('Global JS Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
+        });
+    </script>
     <link rel="icon" type="image/svg+xml" href="logo.svg">
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&family=Sora:wght@500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -318,18 +324,101 @@
         }
 
         .mm-action-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 8px;
-            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+            margin-bottom: 20px;
+            margin-top: 15px;
         }
 
-        .mm-action-grid .type-btn {
-            padding: 8px 6px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            background: rgba(148, 163, 184, 0.12);
+        .mm-action-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            width: 60px;
+        }
+
+        .mm-action-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #037dd6; /* MetaMask Blue */
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: opacity 0.2s;
+        }
+
+        .mm-action-item:hover .mm-action-icon {
+            opacity: 0.8;
+        }
+
+        .mm-action-label {
+            color: #037dd6;
+            font-size: 0.85rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        /* MetaMask Tabs & Asset List */
+        .mm-tabs {
+            display: flex;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 10px;
+        }
+        .mm-tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            color: #94a3b8;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .mm-tab.active {
+            color: #3b82f6;
+            border-bottom: 2px solid #3b82f6;
+        }
+        .mm-asset-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 10px 5px;
+        }
+        .mm-asset-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+        }
+        .mm-asset-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .mm-asset-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .mm-asset-symbol {
             color: #f8fafc;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .mm-asset-balance {
+            color: #94a3b8;
+            font-size: 0.85rem;
         }
 
         #walletActionStatus {
@@ -715,8 +804,9 @@
             </div>
 
             <div style="display:flex;justify-content:center;gap:10px;margin-top:12px;">
-                <button id="menuLoginBtn" class="type-btn">🔐 Login</button>
+                <button id="menuLoginBtn" class="type-btn">🗝️ Login</button>
                 <button id="menuProfileBtn" class="type-btn" style="display:none;">👤 Profile</button>
+                <button id="menuUpdateBtn" class="type-btn" style="background-color: var(--primary); color: white;">🔄 Check for Updates</button>
             </div>
             
             <div class="type-selector">
@@ -776,26 +866,63 @@
 
     <div id="profileModal" class="mm-profile-overlay">
         <div class="mm-profile-card">
-            <div class="mm-profile-header">
-                <div class="mm-profile-title">
-                    <span class="mm-avatar">
-                        <img src="logo.svg" alt="Wallet logo" />
-                    </span>
-                    <h2 id="profileName">Wallet Profile</h2>
-                </div>
-                <button id="profileClose" class="type-btn">✕</button>
+            <div class="mm-profile-header" style="justify-content: space-between; margin-bottom: 5px;">
+                <h2 id="profileName" style="font-size: 1rem; margin:0;">Account 1</h2>
+                <button id="profileClose" class="type-btn" style="background:transparent;border:none;font-size:1.2rem;padding:0;">✕</button>
             </div>
-            <div id="profileEmail"></div>
+            
+            <div id="walletAddress" style="background:#1e293b; color:#94a3b8; font-size:0.75rem; padding:6px 12px; border-radius:12px; display:inline-block; margin-bottom:20px; cursor:pointer;">0x...</div>
+
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div id="walletBalance" style="font-size: 2.2rem; font-weight: bold; color: #f8fafc;">0.00 ETH</div>
+                <select id="walletChainSelector" style="background: #1e293b; color: #94a3b8; font-size: 0.85rem; padding: 4px 10px; border-radius: 12px; border: 1px solid #334155; cursor: pointer; outline: none; margin-top: 5px;">
+                    <option value="1">Ethereum Mainnet</option>
+                    <option value="56">Binance Smart Chain</option>
+                    <option value="137">Polygon Mainnet</option>
+                    <option value="42161">Arbitrum One</option>
+                    <option value="10">Optimism</option>
+                </select>
+                <div id="walletChain" style="display:none;"></div> <!-- Kept for backward compatibility in JS -->
+            </div>
+
             <div id="walletAssetsSection">
-                <h3 style="color:#e2e8f0;margin-bottom:10px;font-size:0.88rem;">Assets</h3>
-                <div id="walletAddress"></div>
-                <div id="walletBalance"></div>
-                <div id="walletChain"></div>
                 <div class="mm-action-grid">
-                    <button class="type-btn" id="walletBuyBtn">🛒 Buy</button>
-                    <button class="type-btn" id="walletSendBtn">📤 Send</button>
-                    <button class="type-btn" id="walletReceiveBtn">📥 Receive</button>
-                    <button class="type-btn" id="walletScanBtn">📷 Scan</button>
+                    <div class="mm-action-item" id="walletBuyBtn">
+                        <div class="mm-action-icon">➕</div>
+                        <span class="mm-action-label">Buy</span>
+                    </div>
+                    <div class="mm-action-item" id="walletSendBtn">
+                        <div class="mm-action-icon">↗️</div>
+                        <span class="mm-action-label">Send</span>
+                    </div>
+                    <div class="mm-action-item" id="walletReceiveBtn">
+                        <div class="mm-action-icon">↙️</div>
+                        <span class="mm-action-label">Receive</span>
+                    </div>
+                    <div class="mm-action-item" id="walletScanBtn">
+                        <div class="mm-action-icon">📷</div>
+                        <span class="mm-action-label">Scan</span>
+                    </div>
+                </div>
+
+                <div class="mm-tabs">
+                    <div class="mm-tab active" id="tabTokens">Tokens</div>
+                    <div class="mm-tab" id="tabNfts">NFTs</div>
+                    <div class="mm-tab" id="tabActivity">Activity</div>
+                </div>
+                
+                <div class="mm-asset-list" id="walletTokenList">
+                    <!-- Tokens will be injected here -->
+                </div>
+                <div class="mm-asset-list" id="walletNftList" style="display:none; text-align:center; padding: 40px 10px;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">🖼️</div>
+                    <div style="color: #cbd5e1; font-weight: bold; margin-bottom: 5px;">No NFTs found</div>
+                    <div style="color: #64748b; font-size: 0.85rem;">You don't have any NFTs on this network yet.</div>
+                </div>
+                <div class="mm-asset-list" id="walletActivityList" style="display:none; text-align:center; padding: 40px 10px;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">📝</div>
+                    <div style="color: #cbd5e1; font-weight: bold; margin-bottom: 5px;">No recent activity</div>
+                    <div style="color: #64748b; font-size: 0.85rem;">Your recent transactions will appear here.</div>
                 </div>
                 <div id="walletActionStatus"></div>
                 <div id="walletSendPanel">
@@ -827,6 +954,7 @@
     <input id="walletScanInput" type="file" accept="image/*" capture="environment" style="display:none;" />
 
     <script src="https://unpkg.com/@metamask/detect-provider/dist/detect-provider.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="web3-auth.js"></script>
     <script>
         // --- MENU TOGGLE LOGIC ---
@@ -1504,23 +1632,60 @@
             if (!profileModal || !auth) return;
             
             // Safely fetch data regardless of adapter version
-            const data = (typeof auth.getWalletData === 'function') ? auth.getWalletData() : {
+            let data = (typeof auth.getWalletData === 'function') ? auth.getWalletData() : {
                 address: auth.address,
                 balance: auth.balance,
                 chainName: auth.chainName,
                 shortAddress: auth.address ? `${auth.address.slice(0, 6)}...${auth.address.slice(-4)}` : ''
             };
 
-            if (!data || !data.address) return;
+            if (!data || !data.address) {
+                const stored = localStorage.getItem('g_user');
+                if (stored) {
+                    try { data = JSON.parse(stored); } catch (e) {}
+                }
+            }
+
+            if (!data || !data.address) {
+                profileModal.style.display = 'flex';
+                return;
+            }
 
             const symbol = getNativeTokenSymbol(data.chainName);
-            if (profileName) profileName.innerText = `Wallet Profile (${data.shortAddress || 'Connected'})`;
-            if (profileEmail) profileEmail.innerText = `Connected with ${auth.provider || 'Web3 Wallet'}`;
-            if (walletAddress) walletAddress.innerText = `Address: ${data.address || 'N/A'}`;
-            if (walletBalance) walletBalance.innerText = `Balance: ${data.balance || '0.0000'} ${symbol}`;
-            if (walletChain) walletChain.innerText = `Network: ${data.chainName || 'Unknown'}`;
+            if (profileName) profileName.innerText = `Account (${data.shortAddress || 'Connected'})`;
+            
+            // Allow user to click the small address badge to copy it
+            if (walletAddress) {
+                walletAddress.innerText = data.shortAddress || 'N/A';
+                walletAddress.onclick = async () => {
+                    try {
+                        await navigator.clipboard.writeText(data.address);
+                        setWalletActionStatus('Address copied to clipboard.');
+                    } catch (_) {
+                        setWalletActionStatus('Could not copy automatically.', true);
+                    }
+                };
+            }
+            
+            if (walletBalance) walletBalance.innerText = `${data.balance || '0.0000'} ${symbol}`;
+            if (walletChain) walletChain.innerText = `${data.chainName || 'Unknown'}`;
             if (walletSendSymbol) walletSendSymbol.innerText = symbol;
             if (walletAssetsSection) walletAssetsSection.style.display = 'block';
+
+            // Populate the Tokens list
+            const tokenList = document.getElementById('walletTokenList');
+            if (tokenList) {
+                tokenList.innerHTML = `
+                    <div class="mm-asset-item">
+                        <div class="mm-asset-icon">${symbol[0]}</div>
+                        <div class="mm-asset-details">
+                            <span class="mm-asset-symbol">${symbol}</span>
+                            <span class="mm-asset-balance">${data.balance || '0.0000'} ${symbol}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
             hideWalletActionPanels();
             if (walletSendTo) walletSendTo.value = '';
             if (walletSendAmount) walletSendAmount.value = '';
@@ -1718,37 +1883,69 @@
             walletScanInput.click();
         }
 
-        async function processWalletScanFile(file) {
+                async function processWalletScanFile(file) {
             if (!file) return;
 
-            if (!('BarcodeDetector' in window) || typeof createImageBitmap !== 'function') {
-                setWalletActionStatus('QR scan is not supported on this browser. Paste address manually in Send.', true);
+            try {
+                const url = URL.createObjectURL(file);
+                const img = new Image();
+                img.onload = () => {
+                    URL.revokeObjectURL(url);
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    try {
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        let rawValue = null;
+                        
+                        if (window.jsQR) {
+                            const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+                            if (code) rawValue = code.data;
+                        }
+                        
+                        if (!rawValue && 'BarcodeDetector' in window) {
+                            (async () => {
+                                const detector = new BarcodeDetector({ formats: ['qr_code'] });
+                                const results = await detector.detect(imageData);
+                                if (results && results.length) {
+                                    rawValue = results[0].rawValue;
+                                    handleScanResult(rawValue);
+                                } else {
+                                    setWalletActionStatus('No QR code detected. Try another image.', true);
+                                }
+                            })();
+                            return;
+                        }
+
+                        if (!rawValue) {
+                            setWalletActionStatus('No QR code detected. Try another image.', true);
+                            return;
+                        }
+                        handleScanResult(rawValue);
+                    } catch (e) {
+                        setWalletActionStatus('Error processing image data.', true);
+                    }
+                };
+                img.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    setWalletActionStatus('Could not load image file.', true);
+                };
+                img.src = url;
+            } catch (err) {
+                setWalletActionStatus('Error reading scan file.', true);
+            }
+        }
+        function handleScanResult(rawValue) {
+            const recipientAddress = parseAddressFromScannedValue(rawValue);
+            if (!recipientAddress) {
+                setWalletActionStatus('QR detected, but no valid Ethereum address found.', true);
                 return;
             }
-
-            try {
-                const bitmap = await createImageBitmap(file);
-                const detector = new BarcodeDetector({ formats: ['qr_code'] });
-                const results = await detector.detect(bitmap);
-                if (typeof bitmap.close === 'function') bitmap.close();
-
-                if (!results || !results.length) {
-                    setWalletActionStatus('No QR code detected. Try another image.', true);
-                    return;
-                }
-
-                const rawValue = results[0]?.rawValue || '';
-                const recipientAddress = parseAddressFromScannedValue(rawValue);
-                if (!recipientAddress) {
-                    setWalletActionStatus('QR detected, but no valid Ethereum address found.', true);
-                    return;
-                }
-
-                setWalletActionStatus(`Scanned recipient: ${formatAddressCompact(recipientAddress)}`);
-                openSendPanel(recipientAddress);
-            } catch (_) {
-                setWalletActionStatus('Failed to scan QR image.', true);
-            }
+            setWalletActionStatus('Scanned recipient: ' + formatAddressCompact(recipientAddress));
+            openSendPanel(recipientAddress);
         }
 
         function updateWalletUI(walletData) {
@@ -1881,6 +2078,8 @@
         // Action Listeners
         if (menuLoginBtn) menuLoginBtn.addEventListener('click', openWalletModal);
         if (menuProfileBtn) menuProfileBtn.addEventListener('click', showProfileModal);
+        document.getElementById('userInfo')?.addEventListener('click', showProfileModal);
+        if (userInfo) userInfo.addEventListener('click', showProfileModal);
         if (walletInfo) walletInfo.addEventListener('click', showProfileModal);
         
         document.getElementById('walletModalClose')?.addEventListener('click', closeWalletModal);
@@ -1951,8 +2150,120 @@
                 clearTransientAuthParams();
             }
         });
-        // Auto-login removed — user must tap Connect MetaMask button
+        
+        // --- OTA Updater ---
+        const APP_VERSION = 'v1.0.32';
+        async function checkForUpdates(manual = false) {
+            try {
+                const response = await fetch('https://api.github.com/repos/seangritthy/seangritthy.github.io/releases/latest');
+                const release = await response.json();
+                if (release.tag_name && release.tag_name !== APP_VERSION) {
+                    const currentParts = APP_VERSION.replace('v', '').split('.').map(Number);
+                    const latestParts = release.tag_name.replace('v', '').split('.').map(Number);
+                    let isNewer = false;
+                    for (let i = 0; i < Math.max(currentParts.length, latestParts.length); i++) {
+                        const curr = currentParts[i] || 0;
+                        const lat = latestParts[i] || 0;
+                        if (lat > curr) { isNewer = true; break; }
+                        if (lat < curr) { break; }
+                    }
+                    if (isNewer) {
+                        showUpdatePrompt(release);
+                    } else if (manual) {
+                        alert('You are already on the latest version (' + APP_VERSION + ').');
+                    }
+                } else if (manual) {
+                    alert('You are already on the latest version (' + APP_VERSION + ').');
+                }
+            } catch (e) {
+                console.error('Failed to check for updates:', e);
+                if (manual) alert('Failed to check for updates. Please try again later.');
+            }
+        }
+
+        function showUpdatePrompt(release) {
+            const apkAsset = release.assets.find(a => a.name.endsWith('.apk'));
+            const downloadUrl = apkAsset ? apkAsset.browser_download_url : release.html_url;
+            
+            const updateModal = document.createElement('div');
+            updateModal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.8); z-index: 99999;
+                display: flex; align-items: center; justify-content: center;
+                backdrop-filter: blur(5px);
+            `;
+            updateModal.innerHTML = `
+                <div style="background: #1e1e2d; padding: 30px; border-radius: 12px; text-align: center; max-width: 90%; width: 400px; border: 1px solid #333; font-family: 'Inter', sans-serif;">
+                    <h2 style="color: #fff; margin-bottom: 15px; font-family: 'Space Grotesk', sans-serif;">New Update Available!</h2>
+                    <p style="color: #aaa; margin-bottom: 25px;">Version ${release.tag_name} is now available.</p>
+                    <button onclick="window.location.href='${downloadUrl}'" style="display: inline-block; background: #6f5cff; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; width: 100%; box-sizing: border-box; margin-bottom: 15px; border:none; cursor:pointer;">Download Update</button>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background: transparent; border: 1px solid #555; color: #888; padding: 10px 24px; border-radius: 8px; cursor: pointer; width: 100%;">Remind Me Later</button>
+                </div>
+            `;
+            document.body.appendChild(updateModal);
+        }
+
+        document.getElementById('menuUpdateBtn')?.addEventListener('click', () => checkForUpdates(true));
+        
+        checkForUpdates(false);
+
     </script>
-    <script src="wc-connect.js"></script>
+    <script src="wc-connect.js"></script><script>
+        // --- NEW PROFILE FEATURES ---
+        
+        // Tab switching logic
+        const tabTokens = document.getElementById('tabTokens');
+        const tabNfts = document.getElementById('tabNfts');
+        const tabActivity = document.getElementById('tabActivity');
+        const listTokens = document.getElementById('walletTokenList');
+        const listNfts = document.getElementById('walletNftList');
+        const listActivity = document.getElementById('walletActivityList');
+        
+        function switchTab(activeTab, activeList) {
+            [tabTokens, tabNfts, tabActivity].forEach(t => t && t.classList.remove('active'));
+            [listTokens, listNfts, listActivity].forEach(l => l && (l.style.display = 'none'));
+            
+            if (activeTab) activeTab.classList.add('active');
+            if (activeList) activeList.style.display = 'flex';
+        }
+        
+        tabTokens?.addEventListener('click', () => switchTab(tabTokens, listTokens));
+        tabNfts?.addEventListener('click', () => switchTab(tabNfts, listNfts));
+        tabActivity?.addEventListener('click', () => switchTab(tabActivity, listActivity));
+        
+        // Network selector logic
+        const chainSelector = document.getElementById('walletChainSelector');
+        chainSelector?.addEventListener('change', async (e) => {
+            const chainIdDec = e.target.value;
+            const chainIdHex = '0x' + Number(chainIdDec).toString(16);
+            
+            try {
+                if (window.ethereum) {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: chainIdHex }],
+                    });
+                } else if (window.WCConnect && window.WCConnect.session) {
+                    // WalletConnect v2 standard namespace update might be needed, but 
+                    // often the wallet handles the switch request via standard RPC.
+                    await window.WCConnect.client.request({
+                        topic: window.WCConnect.session.topic,
+                        chainId: 'eip155:' + chainIdDec,
+                        request: {
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: chainIdHex }]
+                        }
+                    });
+                }
+                setWalletActionStatus('Network switch requested in wallet app.');
+            } catch (err) {
+                console.error(err);
+                // Switch back in UI if failed
+                setWalletActionStatus('Failed to switch network or rejected by user.', true);
+            }
+        });
+    </script>
 </body>
 </html>
+
+

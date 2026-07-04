@@ -681,11 +681,27 @@ class Web3Auth {
 
     // Check if connected
     isConnected() {
-        return !!this.address;
+        if (!!this.address) return true;
+        try {
+            const stored = localStorage.getItem('g_user');
+            if (stored) {
+                const data = JSON.parse(stored);
+                if (data && data.address) return true;
+            }
+        } catch (e) {}
+        return false;
     }
 
     // Get wallet data
     getWalletData() {
+        if (this.address) return this.buildWalletData();
+        try {
+            const stored = localStorage.getItem('g_user');
+            if (stored) {
+                const data = JSON.parse(stored);
+                if (data && data.address) return data;
+            }
+        } catch (e) {}
         return this.buildWalletData();
     }
 }
