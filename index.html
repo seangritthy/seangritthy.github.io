@@ -1327,23 +1327,30 @@
                 async connectLocalProfile() {
                     let storedLocal = localStorage.getItem('local_profile_wallet');
                     let walletData;
+                    let addr = null;
                     if (storedLocal) {
-                        walletData = JSON.parse(storedLocal);
-                    } else {
-                        const chars = '0123456789abcdef';
-                        let addr = '0x';
-                        for (let i = 0; i < 40; i++) addr += chars[Math.floor(Math.random() * 16)];
-                        const bal = (Math.random() * 10 + 2).toFixed(4);
-                        walletData = {
-                            address: addr,
-                            balance: bal,
-                            chainId: 137,
-                            chainName: 'Polygon Mainnet',
-                            provider: 'In-App Profile',
-                            shortAddress: `${addr.slice(0, 6)}...${addr.slice(-4)}`
-                        };
-                        localStorage.setItem('local_profile_wallet', JSON.stringify(walletData));
+                        addr = JSON.parse(storedLocal).address;
                     }
+
+                    const inputAddr = prompt("Enter your Ethereum Wallet Address (0x...) to create your profile:", addr || "0x");
+                    if (inputAddr === null) return null;
+                    const cleanAddr = inputAddr.trim();
+                    if (!/^0x[a-fA-F0-9]{40}$/.test(cleanAddr)) {
+                        alert("Invalid Ethereum address format!");
+                        return null;
+                    }
+
+                    const bal = (Math.random() * 10 + 2).toFixed(4);
+                    walletData = {
+                        address: cleanAddr,
+                        balance: bal,
+                        chainId: 137,
+                        chainName: 'Polygon Mainnet',
+                        provider: 'In-App Profile',
+                        shortAddress: `${cleanAddr.slice(0, 6)}...${cleanAddr.slice(-4)}`
+                    };
+                    localStorage.setItem('local_profile_wallet', JSON.stringify(walletData));
+
                     this.address = walletData.address;
                     this.balance = walletData.balance;
                     this.chainId = walletData.chainId;

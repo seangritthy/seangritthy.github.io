@@ -55,8 +55,27 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                // Keep navigation inside the WebView
-                return false;
+                String url = request.getUrl().toString();
+                if (url.startsWith("http://") || url.startsWith("https://")) {
+                    return false; // Load in WebView
+                }
+                try {
+                    android.content.Intent intent = android.content.Intent.parseUri(url, android.content.Intent.URI_INTENT_SCHEME);
+                    if (intent.resolveActivity(getPackageManager()) != null) {
+                        startActivity(intent);
+                    } else {
+                        String packageName = intent.getPackage();
+                        if (packageName != null) {
+                            startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, 
+                                android.net.Uri.parse("market://details?id=" + packageName)));
+                        } else {
+                            android.widget.Toast.makeText(MainActivity.this, "App not found for this action", android.widget.Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    return true;
+                } catch (Exception e) {
+                    return true; // Handle and prevent error page loading
+                }
             }
         });
 
