@@ -16,6 +16,12 @@
     <meta property="og:image" id="ogImage" content="">
     <meta property="og:url" id="ogUrl" content="">
     <meta property="og:type" content="video.movie">
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Movies">
+    <link rel="apple-touch-icon" href="logo.svg">
 
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&family=Sora:wght@500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -612,6 +618,7 @@
         <div class="player-actions" style="display: flex; gap: 10px; justify-content: center; margin-top: 15px; margin-bottom: 20px;">
             <button id="copyStreamUrlBtn" class="share-btn" style="padding: 10px 18px; font-weight: bold; border-radius: 999px; cursor: pointer; display: none; font-size: 0.84rem; font-family: 'JetBrains Mono', monospace; background: rgba(179, 169, 217, 0.1); border: 1px solid rgba(179, 169, 217, 0.62); color: var(--primary);">📋 COPY URL</button>
             <button id="downloadStreamBtn" class="ai-audio-btn" style="padding: 10px 18px; font-weight: bold; border-radius: 999px; cursor: pointer; display: none; font-size: 0.84rem; font-family: 'JetBrains Mono', monospace; background: rgba(127, 149, 191, 0.1); border: 1px solid rgba(127, 149, 191, 0.6); color: var(--secondary);">⬇️ DOWNLOAD</button>
+            <button id="nextEpisodeBtn" class="ai-audio-btn" style="padding: 10px 18px; font-weight: bold; border-radius: 999px; cursor: pointer; display: none; font-size: 0.84rem; font-family: 'JetBrains Mono', monospace; background: var(--accent); border: 1px solid var(--accent); color: white;">⏭️ NEXT EPISODE</button>
         </div>
 
         <div class="cc-notice" id="ccNotice">
@@ -1091,6 +1098,34 @@
             currentEpisode = parseInt(e.target.value);
             loadLicensedFrame();
         });
+
+        const nextEpisodeBtn = document.getElementById('nextEpisodeBtn');
+        if (mediaType === 'tv') {
+            nextEpisodeBtn.style.display = 'inline-flex';
+            nextEpisodeBtn.addEventListener('click', () => {
+                const currentMaxEpisodes = episodeSelect.options.length;
+                if (currentEpisode < currentMaxEpisodes) {
+                    currentEpisode++;
+                    episodeSelect.value = currentEpisode;
+                    loadLicensedFrame();
+                } else {
+                    const currentMaxSeasons = seasonSelect.options.length;
+                    if (currentSeason < currentMaxSeasons) {
+                        currentSeason++;
+                        seasonSelect.value = currentSeason;
+                        fetchEpisodes(currentSeason).then(() => {
+                            currentEpisode = 1;
+                            if(episodeSelect.options.length > 0) {
+                                episodeSelect.value = currentEpisode;
+                            }
+                            loadLicensedFrame();
+                        });
+                    } else {
+                        alert(getT().noMoreEpisodes || "No more episodes available!");
+                    }
+                }
+            });
+        }
 
         if (!localStorage.getItem('uiLang')) {
             const browserLang = navigator.language || navigator.userLanguage;
