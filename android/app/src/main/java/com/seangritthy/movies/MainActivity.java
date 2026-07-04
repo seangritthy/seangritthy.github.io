@@ -1,6 +1,7 @@
 package com.seangritthy.movies;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -8,10 +9,12 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebResourceRequest;
 import android.provider.MediaStore;
 import androidx.core.content.FileProvider;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -33,7 +36,51 @@ public class MainActivity extends Activity {
         myWebView.getSettings().setDomStorageEnabled(true);
         myWebView.getSettings().setAllowFileAccess(true);
 
-        myWebView.setWebViewClient(new WebViewClient());
+        myWebView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                String url = request.getUrl().toString();
+                if (url.startsWith("http://") || url.startsWith("https://")) {
+                    return false;
+                }
+                
+                try {
+                    Intent intent;
+                    if (url.startsWith("intent:")) {
+                        intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                    } else {
+                        intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    }
+                    startActivity(intent);
+                    return true;
+                } catch (URISyntaxException | ActivityNotFoundException e) {
+                    e.printStackTrace();
+                    return true;
+                }
+            }
+            
+            // For older Android versions
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (url.startsWith("http://") || url.startsWith("https://")) {
+                    return false;
+                }
+                
+                try {
+                    Intent intent;
+                    if (url.startsWith("intent:")) {
+                        intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                    } else {
+                        intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    }
+                    startActivity(intent);
+                    return true;
+                } catch (URISyntaxException | ActivityNotFoundException e) {
+                    e.printStackTrace();
+                    return true;
+                }
+            }
+        });
         
         myWebView.setWebChromeClient(new WebChromeClient() {
             public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
