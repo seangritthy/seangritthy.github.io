@@ -126,6 +126,9 @@ public class MainActivity extends AppCompatActivity {
         // Load the main index.html file through the secure appassets domain
         webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");
 
+        // Handle initial deep link if any
+        handleIntent(getIntent());
+
         // Handle back button presses using AndroidX back-press callback API
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -142,6 +145,24 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    @Override
+    protected void onNewIntent(android.content.Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIntent(intent);
+    }
+
+    private void handleIntent(android.content.Intent intent) {
+        if (intent == null) return;
+        android.net.Uri data = intent.getData();
+        if (data != null && "githubmovies".equals(data.getScheme()) && "login".equals(data.getHost())) {
+            String query = data.getQuery();
+            if (query != null && !query.isEmpty()) {
+                webView.loadUrl("https://appassets.androidplatform.net/assets/index.html?login_success=1&" + query);
+            }
+        }
     }
 
     private void onHideCustomView() {

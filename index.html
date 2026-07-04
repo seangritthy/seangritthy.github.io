@@ -1441,6 +1441,37 @@
             return target.toString();
         }
 
+        function getPublicLoginUrl() {
+            return "https://seangritthy.github.io/index.html?app_redirect=1&mm_login=1";
+        }
+
+        function handleDeepLinkLogin() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('login_success') === '1') {
+                const address = params.get('address');
+                const balance = params.get('balance') || '0.0000';
+                const chainId = parseInt(params.get('chainId')) || 1;
+                const provider = params.get('provider') || 'MetaMask';
+                
+                const walletData = {
+                    address: address,
+                    balance: balance,
+                    chainId: chainId,
+                    chainName: getAuth()?.getChainName?.(chainId) || `Network ${chainId}`,
+                    provider: provider,
+                    shortAddress: address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ''
+                };
+
+                if (address) {
+                    updateWalletUI(walletData);
+                    persistWalletSession(walletData, provider);
+                    redirectToCleanIndex();
+                    setTimeout(showProfileModal, 500);
+                }
+            }
+        }
+
+
         function redirectToCleanIndex() {
             const target = new URL(window.location.href);
             target.pathname = target.pathname.replace(/[^/]*$/, 'index.html');
@@ -1782,6 +1813,13 @@
                     return;
                 }
 
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('app_redirect') === '1') {
+                    const appUrl = `githubmovies://login?address=${walletData.address}&balance=${walletData.balance}&chainId=${walletData.chainId}&provider=MetaMask`;
+                    window.location.href = appUrl;
+                    return;
+                }
+
                 walletData.provider = stored.provider || walletData.provider;
                 updateWalletUI(walletData);
                 persistWalletSession(walletData, walletData.provider);
@@ -1791,23 +1829,29 @@
             }
         }
 
-        async function connectMetaMaskWallet() {
+         async function connectMetaMaskWallet() {
             const auth = await ensureWeb3AuthLoaded();
             if (!auth) {
                 alert('Web3 module not loaded. Please refresh the page.');
                 return;
             }
 
-            const loginUrl = getIndexLoginUrl();
             if (!auth.isMetaMaskAvailable?.()) {
                 if (typeof auth.openMetaMaskApp === 'function') {
-                    auth.openMetaMaskApp(loginUrl);
+                    auth.openMetaMaskApp(getPublicLoginUrl());
                 }
                 return;
             }
 
             const walletData = await auth.connectMetaMask();
             if (walletData) {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('app_redirect') === '1') {
+                    const appUrl = `githubmovies://login?address=${walletData.address}&balance=${walletData.balance}&chainId=${walletData.chainId}&provider=MetaMask`;
+                    window.location.href = appUrl;
+                    return;
+                }
+
                 updateWalletUI(walletData);
                 persistWalletSession(walletData, 'MetaMask');
                 closeWalletModal();
@@ -1922,6 +1966,7 @@
 
         updateUI();
         fetchDashboardData();
+        handleDeepLinkLogin();
         restoreWalletSession().then(() => {
             if (shouldOpenProfileOnLoad()) {
                 showProfileModal();
