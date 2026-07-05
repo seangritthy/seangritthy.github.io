@@ -1,0 +1,46 @@
+
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:13:    <link rel="icon" type="image/svg+xml" href="logo.svg">
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:20:    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&family=Sora:wght@500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:117:    .nav-link {
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:129:    .nav-link:hover {
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:189:    .meta-link { color: var(--warn); text-decoration: none; border-bottom: 1px dashed transparent; transition: all 0.25s; }
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:190:    .meta-link:hover { color: #1e293b; border-color: #1e293b; }
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:496:    .copy-container { display: flex; gap: 10px; margin-top: 15px; }
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:497:    .copy-input { flex: 1; padding: 10px; background: rgba(255, 255, 255, 0.96); border: 1px solid rgba(77, 124, 255, 0.3); color: var(--secondary); font-family: 'JetBrains Mono', monospace; border-radius: 8px; outline: none; }
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:498:    .copy-btn { padding: 10px 14px; background: var(--secondary); color: #ffffff; border: none; font-family: 'JetBrains Mono', 'Noto Sans SC', 'Battambang', monospace; font-weight: bold; cursor: pointer; border-radius: 8px; transition: all 0.25s; }
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:499:    .copy-btn:hover { box-shadow: 0 0 13px rgba(127, 149, 191, 0.45); background: #8ec8ff; }
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:535:                    <button id="signOutBtn" class="quality-btn" style="display:none;">Sign out</button>
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:537:            <a href="index.html" class="nav-link" id="returnBtn">← BACK TO HOME</a>
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:556:                    <button class="ai-audio-btn" id="aiSpeechBtn">🔊 VOICE SUMMARY</button>
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:557:                    <button class="share-btn" id="shareMovieBtn">🔗 SHARE MOVIE</button>
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:613:            <div class="copy-container">
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:614:                <input type="text" id="shareUrlInput" class="copy-input" readonly>
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:615:                <button class="copy-btn" id="copyUrlBtn">COPY</button>
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:658:                getMetaMaskDeepLinks() {
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:663:                        universal: `https://metamask.app.link/dapp/${dappPath}`,
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:664:                        universalEncoded: `https://metamask.app.link/dapp/${encodeURIComponent(dappPath)}`
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:667:                getMetaMaskDeepLink() {
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:668:                    return this.getMetaMaskDeepLinks().universal;
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:673:                    const links = this.getMetaMaskDeepLinks();
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:680:                    window.location.href = links.native;
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:682:                        if (!hidden) window.location.href = links.universal;
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:685:                        if (!hidden) window.location.href = links.universalEncoded;
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:887:            // Show Web3 buttons
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:915:        // Web3 button handlers
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:1000:                copyBtn: "COPY",
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:1032:                copyBtn: "ចម្លង",
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:1064:                copyBtn: "复制",
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:1105:                if (e.target.closest('.genre-tag') || e.target.closest('.cast-card') || e.target.closest('.meta-link') || e.target.closest('.ai-audio-btn') || e.target.closest('.share-btn')) return; 
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:1121:        const copyUrlBtn = document.getElementById('copyUrlBtn');
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:1172:            if (copyUrlBtn.innerText !== t.copiedBtn) {
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:1173:                copyUrlBtn.innerText = t.copyBtn;
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:1224:                    ? data.production_countries.map(c => `<a href="index.html?country=${c.iso_3166_1}&countryName=${encodeURIComponent(c.name)}&type=${mediaType}" class="meta-link">${c.name}</a>`).join(', ') : t.na;
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:1227:                    ? data.spoken_languages.map(l => `<a href="index.html?lang=${l.iso_639_1}&langName=${encodeURIComponent(l.name)}&type=${mediaType}" class="meta-link">${l.name}</a>`).join(', ') : t.na;
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:1298:        // Copy Link Action
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:1299:        copyUrlBtn.addEventListener('click', () => {
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:1301:            document.execCommand('copy');
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:1304:            copyUrlBtn.innerText = t.copiedBtn;
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:1305:            copyUrlBtn.style.background = "var(--primary)";
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:1308:                copyUrlBtn.innerText = t.copyBtn; 
+C:\Users\seang\Downloads\seangritthy.github.io-1.0.65\seangritthy.github.io-1.0.65\play.html:1309:                copyUrlBtn.style.background = "var(--secondary)";
+
