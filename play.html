@@ -555,7 +555,6 @@
                 <div class="btn-group">
                     <button class="ai-audio-btn" id="aiSpeechBtn">🔊 VOICE SUMMARY</button>
                     <button class="share-btn" id="shareMovieBtn">🔗 SHARE MOVIE</button>
-                    <button class="share-btn" id="directCopyBtn">📋 COPY LINK</button>
                 </div>
 
                 <div class="overview" id="movieOverview">Loading movie metadata...</div>
@@ -1296,39 +1295,20 @@
             if (e.target === shareModal) shareModal.classList.remove('active'); 
         });
 
-        // Copy Link Action (from Modal)
+        // Copy Link Action
         copyUrlBtn.addEventListener('click', () => {
             shareUrlInput.select();
             document.execCommand('copy');
             
             const t = getT();
-            copyUrlBtn.innerText = t.copiedBtn || 'COPIED!';
+            copyUrlBtn.innerText = t.copiedBtn;
             copyUrlBtn.style.background = "var(--primary)";
             
             setTimeout(() => { 
-                copyUrlBtn.innerText = t.copyBtn || 'COPY URL'; 
+                copyUrlBtn.innerText = t.copyBtn; 
                 copyUrlBtn.style.background = "var(--secondary)";
             }, 2000);
         });
-
-        // Direct Copy Link Button Action
-        const directCopyBtn = document.getElementById('directCopyBtn');
-        if (directCopyBtn) {
-            directCopyBtn.addEventListener('click', () => {
-                const url = window.location.href;
-                navigator.clipboard.writeText(url).then(() => {
-                    const originalText = directCopyBtn.innerText;
-                    directCopyBtn.innerText = '📋 COPIED!';
-                    directCopyBtn.style.background = "var(--primary)";
-                    setTimeout(() => {
-                        directCopyBtn.innerText = originalText;
-                        directCopyBtn.style.background = "rgba(255, 255, 255, 0.1)";
-                    }, 2000);
-                }).catch(err => {
-                    console.error('Failed to copy: ', err);
-                });
-            });
-        }
 
         // --- AI AUDIO LOGIC ---
         aiSpeechBtn.addEventListener('click', () => {
@@ -1381,13 +1361,13 @@
             try {
                 // legacy encoded token below is no longer used: "YjY0ZjFkNGRmZjg4ODU5NmYzZTJkODllZTg5MmNmOTg6TlVJeVJsSXpTSGsxTlhBeU4zWmhlWGRSVUZvNGIxUk5URU5PZEhaYVYyWmlXVFZ3YVZZdmIyRlpOV1Z2ZVZjeE1VdGhPWEI1ZUhwYVJuVTVjMGxCY0c5WlVtbzJNMFJsV1UxRWN6TndhWFZCV25kd1UyMXdWRmh1Vm5sRmVrcHNORkEyUkd0V2FtaGtlbkpOSzJocGExVndZekZOZFRKTFdrZDJiVGhXZFU4elYzSTNURzU2YjNoT0wxaHRhMWRGUTFWaGJXSlBRU3RwVTJsQlRVZHFOR3B1WXpoWFIwdDJRVWxoTjNCdlRFeG9kbk5hTWxwS1duVk1lUzk2VjJFdmJIRnVjRlo2VlNzelMzQlBkelJvUldsc2NrUmhiVmgxYlRSaVRXZHRVbFp6TXpJclZ6RTRRM2haYW5aYVpuUTBiRkY2UzFOSVIybFRka3QwZUM5MFFXeHRXbVZXU21ZeldWZHVTRmhFUlRjeVR6RlpXRmhGZW5WRFpFaHRWSGg2VGpoemNsUlRhM1pZU3pOUmJESjNUa1V4U21nMmFtbE5hMUpoVFd0VlNrOTRTVXR2T1VaSFNEWnBkVEJvYUdodmVHOTVabWRWUzBoelZXdzROM0pvUTJKVVZqSmpXV1JNTDBaVmFqUmxSV0pFTDNNMVltdzJjM3A0WVNzNU4wbFdiWGR3UkVKbllWb3dSMmRqUm5SSGF6TkNVVFpoYUdKb2RYY3JTWFZYUVhobVJISmtUM1pJYlZKMmRHdFhVa1pSTTNOelRDdDBRemh0TTBGTU9UUnNSbXhwVlRGbk9XcFdhRlJpU0dsM1Nub3ljM1pvYVVreGRreEJObTVNU0ZOYVZ6YzVZekpITVZsVlNETlVPSEY0V1ZOdGIwRldiVW8wZGt4d01DOHJSMmRVZG1vd1ZXeHFhVTVDZVdoNVlUYzBVRmRyVjBsYVdIZzRMMHB1UjNwQlRFUTFaMlpKUzNoUVJFd3hNVTV4TkVoUWFrZ3hUblI0UXpFcmFHWjBjamhYVUhoMGEyZG1ZbkJOY2xSc2NVeFBNMnBJYjJWeWJYbE9kazluTUZoR1pYUTFSWE5WVjNVeGNreERjbGRhWkVSaldFbEpiblowY3pWdmEwMU1NRmxaYlVGNFFsYzVhekpwTDFWeVNVSlVjRGR4VkcxUWJHa3JiMEZXVm5sd1FUVlJhV000TWtoTlRtaDRNV0ZpZHpSM1oyMHpZMHhuUlhWeFdYcGxORkppUm5OeVIzbExZMFo1ZEdKWWNXNHdkaTlvYWpkdU4yOXhaVmRYVURsYVNsQldlVXBzZDJaclQwUXllVzB6YVVSM01FSlpXWFZHWVRFMVNUQXJaWEZ3VkRnNFZVbEtSbXcyZUdVMGVFRXlTMFoyTWxCaVJGQlljbkZEYUZVcmNEVTVLMnRCWW10a1VDODNhVUZFU1ZkeGJuVnBTMVF5T1c4dllrSm9aelJ6WWxkUVUyVlBTRlJRVmtSRlEzSjFiM0p4UVZOT2VXaHFlV1F3U3pSdk1WVm1ORFpWTWpaYVkxQXdLMFV6VVcxMGVVazRTRUkwUjJkdVVVUnliVzUyVEhJNGMwNUxVR3RHU210elFXZzJUWElyTkcxUlEyTm1aM2RIYUhOUU9YY3JieTl6YW0xM1FUZHRkbkJVWjJJek5XSktRalZwTkRkTlpqSnBUblpVTDJOM1ltOUVkVkZKVEhGVE1HUkNTV1ZNU0d3d1V6VjZSVkpGVUhaak5FeDVXbmRHWldjd2VtdHdjblYzZFM5d1ZITnJRMG80Y0VObGIzSnhVa0ZMT0V3ck9GZEJkbEZZTVhGb2FsaDBkazlxWm1kWU1qRXhjV1J2VjJsdk9ESk5NbEl3TUhCbWRuZEVha2RRUVdkeE0wUk1hMlpXVkROR2JXWm9SaTlhY1doWmVHNXZiMUI1YkdsR1prZFBVSEJqTldoSGVtdDFVbXhSYjBOb1preHdZMUpXTm5CcFNqQmFZeXRtUmxkRE5ubDZLMGRNWkRJd2FHNVdZekl6VDBoWFRUbFZNRmQ1VDNaQ1JFa3dTVkpyZEhCamNFNVJRMWd3VW1sMVlsaFBSV1JYTm5OWVkyaHdOamxTWkVwSVVtYzBkR1ZzTlRCWWJreERkMDFQTUhSVmFteFBORm96Y21GS1JrOTZWVVIzU1dwelFWTlBMMFJqY0dOdlFXbExNbWRTYlVrMVVIRjVXVGMwTW1RMmMwUlZOWGM5";
                 
-                // CloudNestra-backed provider.
+                // CloudNestra-backed provider. vsembed renders the CloudNestra "rcp" player.
                 const providers = mediaType === 'tv'
                     ? [
-                        `https://cloudorchestranova.com/embed/tv/${tmdbId}/1/1`
+                        `https://vsembed.ru/embed/tv/${tmdbId}/1/1`
                     ]
                     : [
-                        `https://cloudorchestranova.com/embed/movie/${tmdbId}/`
+                        `https://vsembed.ru/embed/movie/${tmdbId}/`
                     ];
 
                 let sourceIndex = 0;
