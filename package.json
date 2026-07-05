@@ -1,7 +1,7 @@
 {
   "name": "github-movies-extractor",
   "private": true,
-  "version": "1.0.77",
+  "version": "1.0.78",
   "type": "commonjs",
   "description": "Local dev server + Playwright CloudNestra (cloudorchestranova) resolver.",
   "scripts": {
